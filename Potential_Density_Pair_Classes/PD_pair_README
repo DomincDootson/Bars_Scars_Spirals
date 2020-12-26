@@ -1,0 +1,46 @@
+1. General Structure
+--------------------
+
+
+
+
+
+2. PotentialDensityPairContainer
+--------------------------------
+
+It has the following memeber functions,
+	
+	1) potential - returns a value of the potential of a given radial index at a given radius.
+	2) density - same as above, but for density.
+	3) scriptE - generates the bi-orthongolity matrix.
+	4) scriptEelement - generates an element of the bi-othogonality matrix. 
+	5) densityResolving -
+	6) potentialResolving -
+	7) densityResolvingElement -
+	8) potentialResolvingElement -
+
+
+	// Maybe some functions that generate the potential and density on a grid. 
+
+
+
+3. PotentialDensityPair
+-----------------------
+
+
+4. Basis Functions
+------------------
+
+
+4.1 Kalnajs Basis Functions - 'k'
+--------------------------------- 
+
+
+
+
+5. Things to do
+---------------
+
+	*) Some way to do file mangament, i.e. check if a file exists, if not create it. 
+	*) One file that has all the basis function paramters, e.g. k_ka, r_ka... 
+	
