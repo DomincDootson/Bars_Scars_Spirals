@@ -13,8 +13,6 @@ This file contains all classes related to the PD pairs in real space.
 	this is the only class that needs to be interacted with in this file (I can think of no reason why you would want an individual PD pair). 
 	There is some functionality that I would like to add to this
 		
-		*) I've made the resolving functions, but there seems to be a factor of 4 wrong. This might be resolving, or it might be in the kalnajs
-		basis functions.
 		*) Resolving needs to be check with Guassian basis functions 
 
 2. DF Class

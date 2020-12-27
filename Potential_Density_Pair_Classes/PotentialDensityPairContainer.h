@@ -102,7 +102,7 @@ Eigen::MatrixXcd PotentialDensityPairContainer<T>::potentialGrid(const Eigen::Ve
 template <class T>
 Eigen::VectorXcd PotentialDensityPairContainer<T>::potentialResolving(const Eigen::MatrixXcd &potentialArray, const double rMax) const
 {
-	double spacing{rMax/((double) potentialArray.rows()-1)};
+	double spacing{2*rMax/((double) potentialArray.rows()-1)};
 	Eigen::VectorXcd coefficents(m_maxRadialIndex+1);
 
 	
@@ -118,7 +118,7 @@ Eigen::VectorXcd PotentialDensityPairContainer<T>::potentialResolving(const Eige
 template <class T>
 Eigen::VectorXcd PotentialDensityPairContainer<T>::densityResolving(const Eigen::MatrixXcd &densityArray, const double rMax) const
 {
-	double spacing{rMax/((double) densityArray.rows()-1)};
+	double spacing{2*rMax/((double) densityArray.rows()-1)};
 	Eigen::VectorXcd coefficents(m_maxRadialIndex+1);
 
 	
@@ -149,7 +149,7 @@ double PotentialDensityPairContainer<T>::scriptEelement(int k, int j) const // k
 		r = i * stepSize;
 		scriptEelement += (2*M_PI*r)*stepSize*potential(r, k)*density(r, j);
 	}
-	return scriptEelement;
+	return -scriptEelement;
 }
 
 template <class T>
