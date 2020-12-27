@@ -36,7 +36,7 @@ private:
 
 	
 	void kernelReadIn(const std::string & kernelFilename);
-	void kernelWrite2File() const; //const std::string & kernelFilename) WE NEED TO ADD IN FILENAMES
+	void kernelWrite2File(const std::string & kernelFilename) const; //const std::string & kernelFilename) WE NEED TO ADD IN FILENAMES
 	
 	std::complex<double> kernelElement(const int npRow, const int npCol, const ActionAngleBasisContainer & basisFunc, const double time) const;
 	void kernelAtTime(const ActionAngleBasisContainer & basisFunc, const int timeIndex); 
@@ -73,7 +73,7 @@ void EvolutionKernels::kernelCreation(const Tdf & df, const ActionAngleBasisCont
 		kernelAtTime(basisFunc, timeIndex);
 	}
 
-	kernelWrite2File();
+	kernelWrite2File("kernelFileName.csv");
 }
 
 void EvolutionKernels::kernelAtTime(const ActionAngleBasisContainer & basisFunc, const int timeIndex)
@@ -126,7 +126,7 @@ std::complex<double> EvolutionKernels::integration2d(const Eigen::MatrixXcd & gr
 	return integral;
 }
 
-void EvolutionKernels::kernelWrite2File() const
+void EvolutionKernels::kernelWrite2File(const std::string & kernelFilename) const
 {
 	//can we write some funciton to save the kernel please
 }

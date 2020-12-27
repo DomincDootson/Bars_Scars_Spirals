@@ -12,15 +12,29 @@
 
 #include "Volterra_Solver/VolterraSolver.h"
 
+#include <Eigen/Dense>
+
 
 int main()
 {
 
 
-	Mestel DF;
+	//Mestel DF;
 	PotentialDensityPairContainer<KalnajsBasis> PD(10,0);
-	ActionAngleBasisContainer test(10, 0, 5, 101, 20); 
-	test.scriptW(PD, DF, "Kalnajs");
+	//ActionAngleBasisContainer test(10, 0, 5, 101, 20); 
+	//test.scriptW(PD, DF, "Kalnajs");
+	Eigen::VectorXcd coef(11);
+
+	for (int i = 0; i<11; ++i){
+		coef(i) = i;
+	}
+
+	Eigen::MatrixXcd potential = PD.potentialGrid(coef, 201, 20);
+	Eigen::MatrixXcd density = PD.densityGrid(coef, 201, 20);
+
+	std::cout << PD.potentialResolving(potential, 20) << '\n' << '\n'; 
+	std::cout << PD.densityResolving(density, 20) << '\n'; 
+
 
 
 

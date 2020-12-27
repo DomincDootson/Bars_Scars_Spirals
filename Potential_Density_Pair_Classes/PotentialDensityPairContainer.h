@@ -16,12 +16,14 @@ class PotentialDensityPairContainer
 {
 public:
 	PotentialDensityPairContainer(int maxN, int l) : // Can we make it more efficent so it can figure out which basis it is??
-	m_potentialDensityContainer{}, m_maxRadialIndex{maxN}, m_fourierHarmonic{l}
+	m_potentialDensityContainer{}, m_maxRadialIndex{maxN}, m_fourierHarmonic{l}, 
+	m_scriptE{Eigen::MatrixXcd::Zero(m_maxRadialIndex+1, m_maxRadialIndex+1)}
 	{
 		for (int i = 0; i <= m_maxRadialIndex ; ++i)
 		{
 			m_potentialDensityContainer.emplace_back(i, m_fourierHarmonic);
-		}	
+		}
+		m_scriptE = scriptE();
 	}
 
 	~PotentialDensityPairContainer() {}
@@ -33,14 +35,22 @@ public:
 	double   density(const double radius, const int n) const;
 
 	void scriptE(const std::string &filename) const;
+	Eigen::MatrixXcd scriptE() const;
 
 	int maxRadialIndex() const {return m_maxRadialIndex;}
 	int fourierHarmonic() const {return m_fourierHarmonic;}
+
+	Eigen::MatrixXcd   densityGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const; // Maybe we could overload to have a real verision?
+	Eigen::MatrixXcd potentialGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
+
+	Eigen::VectorXcd potentialResolving(const Eigen::MatrixXcd &potentialArray, const double rMax) const;
+	Eigen::VectorXcd densityResolving(const Eigen::MatrixXcd &densityArray, const double rMax) const;
 
 private:	
 	
 	std::vector<T> m_potentialDensityContainer; // Please overload the [] operator so this can be private
 	int m_maxRadialIndex,  m_fourierHarmonic;
+	Eigen::MatrixXcd m_scriptE;
 	
 	
 	void saveParamters(std::ofstream & out) const;
@@ -49,7 +59,7 @@ private:
 };
 
 
-// So down here we have our function definitions
+// Our potential and density function
 
 template <class T>
 double PotentialDensityPairContainer<T>::potential(const double radius, const int n) const
@@ -65,8 +75,65 @@ double   PotentialDensityPairContainer<T>::density(const double radius, const in
 	return m_potentialDensityContainer[n].density(radius);
 }
 
+// Grid generation Function
 
-// Script generating functions
+template <class T>
+Eigen::MatrixXcd   PotentialDensityPairContainer<T>::densityGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const
+{
+	Eigen::MatrixXcd grid = Eigen::MatrixXcd::Zero(nGrid, nGrid);
+	for (int i = 0; i <= m_maxRadialIndex; ++i){
+		grid += coefficents(i) * m_potentialDensityContainer[i].densityGrid(nGrid, rMax);
+	}
+	return grid;
+}
+
+
+template <class T>
+Eigen::MatrixXcd PotentialDensityPairContainer<T>::potentialGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const
+{
+	Eigen::MatrixXcd grid = Eigen::MatrixXcd::Zero(nGrid, nGrid);
+	for (int i = 0; i <= m_maxRadialIndex; ++i){
+		grid += coefficents(i) * m_potentialDensityContainer[i].potentialGrid(nGrid, rMax);
+	}
+	return grid;
+}
+
+// Resolving function
+template <class T>
+Eigen::VectorXcd PotentialDensityPairContainer<T>::potentialResolving(const Eigen::MatrixXcd &potentialArray, const double rMax) const
+{
+	double spacing{rMax/((double) potentialArray.rows()-1)};
+	Eigen::VectorXcd coefficents(m_maxRadialIndex+1);
+
+	
+	for (int i = 0; i <= m_maxRadialIndex; ++i)
+	{
+		Eigen::MatrixXcd densityArray{((m_potentialDensityContainer[i].densityGrid(potentialArray.rows(), rMax)).conjugate()).array()};
+		coefficents(i) = spacing*spacing*(densityArray.array() * potentialArray.array()).sum();
+	}
+	return -(m_scriptE.inverse())*coefficents; // WE NEED TO DO MULTIPLICATION BY SCRIPTE
+	// Do mulitplication by E 
+}
+
+template <class T>
+Eigen::VectorXcd PotentialDensityPairContainer<T>::densityResolving(const Eigen::MatrixXcd &densityArray, const double rMax) const
+{
+	double spacing{rMax/((double) densityArray.rows()-1)};
+	Eigen::VectorXcd coefficents(m_maxRadialIndex+1);
+
+	
+	for (int i = 0; i <= m_maxRadialIndex; ++i)
+	{
+		Eigen::MatrixXcd potentialArray{((m_potentialDensityContainer[i].potentialGrid(densityArray.rows(), rMax)).conjugate())};
+		coefficents(i) = spacing*spacing*(potentialArray.array() * densityArray.array()).sum();
+	}
+	return -(m_scriptE.inverse())*coefficents; // WE NEED TO DO MULTIPLICATION BY SCRIPTE
+	// Do mulitplication by E 
+}
+
+
+// ScriptE Generating functions
+
 template <class T>
 void PotentialDensityPairContainer<T>::saveParamters(std::ofstream & out) const
 {
@@ -82,7 +149,7 @@ double PotentialDensityPairContainer<T>::scriptEelement(int k, int j) const // k
 		r = i * stepSize;
 		scriptEelement += (2*M_PI*r)*stepSize*potential(r, k)*density(r, j);
 	}
-	return -scriptEelement;
+	return scriptEelement;
 }
 
 template <class T>
@@ -95,11 +162,26 @@ void PotentialDensityPairContainer<T>::scriptE(const std::string &filename) cons
 	{
 		for(int j = 0; j<= m_maxRadialIndex; ++j)
 		{
-			out << PotentialDensityPairContainer<T>::scriptEelement(i,j) << " ";
+			out << m_scriptE(i,j) << " ";
 		}
 		out << '\n';
 	}
 	out.close();
 }
+
+template <class T>
+Eigen::MatrixXcd PotentialDensityPairContainer<T>::scriptE() const
+{
+	Eigen::MatrixXcd scriptE = Eigen::MatrixXcd::Zero(m_maxRadialIndex+1, m_maxRadialIndex+1);
+	for (int i = 0; i<= m_maxRadialIndex; ++i)
+	{
+		for(int j = 0; j<= m_maxRadialIndex; ++j)
+		{
+			scriptE(i,j) = PotentialDensityPairContainer<T>::scriptEelement(i,j);
+		}
+	}
+	return scriptE; 
+}
+
 
 #endif 
