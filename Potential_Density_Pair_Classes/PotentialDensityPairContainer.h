@@ -24,9 +24,11 @@ public:
 			m_potentialDensityContainer.emplace_back(i, m_fourierHarmonic);
 		}
 		m_scriptE = scriptE();
+		//std::cout << m_scriptE << '\n';
 	}
 
 	~PotentialDensityPairContainer() {}
+
 
 
 	T operator()(int index) const{return m_potentialDensityContainer[index];}
@@ -43,7 +45,7 @@ public:
 	Eigen::MatrixXcd   densityGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const; // Maybe we could overload to have a real verision?
 	Eigen::MatrixXcd potentialGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
 
-	Eigen::VectorXcd potentialResolving(const Eigen::MatrixXcd &potentialArray, const double rMax) const;
+	Eigen::VectorXcd potentialResolving(const Eigen::MatrixXcd &potentialArray, const double rMax) const; // Not great at resolving l =0
 	Eigen::VectorXcd densityResolving(const Eigen::MatrixXcd &densityArray, const double rMax) const;
 
 private:	
