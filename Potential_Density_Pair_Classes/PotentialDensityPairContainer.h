@@ -42,11 +42,11 @@ public:
 	int maxRadialIndex() const {return m_maxRadialIndex;}
 	int fourierHarmonic() const {return m_fourierHarmonic;}
 
-	Eigen::MatrixXcd   densityGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const; // Maybe we could overload to have a real verision?
-	Eigen::MatrixXcd potentialGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
+	Eigen::ArrayXXcd   densityGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const; // Maybe we could overload to have a real verision?
+	Eigen::ArrayXXcd potentialGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
 
-	Eigen::VectorXcd potentialResolving(const Eigen::MatrixXcd &potentialArray, const double rMax) const; // Not great at resolving l =0
-	Eigen::VectorXcd densityResolving(const Eigen::MatrixXcd &densityArray, const double rMax) const;
+	Eigen::VectorXcd potentialResolving(const Eigen::ArrayXXcd &potentialArray, const double rMax) const; // Not great at resolving l =0
+	Eigen::VectorXcd densityResolving(const Eigen::ArrayXXcd &densityArray, const double rMax) const;
 
 private:	
 	
@@ -80,9 +80,9 @@ double   PotentialDensityPairContainer<T>::density(const double radius, const in
 // Grid generation Function
 
 template <class T>
-Eigen::MatrixXcd   PotentialDensityPairContainer<T>::densityGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const
+Eigen::ArrayXXcd   PotentialDensityPairContainer<T>::densityGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const
 {
-	Eigen::MatrixXcd grid = Eigen::MatrixXcd::Zero(nGrid, nGrid);
+	Eigen::ArrayXXcd grid = Eigen::ArrayXXcd::Zero(nGrid, nGrid);
 	for (int i = 0; i <= m_maxRadialIndex; ++i){
 		grid += coefficents(i) * m_potentialDensityContainer[i].densityGrid(nGrid, rMax);
 	}
@@ -91,9 +91,9 @@ Eigen::MatrixXcd   PotentialDensityPairContainer<T>::densityGrid(const Eigen::Ve
 
 
 template <class T>
-Eigen::MatrixXcd PotentialDensityPairContainer<T>::potentialGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const
+Eigen::ArrayXXcd PotentialDensityPairContainer<T>::potentialGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const
 {
-	Eigen::MatrixXcd grid = Eigen::MatrixXcd::Zero(nGrid, nGrid);
+	Eigen::ArrayXXcd grid = Eigen::ArrayXXcd::Zero(nGrid, nGrid);
 	for (int i = 0; i <= m_maxRadialIndex; ++i){
 		grid += coefficents(i) * m_potentialDensityContainer[i].potentialGrid(nGrid, rMax);
 	}
@@ -102,7 +102,7 @@ Eigen::MatrixXcd PotentialDensityPairContainer<T>::potentialGrid(const Eigen::Ve
 
 // Resolving function
 template <class T>
-Eigen::VectorXcd PotentialDensityPairContainer<T>::potentialResolving(const Eigen::MatrixXcd &potentialArray, const double rMax) const
+Eigen::VectorXcd PotentialDensityPairContainer<T>::potentialResolving(const Eigen::ArrayXXcd &potentialArray, const double rMax) const
 {
 	double spacing{2*rMax/((double) potentialArray.rows()-1)};
 	Eigen::VectorXcd coefficents(m_maxRadialIndex+1);
@@ -110,15 +110,15 @@ Eigen::VectorXcd PotentialDensityPairContainer<T>::potentialResolving(const Eige
 	
 	for (int i = 0; i <= m_maxRadialIndex; ++i)
 	{
-		Eigen::MatrixXcd densityArray{((m_potentialDensityContainer[i].densityGrid(potentialArray.rows(), rMax)).conjugate()).array()};
-		coefficents(i) = spacing*spacing*(densityArray.array() * potentialArray.array()).sum();
+		Eigen::ArrayXXcd densityArray{((m_potentialDensityContainer[i].densityGrid(potentialArray.rows(), rMax)).conjugate())};
+		coefficents(i) = spacing*spacing*(densityArray * potentialArray).sum();
 	}
 	return -(m_scriptE.inverse())*coefficents; // WE NEED TO DO MULTIPLICATION BY SCRIPTE
 	// Do mulitplication by E 
 }
 
 template <class T>
-Eigen::VectorXcd PotentialDensityPairContainer<T>::densityResolving(const Eigen::MatrixXcd &densityArray, const double rMax) const
+Eigen::VectorXcd PotentialDensityPairContainer<T>::densityResolving(const Eigen::ArrayXXcd &densityArray, const double rMax) const
 {
 	double spacing{2*rMax/((double) densityArray.rows()-1)};
 	Eigen::VectorXcd coefficents(m_maxRadialIndex+1);
@@ -126,8 +126,8 @@ Eigen::VectorXcd PotentialDensityPairContainer<T>::densityResolving(const Eigen:
 	
 	for (int i = 0; i <= m_maxRadialIndex; ++i)
 	{
-		Eigen::MatrixXcd potentialArray{((m_potentialDensityContainer[i].potentialGrid(densityArray.rows(), rMax)).conjugate())};
-		coefficents(i) = spacing*spacing*(potentialArray.array() * densityArray.array()).sum();
+		Eigen::ArrayXXcd potentialArray{((m_potentialDensityContainer[i].potentialGrid(densityArray.rows(), rMax)).conjugate())};
+		coefficents(i) = spacing*spacing*(potentialArray * densityArray).sum();
 	}
 	return -(m_scriptE.inverse())*coefficents; // WE NEED TO DO MULTIPLICATION BY SCRIPTE
 	// Do mulitplication by E 

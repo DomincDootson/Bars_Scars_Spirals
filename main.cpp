@@ -20,7 +20,7 @@ int main()
 
 
 	//Mestel DF;
-	PotentialDensityPairContainer<GaussianLogBasis> PD(24,0);
+	PotentialDensityPairContainer<GaussianLogBasis> PD(24,1);
 	//ActionAngleBasisContainer test(10, 0, 5, 101, 20); 
 	//test.scriptW(PD, DF, "Kalnajs");
 	Eigen::VectorXcd coef(25);

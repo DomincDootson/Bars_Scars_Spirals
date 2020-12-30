@@ -21,8 +21,8 @@ public:
 	double scriptWElement(int const m1, std::vector<double> const &radii, std::vector<double> const &theta1, std::vector<double> const &theta2, std::vector<double> const &theta1Deriv);
 
 
-	Eigen::MatrixXcd   densityGrid(const int nGrid, const double rMax) const;
-	Eigen::MatrixXcd potentialGrid(const int nGrid, const double rMax) const;
+	Eigen::ArrayXXcd   densityGrid(const int nGrid, const double rMax) const;
+	Eigen::ArrayXXcd potentialGrid(const int nGrid, const double rMax) const;
 
 protected:
 	const int m_fourierHarmonic, m_radialIndex;
@@ -71,9 +71,9 @@ double angle(double x, double y) // I hate this function, but don't know where i
 	}
 }
 
-Eigen::MatrixXcd   PotentialDensityPair::densityGrid(const int nGrid, const double rMax) const
+Eigen::ArrayXXcd   PotentialDensityPair::densityGrid(const int nGrid, const double rMax) const
 {
-	Eigen::MatrixXcd grid = Eigen::MatrixXcd::Zero(nGrid, nGrid);
+	Eigen::ArrayXXcd grid = Eigen::ArrayXXcd::Zero(nGrid, nGrid);
 	double x{}, y{}, theta{}, r{}, spacing{2*rMax/((double) nGrid-1)}, centre{0.5*(nGrid-1)};
 	std::complex<double> unitComplex(0,1);
 	for (int i = 0; i < grid.rows(); ++i)
@@ -90,9 +90,9 @@ Eigen::MatrixXcd   PotentialDensityPair::densityGrid(const int nGrid, const doub
 	return grid;
 }
 
-Eigen::MatrixXcd PotentialDensityPair::potentialGrid(const int nGrid, const double rMax) const
+Eigen::ArrayXXcd PotentialDensityPair::potentialGrid(const int nGrid, const double rMax) const
 {
-	Eigen::MatrixXcd grid = Eigen::MatrixXcd::Zero(nGrid, nGrid);
+	Eigen::ArrayXXcd grid = Eigen::ArrayXXcd::Zero(nGrid, nGrid);
 	double x{}, y{}, theta{}, r{}, spacing{2*rMax/((double) nGrid-1)}, centre{0.5*(nGrid-1)};
 	std::complex<double> unitComplex(0,1);
 	for (int i = 0; i < grid.rows(); ++i)

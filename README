@@ -13,8 +13,6 @@ This file contains all classes related to the PD pairs in real space.
 	this is the only class that needs to be interacted with in this file (I can think of no reason why you would want an individual PD pair). 
 	There is some functionality that I would like to add to this
 
-Things to do
-	1) Change the Eigen::MatrixXcd to Eigen::ArrayXXcd, this will allow us to use element wise operations. 
 
 2. DF Class
 -----------
@@ -58,6 +56,6 @@ There are three class, one main and two part classes,
 We need memeber functions,
 	1) Bar evolutions memeber functions
 	2) Something to calculate the torque
-	3) Moment of inertia calculation --> Probably update the basis functions to change to array rather matrix
+	3) Moment of inertia calculation 
 	4) Write bar evolution into VolterraSolver.h class
 	*) Use a Expansion Coeff to hold the bar structure. 
