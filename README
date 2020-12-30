@@ -51,3 +51,13 @@ There are three class, one main and two part classes,
 	response.
 
 	VolterraSolver.h - Contains the methods to solve the volterra equation, the generation functions are also called from here. 
+
+4. Bar Class
+------------
+
+We need memeber functions,
+	1) Bar evolutions memeber functions
+	2) Something to calculate the torque
+	3) Moment of inertia calculation --> Probably update the basis functions to change to array rather matrix
+	4) Write bar evolution into VolterraSolver.h class
+	*) Use a Expansion Coeff to hold the bar structure. 
