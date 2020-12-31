@@ -55,7 +55,5 @@ There are three class, one main and two part classes,
 
 We need memeber functions,
 	1) Bar evolutions memeber functions
-	2) Something to calculate the torque
 	3) Moment of inertia calculation 
 	4) Write bar evolution into VolterraSolver.h class
-	*) Use a Expansion Coeff to hold the bar structure. 
