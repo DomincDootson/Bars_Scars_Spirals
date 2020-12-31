@@ -24,7 +24,6 @@ public:
 			m_potentialDensityContainer.emplace_back(i, m_fourierHarmonic);
 		}
 		m_scriptE = scriptE();
-		//std::cout << m_scriptE << '\n';
 	}
 
 	~PotentialDensityPairContainer() {}
@@ -42,15 +41,20 @@ public:
 	int maxRadialIndex() const {return m_maxRadialIndex;}
 	int fourierHarmonic() const {return m_fourierHarmonic;}
 
-	Eigen::ArrayXXcd   densityGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const; // Maybe we could overload to have a real verision?
+	Eigen::ArrayXXcd   densityGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const; 
 	Eigen::ArrayXXcd potentialGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
+
+	Eigen::ArrayXXd   densityGridReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
+	Eigen::ArrayXXd potentialGridReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
 
 	Eigen::VectorXcd potentialResolving(const Eigen::ArrayXXcd &potentialArray, const double rMax) const; // Not great at resolving l =0
 	Eigen::VectorXcd densityResolving(const Eigen::ArrayXXcd &densityArray, const double rMax) const;
 
+	Eigen::MatrixXcd getScriptE() {return m_scriptE;}
+
 private:	
 	
-	std::vector<T> m_potentialDensityContainer; // Please overload the [] operator so this can be private
+	std::vector<T> m_potentialDensityContainer;
 	int m_maxRadialIndex,  m_fourierHarmonic;
 	Eigen::MatrixXcd m_scriptE;
 	
@@ -99,6 +103,19 @@ Eigen::ArrayXXcd PotentialDensityPairContainer<T>::potentialGrid(const Eigen::Ve
 	}
 	return grid;
 }
+
+template <class T>
+Eigen::ArrayXXd   PotentialDensityPairContainer<T>::densityGridReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const{
+	return (potentialGrid(coefficents, nGrid, rMax) + potentialGrid(coefficents, nGrid, rMax).conj()).real();
+}
+
+
+template <class T>
+Eigen::ArrayXXd PotentialDensityPairContainer<T>::potentialGridReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const{
+	return (densityGrid(coefficents, nGrid, rMax) + densityGrid(coefficents, nGrid, rMax).conj()).real(); 
+}
+
+
 
 // Resolving function
 template <class T>
