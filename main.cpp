@@ -14,16 +14,19 @@
 
 #include <Eigen/Dense>
 
+#include <vector>
+
 
 int main()
 {
 
 
 	//Mestel DF;
-	PotentialDensityPairContainer<GaussianLogBasis> PD(24,1);
+	std::vector<double> params{4, 20};
+	PotentialDensityPairContainer<KalnajsBasis> PD(params, 10, 1);
 	//ActionAngleBasisContainer test(10, 0, 5, 101, 20); 
 	//test.scriptW(PD, DF, "Kalnajs");
-	Eigen::VectorXcd coef(25);
+	/*Eigen::VectorXcd coef(25);
 
 	for (int i = 0; i<25; ++i){
 		coef(i) = i;
@@ -34,7 +37,7 @@ int main()
 	Eigen::MatrixXcd density = PD.densityGrid(coef, 801, 20);
 
 	std::cout << PD.potentialResolving(potential, 20) << '\n' << '\n'; 
-	std::cout << PD.densityResolving(density, 20) << '\n'; 
+	std::cout << PD.densityResolving(density, 20) << '\n'; */ 
 
 
 
@@ -43,6 +46,6 @@ int main()
 	// Things to do tomorrow
 	//	 1) get the code to put the basis funcitons into the right file
 	//	 2) Get the basis functions to put the code in the right dir
-	//Gaussian.scriptE("gaussian1.out");
+
 	return 0;
 }

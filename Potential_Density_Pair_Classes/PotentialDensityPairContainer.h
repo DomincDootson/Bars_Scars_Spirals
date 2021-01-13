@@ -15,13 +15,13 @@ template <class T>
 class PotentialDensityPairContainer
 {
 public:
-	PotentialDensityPairContainer(int maxN, int l) : // Can we make it more efficent so it can figure out which basis it is??
+	PotentialDensityPairContainer(std::vector<double> params, int maxN, int l) :
 	m_potentialDensityContainer{}, m_maxRadialIndex{maxN}, m_fourierHarmonic{l}, 
 	m_scriptE{Eigen::MatrixXcd::Zero(m_maxRadialIndex+1, m_maxRadialIndex+1)}
 	{
 		for (int i = 0; i <= m_maxRadialIndex ; ++i)
 		{
-			m_potentialDensityContainer.emplace_back(i, m_fourierHarmonic);
+			m_potentialDensityContainer.emplace_back(params, i, m_fourierHarmonic);
 		}
 		m_scriptE = scriptE();
 	}

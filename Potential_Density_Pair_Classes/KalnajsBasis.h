@@ -9,9 +9,9 @@ class KalnajsBasis : public PotentialDensityPair
 {
 
 public:
-	KalnajsBasis(int m_radialIndex, int m_fourierHarmonic)
+	KalnajsBasis(std::vector<double> params, int m_radialIndex, int m_fourierHarmonic)
 		: PotentialDensityPair(m_radialIndex, m_fourierHarmonic),
-		m_kalnajsIndex{4}, m_kalnajsScale{20},
+		m_kalnajsIndex{static_cast<int>(params[0])}, m_kalnajsScale{params[1]},
 		m_alphaPrime{alphaPrime()},
 		m_betaPrime{betaPrime()} 
 		{} 

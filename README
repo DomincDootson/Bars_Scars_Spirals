@@ -50,10 +50,10 @@ There are three class, one main and two part classes,
 
 	VolterraSolver.h - Contains the methods to solve the volterra equation, the generation functions are also called from here. 
 
+	*) I think we will need to write the member functions into a .cpp file
+
 4. Bar Class
 ------------
 
 We need memeber functions,
-	1) Bar evolutions memeber functions
-	3) Moment of inertia calculation 
 	4) Write bar evolution into VolterraSolver.h class

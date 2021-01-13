@@ -8,8 +8,9 @@
 class GaussianLogBasis : public PotentialDensityPair
 {
 public:
-	GaussianLogBasis(int m_radialIndex, int m_fourierHarmonic)
-		: PotentialDensityPair(m_radialIndex, m_fourierHarmonic), m_maxIndex{24}, m_innerRadius{.5}, m_outerRadius{15},
+	GaussianLogBasis(std::vector<double> params, int m_radialIndex, int m_fourierHarmonic)
+		: PotentialDensityPair(m_radialIndex, m_fourierHarmonic), 
+		m_maxIndex{static_cast<int>(params[0])}, m_innerRadius{params[1]}, m_outerRadius{params[2]},
 		m_r0{r0()}, m_sigma{sigma()}
 		
 		{
