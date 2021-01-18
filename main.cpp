@@ -1,4 +1,4 @@
-#include <iostream>
+/*#include <iostream>
 #include <typeinfo>
 
 #include "Potential_Density_Pair_Classes/KalnajsBasis.h"
@@ -14,16 +14,22 @@
 
 #include <Eigen/Dense>
 
-#include <vector>
+#include <vector>*/ 
 
+#include "physics.h"
+	
 
 int main()
 {
 
 
 	//Mestel DF;
-	std::vector<double> params{4, 20};
-	PotentialDensityPairContainer<KalnajsBasis> PD(params, 10, 1);
+
+	kalnajBasisFunctionsVaryingK();
+
+
+
+
 	//ActionAngleBasisContainer test(10, 0, 5, 101, 20); 
 	//test.scriptW(PD, DF, "Kalnajs");
 	/*Eigen::VectorXcd coef(25);
