@@ -18,6 +18,33 @@
 #include "physics.h"
 
 
+
+void generatingBF()
+{
+	Mestel DF;
+
+	std::vector<double> params{4, 20};
+	PotentialDensityPairContainer<KalnajsBasis> PD(params, 10,1);
+
+	ActionAngleBasisContainer test(10, 1, 5, 101, 20); 
+	test.scriptW(PD, DF, "Kalnajs");
+}
+
+
+
+void generatingKernels()
+{
+	ActionAngleBasisContainer test("Kalnajs", 10, 1, 5, 101, 20);
+	Mestel DF;
+
+
+	VolterraSolver solver(10, 1, 5, 0.1);
+	solver.generateKernel(DF, test);
+
+	VolterraSolver readingIn("kernelFileName.csv", 10, 1, 5, 0.1);
+}
+
+
 void kalnajBasisFunctionsVaryingK() // Outputs the values of the density basis functions for plotting
 {
 	std::vector<double> params{4, 10};

@@ -19,12 +19,12 @@ public:
 	VolterraSolver(const std::string & kernelFilename, int maxRadialIndex, int fourierHarmonic, int numbTimeSteps, double timeStep) :
 	m_maxRadialIndex{maxRadialIndex}, m_fourierHarmonic{fourierHarmonic}, m_numbTimeSteps{numbTimeSteps}, m_timeStep{timeStep},
 	m_kernels(kernelFilename, m_numbTimeSteps),
-	m_responseCoef(m_numbTimeSteps), m_perturbationCoef(m_numbTimeSteps) {}
+	m_responseCoef(m_numbTimeSteps), m_perturbationCoef(m_numbTimeSteps) {} // we must read in the kernels, then possily check we have the correct params
 	
 	~VolterraSolver() {}
 
 	template <class Tdf>
-	void generateKernel(const Tdf & df, const ActionAngleBasisContainer & basisFunc, const Eigen::MatrixXcd & scriptE);// Come up with some standard way of naming kernels
+	void generateKernel(const Tdf & df, const ActionAngleBasisContainer & basisFunc);// Come up with some standard way of naming kernels
 	void volterraSolver(const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent = true);
 
 	void evolution();
@@ -40,10 +40,10 @@ private:
 };
 
 template <class Tdf>
-void VolterraSolver::generateKernel(const Tdf & df, const ActionAngleBasisContainer & basisFunc, const Eigen::MatrixXcd & scriptE)
+void VolterraSolver::generateKernel(const Tdf & df, const ActionAngleBasisContainer & basisFunc)
 {
 	m_kernels.getVolterraParams(m_maxRadialIndex, m_fourierHarmonic, m_numbTimeSteps, m_timeStep);
-	m_kernels.kernelCreation(df, basisFunc, scriptE);
+	m_kernels.kernelCreation(df, basisFunc);
 }
 
 void VolterraSolver::volterraSolver(const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent) 

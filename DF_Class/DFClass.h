@@ -20,7 +20,7 @@ public:
 	Eigen::MatrixXd dFdEgrid(const double spacing, const Eigen::MatrixXd & om1) const;
 	Eigen::MatrixXd dFdJgrid(const double spacing, const Eigen::MatrixXd & om2) const; 
 
-	Eigen::MatrixXd energyAngMomJacobain(const int size, const int spacing) const;
+	Eigen::MatrixXd energyAngMomJacobain(const int size, const double spacing) const;
 
 protected: 	
 	virtual double potential(double radius) const = 0;
@@ -60,7 +60,7 @@ double DFClass::omega1(double rApo, double rPer) const // what to do for circula
 	double integral{0}, upperU{0.5 * M_PI}, nstep{1000}, stepSize{upperU/(nstep -1)}, rstep{};
 	for (int i = 1; i < nstep-1; ++i)
 	{
-		rstep = rPer +(rApo-rPer)*pow(sin(stepSize *i),2);
+		rstep = rPer +(rApo-rPer)*pow(sin(stepSize * i),2);
 		integral += sin(2 * i * stepSize) * pow(2*(E- potential(rstep)) -J*J * pow(rstep, -2) , -0.5) * stepSize; 
 	}
 
@@ -71,13 +71,14 @@ double DFClass::omega1(double rApo, double rPer) const // what to do for circula
 double DFClass::omega2(double rApo, double rPer) const // what to do for circular orbits?
 {
 	double E{rad2Energy(rApo, rPer)}, J{rad2AngMom(rApo, rPer)};
-	double integral{0}, upperU{0.5 * M_PI}, nstep{1000}, stepSize{upperU/nstep-1}, rstep{};
+	double integral{0}, upperU{0.5 * M_PI}, nstep{1000}, stepSize{upperU/(nstep-1)}, rstep{};
 	for (int i = 1; i < nstep-1; ++i)
 	{
-		rstep = rPer +(rApo-rPer)*pow(sin(stepSize *i),2);
-		integral += sin(2 * i * stepSize) * pow(2*(E- potential(rstep)) -J*J * pow(rstep, -2) , -0.5) * (stepSize/ (rstep*rstep)); 
-		
+		rstep = rPer +(rApo-rPer)*pow(sin(stepSize * i),2);
+
+		integral += sin(2 * i * stepSize) * pow(2*(E- potential(rstep)) -J*J * pow(rstep, -2) , -0.5) * (stepSize / (rstep*rstep)); 	
 	}
+	
 	return DFClass::omega1(rApo, rPer) * J * ((rApo - rPer) * integral)/M_PI;
 }
   
@@ -125,7 +126,7 @@ double DFClass::theta2(double radius, double rApo, double rPer, double omega2) c
 double DFClass::theta1Deriv(double radius, double rApo, double rPer, double omega1) const
 {
 	double E{rad2Energy(rApo, rPer)}, J{rad2AngMom(rApo, rPer)};
-	return omega1*pow(2 * (E - potential(radius)) - pow(J/radius, 2), -.5);
+	return omega1*pow(2 * (E - potential(radius)) - pow(J/radius, 2), -.5);  
 }
 
 Eigen::MatrixXd DFClass::dFdEgrid(const double spacing, const Eigen::MatrixXd & om1) const
@@ -162,17 +163,17 @@ Eigen::MatrixXd DFClass::dFdJgrid(const double spacing, const Eigen::MatrixXd & 
 	return dFdJ;
 }
 
-Eigen::MatrixXd DFClass::energyAngMomJacobain(const int size, const int spacing) const
+Eigen::MatrixXd DFClass::energyAngMomJacobain(const int size, const double spacing) const
 {
 	Eigen::MatrixXd jacobian{Eigen::MatrixXd::Zero(size, size)};
 	double step{0.001}, rApo{}, rPer{}, dErApo{}, dErPer{}, dLrApo{}, dLrPer{};
-	for (int i = 0; i < jacobian.rows(); ++i)
+	for (int i = 1; i < size; ++i)
 	{
-		for (int j = 1; j < i; ++i)
+		for (int j = 1; j < i; ++j)
 		{
 			rApo = i * spacing;
 			rPer = j * spacing; 
-
+			
 			dErApo = (rad2Energy(rApo + step, rPer) - rad2Energy(rApo - step, rPer))/(2*step);
 			dErPer = (rad2Energy(rApo, rPer + step) - rad2Energy(rApo, rPer - step))/(2*step);
 

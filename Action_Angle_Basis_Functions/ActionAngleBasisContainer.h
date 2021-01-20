@@ -1,9 +1,7 @@
 #ifndef ACTIONANGLEBASISCONTAINER
 #define ACTIONANGLEBASISCONTAINER
 
-// I think it might be quicker to have the basis functions and the DF as member functions that are only init if we are creating AABF, i.e. like kernelGeneration
-// This could also be 
-
+// Add way to read in sciptE 
 #include "ActionAngleBasisFunction.h"
 #include "../DF_Class/Mestel.h" 
 #include <vector>
@@ -22,12 +20,27 @@ public:
 	m_spacingSize{maxRadius/((double) m_sizeArray - 1)}, // The size has minus 1 as we want the end point to be inclusive
 	m_basisContainer{}
 	{
-
 		for (int np = 0; np <= m_maxRadialIndex; ++np)
 		{
 			for (int m1 = -m_maxFourierHarmonic; m1 <= m_maxFourierHarmonic; ++ m1)
 			{
 				m_basisContainer.emplace_back(np, m1, m_fourierHarmonic, m_sizeArray);
+			}
+		}
+	}
+
+
+	ActionAngleBasisContainer(std::string dir, int maxRadialIndex, int fourierHarmonic, int maxFourierHarmonic, int sizeArray, double maxRadius)
+	: m_maxRadialIndex{maxRadialIndex}, m_fourierHarmonic{fourierHarmonic}, m_maxFourierHarmonic{maxFourierHarmonic},
+	m_sizeArray{sizeArray}, m_maxRadius{maxRadius}, 
+	m_spacingSize{maxRadius/((double) m_sizeArray - 1)}, // The size has minus 1 as we want the end point to be inclusive
+	m_basisContainer{}
+	{
+		for (int np = 0; np <= m_maxRadialIndex; ++np)
+		{
+			for (int m1 = -m_maxFourierHarmonic; m1 <= m_maxFourierHarmonic; ++ m1)
+			{
+				m_basisContainer.emplace_back(dir, np, m1, m_fourierHarmonic, m_sizeArray);
 			}
 		}
 	}
@@ -41,7 +54,12 @@ public:
 	int size(int axis) const {return m_sizeArray;}
 	int maxFourierHarmonic() const {return m_maxFourierHarmonic;}
 
-	double operator()(int np, int m1, int i, int j) const {return m_basisContainer[m1 + (2*m_maxFourierHarmonic+1) * np](i,j);}
+	double operator()(int np, int m1, int i, int j) const {return m_basisContainer[(m_maxFourierHarmonic + m1) + (2*m_maxFourierHarmonic+1) * np](i,j);}
+
+	template <class T>
+	Eigen::MatrixXd omega1Grid(const T & distFunction) const;
+	template <class T>
+	Eigen::MatrixXd omega2Grid(const T & distFunction) const;
 
 
 private:
@@ -54,10 +72,7 @@ private:
 
 	
 
-	template <class T>
-	Eigen::MatrixXd omega1Grid(const T & distFunction) const;
-	template <class T>
-	Eigen::MatrixXd omega2Grid(const T & distFunction) const;
+	
 
 	template <class T>
 	std::vector<double>  theta1Vector(T & df, std::vector<double> & radii, double om1);
@@ -73,7 +88,7 @@ std::vector<double> nonLinearRadii(int steps, double rApo, double rPer)
 {
 	std::vector<double> radii(steps);
 
-	double stepSize{0.5*M_PI/ ((double) steps -1)};
+	double stepSize{0.5*M_PI/ ((double) steps)}; // CHANGE THIS BACK
 
 	for (int i = 0; i < steps; ++i){
 		radii[i] = rPer + (rApo-rPer) * pow(sin(stepSize*i),2);
@@ -167,28 +182,25 @@ void ActionAngleBasisContainer::scriptW(Tbf & basisFunctions, Tdf & df, std::str
 		std::cout << "Fraction of rows completed: " << round(100*i/((double)  om1Grid.rows())) << '\n';
 		for (int j = (1); j<i; ++j)
 		{
-			// update param
 			double rApo{i*m_spacingSize}, rPer{j*m_spacingSize};
 			radii = nonLinearRadii(nIntegrationSteps, rApo, rPer);
 
 			theta1 = theta1Vector(df, radii, om1Grid(i,j));
 			theta2 = theta2Vector(df, radii, om2Grid(i,j));
 			theta1Deriv = theta1DerivVector(df, radii, om1Grid(i,j));
-					
+		
 			int count{0};
 			for (int np = 0; np <= m_maxRadialIndex; ++np)
 			 {
-			 	for (int m1 = -m_maxFourierHarmonic; m1 <= m_maxFourierHarmonic; ++m1){
+			 	for (int m1 = -m_maxFourierHarmonic; m1 <= m_maxFourierHarmonic; ++m1){		 		
 			 		(m_basisContainer[count])(i,j) = (basisFunctions(np)).scriptWElement(m1, radii, theta1, theta2, theta1Deriv);
-
 				 	count += 1;
-				 }
-				 
+				 }				
 			 } 
 		}
 	} 
 	for (auto bfGrid = m_basisContainer.begin(); bfGrid != m_basisContainer.end(); ++bfGrid){
-		bfGrid -> save(directory, "Mestel", m_spacingSize); // We need to use -> as bfGrid is an interator
+		bfGrid -> save(directory, m_spacingSize); // We need to use -> as bfGrid is an interator
 	}
 	basisFunctions.scriptE(directory + "/scriptE_"+"Mestel_" + std::to_string(m_fourierHarmonic) + ".out");
 }

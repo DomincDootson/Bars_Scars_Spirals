@@ -1,21 +1,3 @@
-/*#include <iostream>
-#include <typeinfo>
-
-#include "Potential_Density_Pair_Classes/KalnajsBasis.h"
-#include "Potential_Density_Pair_Classes/GaussianLogBasis.h"
-#include "Potential_Density_Pair_Classes/PotentialDensityPairContainer.h"
-
-#include "Action_Angle_Basis_Functions/ActionAngleBasisContainer.h"
-
-#include "DF_Class/Mestel.h"
-
-
-#include "Volterra_Solver/VolterraSolver.h"
-
-#include <Eigen/Dense>
-
-#include <vector>*/ 
-
 #include "physics.h"
 	
 
@@ -25,8 +7,10 @@ int main()
 
 	//Mestel DF;
 
-	kalnajBasisFunctionsVaryingK();
+	//kalnajBasisFunctionsVaryingK();
+	//generatingBF();
 
+	generatingKernels();
 
 
 
