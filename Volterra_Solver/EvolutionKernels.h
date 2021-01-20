@@ -97,21 +97,23 @@ void EvolutionKernels::kernelAtTime(const ActionAngleBasisContainer & basisFunc,
 std::complex<double> EvolutionKernels::kernelElement(const int npRow, const int npCol, const ActionAngleBasisContainer & basisFunc, const double time) const
 {
 	Eigen::MatrixXcd integrand(basisFunc.size(0), basisFunc.size(1));
-	std::complex<double> unitComplex(0,1);	
+	std::complex<double> unitComplex(0,1);
+	std::cout << time << '\n';	
 	for (int i = 0; i < integrand.rows(); ++i) 
 	{
 		for (int j = 1; j <= i; ++j)
 		{
 			integrand(i,j) = 0;
-			for (int m1 = -m_maxFourierHarmonic; m1 <= m_maxFourierHarmonic; ++m1) // We do the sum over n1 index
+			for (int m1 = -m_maxFourierHarmonic; m1 <= m_maxFourierHarmonic; ++m1) 
 			{
-				integrand(i,j) += //basisFunc(npRow, m1, i, j)* basisFunc(npCol, m1, i, j) * (m_fourierHarmonic*m_dfdJGrid(i,j) + m1*m_dfdEGrid(i,j))
-				exp(unitComplex*time * ((m1 * m_om1Grid(i,j) + m_fourierHarmonic * m_om2Grid(i,j))));	
+				integrand(i,j) += //basisFunc(npRow, m1, i, j)* basisFunc(npCol, m1, i, j) *
+				(m_fourierHarmonic*m_dfdJGrid(i,j) + m1*m_dfdEGrid(i,j)) * // When combing this with the next line we get wrong integral result
+				exp(-unitComplex*time * ((m1 * m_om1Grid(i,j) + m_fourierHarmonic * m_om2Grid(i,j))));	
 			}
 		}
 	}
 
-	return integration2d(integrand); 
+	return -unitComplex * (2*M_PI)*(2*M_PI) * integration2d(integrand); 
 }
 
 
@@ -122,7 +124,7 @@ std::complex<double> EvolutionKernels::integration2d(const Eigen::MatrixXcd & gr
 	{
 		for (int j = 1; j < i; ++j)
 		{
-			rowIntegral += m_spacing * grid2Integrate(i,j) * (1/m_om1Grid(i,j))*m_elJacobian(i * m_spacing, j * m_spacing);
+			rowIntegral +=  m_spacing * grid2Integrate(i,j)*m_elJacobian(i, j)*(1/m_om1Grid(i,j));
 		}
 		integral +=  m_spacing * rowIntegral;
 		rowIntegral = 0;

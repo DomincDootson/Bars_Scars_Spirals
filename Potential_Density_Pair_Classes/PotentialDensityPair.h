@@ -34,7 +34,7 @@ protected:
 double PotentialDensityPair::scriptWElement(int const m1, std::vector<double> const &radii, std::vector<double> const &theta1, std::vector<double> const &theta2, std::vector<double> const &theta1Deriv)
 {
 	int nstep{static_cast<int> (radii.size())};
-	double integral{0}, upperU{0.5 * M_PI}, stepSize{upperU/nstep};
+	double integral{0}, upperU{0.5 * M_PI}, stepSize{upperU/(nstep-1)};
 	for (int i = 1; i< nstep-1; ++i){
 		integral += (theta1Deriv[i]) * potential(radii[i]) * sin(2*stepSize*i) * stepSize * cos(m1*theta1[i] + m_fourierHarmonic*theta2[i]);
 	}

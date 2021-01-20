@@ -46,11 +46,6 @@ protected:
 		return pow(2*(potential(rApo) - potential(rPer))/ (pow(rPer ,-2) - pow(rApo ,-2)), 0.5);	
 	}
 
-	
-
-
-
-
 };
 
 
@@ -75,7 +70,6 @@ double DFClass::omega2(double rApo, double rPer) const // what to do for circula
 	for (int i = 1; i < nstep-1; ++i)
 	{
 		rstep = rPer +(rApo-rPer)*pow(sin(stepSize * i),2);
-
 		integral += sin(2 * i * stepSize) * pow(2*(E- potential(rstep)) -J*J * pow(rstep, -2) , -0.5) * (stepSize / (rstep*rstep)); 	
 	}
 	
@@ -86,20 +80,16 @@ double DFClass::theta1(double radius, double rApo, double rPer, double omega1) c
 {
 	int nstep{1000};
 	double E{rad2Energy(rApo, rPer)}, J{rad2AngMom(rApo, rPer)};
-	double integral{0}, upperU{asin(pow((radius- rPer)/(rApo-rPer), 0.5))}, stepSize{upperU/nstep}, rstep{};
+	double integral{0}, upperU{asin(pow((radius- rPer)/(rApo-rPer), 0.5))}, stepSize{upperU/(nstep-1)}, rstep{};
 	
-	for (int i = 1; i < nstep-1; ++i)
+	for (int i = 1; i < nstep; ++i)
 	{
 		rstep = rPer +(rApo-rPer)*pow(sin(stepSize *i),2);
-		integral += sin(2 * i * stepSize) * pow(2*(E- potential(rstep)) -J*J * pow(rstep, -2) , -0.5) * stepSize; 
+		integral += pow(2*(E- potential(rstep)) -J*J * pow(rstep, -2) , -0.5);// * stepSize; sin(2 * i * stepSize)* 
 	}
 	double th1 = (rApo - rPer) * integral * omega1;
 
-	if (th1 != th1) // we proabably want to get rid of this...
-	{
-		std::cout << "returning 0\n";
-		return 0;
-	}
+	if (th1 != th1) {th1 = 0;} // For very small integrals you get numberical error that cause infinites. 
 	return th1;
 }
 
@@ -107,7 +97,7 @@ double DFClass::theta2(double radius, double rApo, double rPer, double omega2) c
 {
 	int nstep{1000};
 	double E{rad2Energy(rApo, rPer)}, J{rad2AngMom(rApo, rPer)};
-	double integral{0}, upperU{asin(pow((radius- rPer)/(rApo-rPer), 0.5))}, stepSize{upperU/nstep}, rstep{};
+	double integral{0}, upperU{asin(pow((radius- rPer)/(rApo-rPer), 0.5))}, stepSize{upperU/(nstep-1)}, rstep{};
 
 	for (int i = 1; i < nstep; ++i)
 	{
@@ -115,10 +105,7 @@ double DFClass::theta2(double radius, double rApo, double rPer, double omega2) c
 		integral += (omega2 - J*pow(rstep,-2))* sin(2 * i * stepSize) * pow(2*(E- potential(rstep)) -J*J * pow(rstep, -2) , -0.5) * stepSize; 
 	}
 
-	if (integral != integral)
-	{
-		return 0;
-	}
+	if (integral != integral) {return 0;}
 
 	return  (rApo - rPer) * integral;
 }
@@ -139,7 +126,7 @@ Eigen::MatrixXd DFClass::dFdEgrid(const double spacing, const Eigen::MatrixXd & 
 		{
 			E = rad2Energy(i * spacing,  j * spacing); 
 			J = rad2AngMom(i * spacing,  j * spacing); 
-			dFdE(i,j) = 0.5  * ((distFunc(E+0.001, J) - distFunc(E-0.001,J))/0.001)* om1(i,j);	
+			dFdE(i,j) = 0.5  * ((distFunc(E+0.001, J) - distFunc(E-0.001,J))/0.001);//* om1(i,j);	
 		}
 	}
 	return dFdE;

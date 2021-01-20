@@ -38,10 +38,10 @@ void generatingKernels()
 	Mestel DF;
 
 
-	VolterraSolver solver(10, 1, 5, 0.1);
+	VolterraSolver solver(10, 1, 5, 0.01);
 	solver.generateKernel(DF, test);
 
-	VolterraSolver readingIn("kernelFileName.csv", 10, 1, 5, 0.1);
+	VolterraSolver readingIn("kernelFileName.csv", 10, 1, 5, 0.01);
 }
 
 

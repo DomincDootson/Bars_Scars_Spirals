@@ -46,9 +46,10 @@ ActionAngleBasisFunction::ActionAngleBasisFunction(std::string dir, int np, int 
 	inFile >> rbasisRows >> rstep >> rradialIndex >> rm1 >> rm2;
 	checkParam(rbasisRows, rstep, rradialIndex, rm1, rm2);
 	// some test function
+	
 	for (int i = 1; i<m_basisGrid.rows(); ++i){
 		for (int j = 1; j < i; ++j){
-			inFile >> m_basisGrid(i,j);
+			inFile >> m_basisGrid(i,j);	
 		}
 	}
 	inFile.close();

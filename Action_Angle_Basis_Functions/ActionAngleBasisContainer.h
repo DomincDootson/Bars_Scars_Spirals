@@ -36,6 +36,7 @@ public:
 	m_spacingSize{maxRadius/((double) m_sizeArray - 1)}, // The size has minus 1 as we want the end point to be inclusive
 	m_basisContainer{}
 	{
+		std::cout << "Reading in basis functions.\n";
 		for (int np = 0; np <= m_maxRadialIndex; ++np)
 		{
 			for (int m1 = -m_maxFourierHarmonic; m1 <= m_maxFourierHarmonic; ++ m1)
@@ -88,7 +89,7 @@ std::vector<double> nonLinearRadii(int steps, double rApo, double rPer)
 {
 	std::vector<double> radii(steps);
 
-	double stepSize{0.5*M_PI/ ((double) steps)}; // CHANGE THIS BACK
+	double stepSize{0.5*M_PI/ ((double) steps - 1)}; // CHANGE THIS BACK
 
 	for (int i = 0; i < steps; ++i){
 		radii[i] = rPer + (rApo-rPer) * pow(sin(stepSize*i),2);
@@ -180,7 +181,7 @@ void ActionAngleBasisContainer::scriptW(Tbf & basisFunctions, Tdf & df, std::str
 	for (int i = 1; i < om1Grid.rows(); ++i)
 	{
 		std::cout << "Fraction of rows completed: " << round(100*i/((double)  om1Grid.rows())) << '\n';
-		for (int j = (1); j<i; ++j)
+		for (int j = 1; j<i; ++j)
 		{
 			double rApo{i*m_spacingSize}, rPer{j*m_spacingSize};
 			radii = nonLinearRadii(nIntegrationSteps, rApo, rPer);
@@ -193,13 +194,13 @@ void ActionAngleBasisContainer::scriptW(Tbf & basisFunctions, Tdf & df, std::str
 			for (int np = 0; np <= m_maxRadialIndex; ++np)
 			 {
 			 	for (int m1 = -m_maxFourierHarmonic; m1 <= m_maxFourierHarmonic; ++m1){		 		
-			 		(m_basisContainer[count])(i,j) = (basisFunctions(np)).scriptWElement(m1, radii, theta1, theta2, theta1Deriv);
+			 		(m_basisContainer[count])(i,j) = (basisFunctions(np)).scriptWElement(m1, radii, theta1, theta2, theta1Deriv);		
 				 	count += 1;
 				 }				
-			 } 
+			} 
 		}
 	} 
-	for (auto bfGrid = m_basisContainer.begin(); bfGrid != m_basisContainer.end(); ++bfGrid){
+		for (auto bfGrid = m_basisContainer.begin(); bfGrid != m_basisContainer.end(); ++bfGrid){
 		bfGrid -> save(directory, m_spacingSize); // We need to use -> as bfGrid is an interator
 	}
 	basisFunctions.scriptE(directory + "/scriptE_"+"Mestel_" + std::to_string(m_fourierHarmonic) + ".out");
