@@ -106,9 +106,9 @@ std::complex<double> EvolutionKernels::kernelElement(const int npRow, const int 
 			integrand(i,j) = 0;
 			for (int m1 = -m_maxFourierHarmonic; m1 <= m_maxFourierHarmonic; ++m1) 
 			{
-				integrand(i,j) += //basisFunc(npRow, m1, i, j)* basisFunc(npCol, m1, i, j) *
-				(m_fourierHarmonic*m_dfdJGrid(i,j) + m1*m_dfdEGrid(i,j)) * // When combing this with the next line we get wrong integral result
-				exp(-unitComplex*time * ((m1 * m_om1Grid(i,j) + m_fourierHarmonic * m_om2Grid(i,j))));	
+				integrand(i,j) += basisFunc(npRow, m1, i, j)* basisFunc(npCol, m1, i, j)
+				*(m_fourierHarmonic*m_dfdJGrid(i,j) + m1*m_dfdEGrid(i,j)) // It seems like this is the line that is breaking it
+				*exp(-unitComplex*time * ((m1 * m_om1Grid(i,j) + m_fourierHarmonic * m_om2Grid(i,j))));	
 			}
 		}
 	}

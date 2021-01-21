@@ -85,7 +85,7 @@ double DFClass::theta1(double radius, double rApo, double rPer, double omega1) c
 	for (int i = 1; i < nstep; ++i)
 	{
 		rstep = rPer +(rApo-rPer)*pow(sin(stepSize *i),2);
-		integral += pow(2*(E- potential(rstep)) -J*J * pow(rstep, -2) , -0.5);// * stepSize; sin(2 * i * stepSize)* 
+		integral += sin(2 * i * stepSize)*pow(2*(E- potential(rstep)) -J*J * pow(rstep, -2) , -0.5)*stepSize;// *  
 	}
 	double th1 = (rApo - rPer) * integral * omega1;
 
@@ -120,14 +120,13 @@ Eigen::MatrixXd DFClass::dFdEgrid(const double spacing, const Eigen::MatrixXd & 
 {
 	Eigen::MatrixXd dFdE{Eigen::MatrixXd::Zero(om1.rows(), om1.cols())};
 	double E{}, J{};
-	for (int i = i; i < dFdE.rows(); ++i)
+	for (int i = 1; i < dFdE.rows(); ++i)
 	{
 		for (int j = 0; j < i; ++j)
 		{
 			E = rad2Energy(i * spacing,  j * spacing); 
 			J = rad2AngMom(i * spacing,  j * spacing); 
 			dFdE(i,j) = 0.5  * ((distFunc(E+0.001, J) - distFunc(E-0.001,J))/0.001)* om1(i,j);	
-			std::cout << i << " " << j << " " << dFdE(i,j) << '\n';
 		}
 	}
 	return dFdE;
@@ -145,7 +144,9 @@ Eigen::MatrixXd DFClass::dFdJgrid(const double spacing, const Eigen::MatrixXd & 
 		{
 			E = rad2Energy(i * spacing,  j * spacing); 
 			J = rad2AngMom(i * spacing,  j * spacing); 
-			dFdJ(i,j) = 0.5 * ((om2(i,j)*(distFunc(E+0.001, J) - distFunc(E-0.001,J)) + distFunc(E, J+0.001) - distFunc(E,J-0.001) )/0.001);
+			dFdJ(i,j) = om2(i,j)*(distFunc(E+0.001, J) - distFunc(E-0.001,J)) / (2*0.001) 
+						+ (distFunc(E, J+0.001) - distFunc(E,J-0.001)) / (2*0.001);
+			std::cout << i << " " << j << " " << dFdJ(i,j) << '\n';
 		}
 	}
 	return dFdJ;

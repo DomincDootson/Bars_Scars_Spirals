@@ -32,9 +32,10 @@ double Mestel::outerTaper(double J) const{
 
 double Mestel::distFunc(double E, double J) const // Note that we have set G = 1
 {
-	return  innerTaper(J)*outerTaper(J)*(m_xi)*pow((J/(m_r0*m_vc)), m_q) * exp(-E/pow(m_littleSigma,2)) * 
+	return  innerTaper(J)*outerTaper(J) *(m_xi)*pow((J/(m_r0*m_vc)), m_q) * exp(-E/pow(m_littleSigma,2)) * 
 	(((pow(m_vc,2)/(2*M_PI*m_r0)) * pow(m_vc,m_q)) * pow(pow(2, 0.5*m_q) * 
-	sqrt(M_PI)*tgamma(0.5*m_q+0.5)*pow(m_littleSigma,2+m_q), -1));
+	sqrt(M_PI)*tgamma(0.5*m_q+0.5)*pow(m_littleSigma,2+m_q), -1)); 
+
 }
 
 #endif

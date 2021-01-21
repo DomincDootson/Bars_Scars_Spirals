@@ -22,11 +22,11 @@
 void generatingBF()
 {
 	Mestel DF;
-
+	int m2{1};
 	std::vector<double> params{4, 20};
-	PotentialDensityPairContainer<KalnajsBasis> PD(params, 10,1);
+	PotentialDensityPairContainer<KalnajsBasis> PD(params, 10,m2);
 
-	ActionAngleBasisContainer test(10, 1, 5, 101, 20); 
+	ActionAngleBasisContainer test(10, m2, 5, 101, 20); 
 	test.scriptW(PD, DF, "Kalnajs");
 }
 

@@ -194,10 +194,11 @@ void ActionAngleBasisContainer::scriptW(Tbf & basisFunctions, Tdf & df, std::str
 			for (int np = 0; np <= m_maxRadialIndex; ++np)
 			 {
 			 	for (int m1 = -m_maxFourierHarmonic; m1 <= m_maxFourierHarmonic; ++m1){		 		
-			 		(m_basisContainer[count])(i,j) = (basisFunctions(np)).scriptWElement(m1, radii, theta1, theta2, theta1Deriv);		
+			 		(m_basisContainer[count])(i,j) = (basisFunctions(np)).scriptWElement(m1, radii, theta1, theta2, theta1Deriv);	
 				 	count += 1;
-				 }				
-			} 
+				 }
+			}
+
 		}
 	} 
 		for (auto bfGrid = m_basisContainer.begin(); bfGrid != m_basisContainer.end(); ++bfGrid){
