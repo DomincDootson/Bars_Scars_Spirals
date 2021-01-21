@@ -120,13 +120,14 @@ Eigen::MatrixXd DFClass::dFdEgrid(const double spacing, const Eigen::MatrixXd & 
 {
 	Eigen::MatrixXd dFdE{Eigen::MatrixXd::Zero(om1.rows(), om1.cols())};
 	double E{}, J{};
-	for (int i = 0; i < dFdE.rows(); ++i)
+	for (int i = i; i < dFdE.rows(); ++i)
 	{
 		for (int j = 0; j < i; ++j)
 		{
 			E = rad2Energy(i * spacing,  j * spacing); 
 			J = rad2AngMom(i * spacing,  j * spacing); 
-			dFdE(i,j) = 0.5  * ((distFunc(E+0.001, J) - distFunc(E-0.001,J))/0.001);//* om1(i,j);	
+			dFdE(i,j) = 0.5  * ((distFunc(E+0.001, J) - distFunc(E-0.001,J))/0.001)* om1(i,j);	
+			std::cout << i << " " << j << " " << dFdE(i,j) << '\n';
 		}
 	}
 	return dFdE;
