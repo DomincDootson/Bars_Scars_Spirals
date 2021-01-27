@@ -3,3 +3,4 @@ Kalnajs
 *.csv
 *.py
 *.o 
+*.out 
