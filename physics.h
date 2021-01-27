@@ -3,9 +3,12 @@
 
 
 void generatingBF(int m2);
-void generatingKernels();
+void generatingKernels(int m2);
 void testEvolution();
 void somePerturbation();
+void barTesting();
+
+
 void kalnajBasisFunctionsVaryingK();
 
 

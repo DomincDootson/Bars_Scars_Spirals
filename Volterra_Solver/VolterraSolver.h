@@ -60,7 +60,7 @@ void VolterraSolver::volterraSolver(const std::string & outFilename, const std::
 									* timeIntegration(timeIndex, includeSelfConsistent);
 
 		if (timeIndex % (skip*10) ==0){
-				std::cout << timeIndex << '\n';
+				std::cout << "Time step: " << timeIndex << '\n';
 			}	
 	}
 	m_responseCoef.write2File(outFilename, skip);
@@ -69,12 +69,9 @@ void VolterraSolver::volterraSolver(const std::string & outFilename, const std::
 Eigen::VectorXcd VolterraSolver::timeIntegration(const int timeIndex, const double includeSelfConsistent) const // Should we make this a memeber function? 
 {
 	Eigen::VectorXcd integral = 0.5 * m_timeStep * m_kernels(timeIndex) * (m_perturbationCoef(0) + includeSelfConsistent*m_responseCoef(0));
-	
 	for (int i = 1; i < (timeIndex); ++i){
 		integral += m_timeStep * m_kernels(timeIndex - i) * (m_perturbationCoef(i) + includeSelfConsistent*m_responseCoef(i)); 
 	}
-	
-	
 	integral += 0.5 * m_timeStep * m_kernels(0) * m_perturbationCoef(timeIndex);	
 	return integral; 
 }

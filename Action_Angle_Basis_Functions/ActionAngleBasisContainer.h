@@ -6,10 +6,8 @@
 #include <vector>
 #include <Eigen/Dense>
 #include <string>
-#include <typeinfo>
-#include <string>
 
-
+// Could we make this more efficent to have the grids that keep getting passed around, saved as memeber variables? 
 class ActionAngleBasisContainer
 {
 public:

@@ -34,9 +34,6 @@ Again there are two files, a individual representation of a PD pair and a contai
 	ActionAngleBasisContainer.h - A container class that contains many PD pairs with different n and m_{1}, but the same m_{2} (=\ell).
 	This contains the memeber function that will generate and save the AA PD pair representation. Things to do,
 
-		1) I think this class could be made clearer - saving the DF and the PD container as private memeber variables instead of passing the around
-		à la kernel generation. 
-
 3. Volterra Solver
 ------------------ 
 
@@ -50,7 +47,6 @@ There are three class, one main and two part classes,
 
 	VolterraSolver.h - Contains the methods to solve the volterra equation, the generation functions are also called from here. 
 
-	*) I think we will need to write the member functions into a .cpp file
 
 4. Bar Class
 ------------

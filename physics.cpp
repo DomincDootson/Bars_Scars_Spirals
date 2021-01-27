@@ -12,6 +12,8 @@
 
 #include "Volterra_Solver/VolterraSolver.h"
 
+#include "Bar2D/Bar2D.h"
+
 #include <Eigen/Dense>
 
 #include <vector>
@@ -32,13 +34,13 @@ void generatingBF(int m2)
 
 
 
-void generatingKernels()
+void generatingKernels(int m2)
 {
-	ActionAngleBasisContainer test("Kalnajs", 10, 1, 5, 101, 20);
+	ActionAngleBasisContainer test("Kalnajs", 10, m2, 5, 101, 20);
 	Mestel DF;
 
 
-	VolterraSolver solver(10, 1, 2000, 0.01);
+	VolterraSolver solver(10, m2, 2000, 0.01);
 	solver.generateKernel("kernelFileName.csv", DF, test);
 
 	//VolterraSolver readingIn("kernelFileName.csv", 10, 1, 5, 0.01);
@@ -66,13 +68,21 @@ void somePerturbation()
 void testEvolution()
 {
 	somePerturbation();
-	VolterraSolver solver("kernelFileName.csv", 10, 1, 2000, 0.01);
-	solver.activeFraction(.1);	
+	VolterraSolver solver("kernelFileName.csv", 10, 0, 2000, 0.01);
+	solver.activeFraction(.25);	
 	solver.volterraSolver("evolution.csv", "someperturbation", true);
 	solver.resetActiveFraction();
 }
 
+void barTesting()
+{
+	std::vector<double> params{4, 20};
+	PotentialDensityPairContainer<KalnajsBasis> PD(params, 10,2);
 
+	Eigen::VectorXcd coef = Eigen::VectorXcd::Zero(11);
+	Bar2D bar(coef, PD, 0);
+
+}
 
 
 void kalnajBasisFunctionsVaryingK() // Outputs the values of the density basis functions for plotting

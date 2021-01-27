@@ -8,11 +8,11 @@ int main()
 	//Mestel DF;
 
 	//kalnajBasisFunctionsVaryingK();
-	//generatingBF(0);
+	//generatingBF(2);
 
-	//generatingKernels();
+	//generatingKernels(0);
 	//somePerturbation();
-	testEvolution();
+	//testEvolution();
 
 
 
@@ -33,7 +33,7 @@ int main()
 
 
 
-
+	barTesting();
 
 	// Things to do tomorrow
 	//	 1) get the code to put the basis funcitons into the right file

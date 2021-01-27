@@ -17,7 +17,7 @@ class PotentialDensityPairContainer
 public:
 	PotentialDensityPairContainer(std::vector<double> params, int maxN, int l) :
 	m_potentialDensityContainer{}, m_maxRadialIndex{maxN}, m_fourierHarmonic{l}, 
-	m_scriptE{Eigen::MatrixXcd::Zero(m_maxRadialIndex+1, m_maxRadialIndex+1)}
+	m_scriptE{Eigen::MatrixXd::Zero(m_maxRadialIndex+1, m_maxRadialIndex+1)}
 	{
 		for (int i = 0; i <= m_maxRadialIndex ; ++i)
 		{
@@ -36,27 +36,28 @@ public:
 	double   density(const double radius, const int n) const;
 
 	void scriptE(const std::string &filename) const;
-	Eigen::MatrixXcd scriptE() const;
+	Eigen::MatrixXd scriptE() const;
 
 	int maxRadialIndex() const {return m_maxRadialIndex;}
 	int fourierHarmonic() const {return m_fourierHarmonic;}
 
-	Eigen::ArrayXXcd   densityGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const; 
-	Eigen::ArrayXXcd potentialGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
+	Eigen::ArrayXXcd   densityArray(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const; 
+	Eigen::ArrayXXcd potentialArray(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
 
-	Eigen::ArrayXXd   densityGridReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
-	Eigen::ArrayXXd potentialGridReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
+	Eigen::ArrayXXd   densityArrayReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
+	Eigen::ArrayXXd potentialArrayReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
 
 	Eigen::VectorXcd potentialResolving(const Eigen::ArrayXXcd &potentialArray, const double rMax) const; // Not great at resolving l =0
 	Eigen::VectorXcd densityResolving(const Eigen::ArrayXXcd &densityArray, const double rMax) const;
 
-	Eigen::MatrixXcd getScriptE() {return m_scriptE;}
+	Eigen::MatrixXd getScriptE() const {return m_scriptE;}
+
 
 private:	
 	
 	std::vector<T> m_potentialDensityContainer;
 	int m_maxRadialIndex,  m_fourierHarmonic;
-	Eigen::MatrixXcd m_scriptE;
+	Eigen::MatrixXd m_scriptE;
 	
 	
 	void saveParamters(std::ofstream & out) const;
@@ -84,7 +85,7 @@ double   PotentialDensityPairContainer<T>::density(const double radius, const in
 // Grid generation Function
 
 template <class T>
-Eigen::ArrayXXcd   PotentialDensityPairContainer<T>::densityGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const
+Eigen::ArrayXXcd   PotentialDensityPairContainer<T>::densityArray(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const
 {
 	Eigen::ArrayXXcd grid = Eigen::ArrayXXcd::Zero(nGrid, nGrid);
 	for (int i = 0; i <= m_maxRadialIndex; ++i){
@@ -95,7 +96,7 @@ Eigen::ArrayXXcd   PotentialDensityPairContainer<T>::densityGrid(const Eigen::Ve
 
 
 template <class T>
-Eigen::ArrayXXcd PotentialDensityPairContainer<T>::potentialGrid(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const
+Eigen::ArrayXXcd PotentialDensityPairContainer<T>::potentialArray(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const
 {
 	Eigen::ArrayXXcd grid = Eigen::ArrayXXcd::Zero(nGrid, nGrid);
 	for (int i = 0; i <= m_maxRadialIndex; ++i){
@@ -105,14 +106,14 @@ Eigen::ArrayXXcd PotentialDensityPairContainer<T>::potentialGrid(const Eigen::Ve
 }
 
 template <class T>
-Eigen::ArrayXXd   PotentialDensityPairContainer<T>::densityGridReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const{
-	return (potentialGrid(coefficents, nGrid, rMax) + potentialGrid(coefficents, nGrid, rMax).conj()).real();
+Eigen::ArrayXXd   PotentialDensityPairContainer<T>::densityArrayReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const{
+	return (potentialArray(coefficents, nGrid, rMax) + potentialArray(coefficents, nGrid, rMax).conjugate()).real();
 }
 
 
 template <class T>
-Eigen::ArrayXXd PotentialDensityPairContainer<T>::potentialGridReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const{
-	return (densityGrid(coefficents, nGrid, rMax) + densityGrid(coefficents, nGrid, rMax).conj()).real(); 
+Eigen::ArrayXXd PotentialDensityPairContainer<T>::potentialArrayReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const{
+	return (densityArray(coefficents, nGrid, rMax) + densityArray(coefficents, nGrid, rMax).conjugate()).real(); 
 }
 
 
@@ -181,7 +182,7 @@ void PotentialDensityPairContainer<T>::scriptE(const std::string &filename) cons
 	{
 		for(int j = 0; j<= m_maxRadialIndex; ++j)
 		{
-			out << real(m_scriptE(i,j)) << " ";
+			out << (m_scriptE(i,j)) << " ";
 		}
 		out << '\n';
 	}
@@ -189,9 +190,9 @@ void PotentialDensityPairContainer<T>::scriptE(const std::string &filename) cons
 }
 
 template <class T>
-Eigen::MatrixXcd PotentialDensityPairContainer<T>::scriptE() const
+Eigen::MatrixXd PotentialDensityPairContainer<T>::scriptE() const
 {
-	Eigen::MatrixXcd scriptE = Eigen::MatrixXcd::Zero(m_maxRadialIndex+1, m_maxRadialIndex+1);
+	Eigen::MatrixXd scriptE = Eigen::MatrixXd::Zero(m_maxRadialIndex+1, m_maxRadialIndex+1);
 	for (int i = 0; i<= m_maxRadialIndex; ++i)
 	{
 		for(int j = 0; j<= m_maxRadialIndex; ++j)
