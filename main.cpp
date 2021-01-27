@@ -8,9 +8,11 @@ int main()
 	//Mestel DF;
 
 	//kalnajBasisFunctionsVaryingK();
-	//generatingBF();
+	//generatingBF(0);
 
-	generatingKernels();
+	//generatingKernels();
+	//somePerturbation();
+	testEvolution();
 
 
 

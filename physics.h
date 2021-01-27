@@ -2,9 +2,10 @@
 #define PHYSICS 
 
 
-void generatingBF();
+void generatingBF(int m2);
 void generatingKernels();
-
+void testEvolution();
+void somePerturbation();
 void kalnajBasisFunctionsVaryingK();
 
 

@@ -1,7 +1,6 @@
 #ifndef ACTIONANGLEBASISCONTAINER
 #define ACTIONANGLEBASISCONTAINER
 
-// Add way to read in sciptE 
 #include "ActionAngleBasisFunction.h"
 #include "../DF_Class/Mestel.h" 
 #include <vector>
@@ -18,7 +17,8 @@ public:
 	: m_maxRadialIndex{maxRadialIndex}, m_fourierHarmonic{fourierHarmonic}, m_maxFourierHarmonic{maxFourierHarmonic},
 	m_sizeArray{sizeArray}, m_maxRadius{maxRadius}, 
 	m_spacingSize{maxRadius/((double) m_sizeArray - 1)}, // The size has minus 1 as we want the end point to be inclusive
-	m_basisContainer{}
+	m_basisContainer{},
+	m_scriptE(m_maxRadialIndex+1, m_maxRadialIndex+1)
 	{
 		for (int np = 0; np <= m_maxRadialIndex; ++np)
 		{
@@ -34,7 +34,8 @@ public:
 	: m_maxRadialIndex{maxRadialIndex}, m_fourierHarmonic{fourierHarmonic}, m_maxFourierHarmonic{maxFourierHarmonic},
 	m_sizeArray{sizeArray}, m_maxRadius{maxRadius}, 
 	m_spacingSize{maxRadius/((double) m_sizeArray - 1)}, // The size has minus 1 as we want the end point to be inclusive
-	m_basisContainer{}
+	m_basisContainer{},
+	m_scriptE{ readInScriptE(dir)}
 	{
 		std::cout << "Reading in basis functions.\n";
 		for (int np = 0; np <= m_maxRadialIndex; ++np)
@@ -62,19 +63,22 @@ public:
 	template <class T>
 	Eigen::MatrixXd omega2Grid(const T & distFunction) const;
 
+	Eigen::MatrixXd inverseScriptE() const {return m_scriptE.inverse();};
+
 
 private:
 	
 	const int m_maxRadialIndex, m_fourierHarmonic, m_maxFourierHarmonic, m_sizeArray;
 	const double m_maxRadius, m_spacingSize;
 	std::vector<ActionAngleBasisFunction> m_basisContainer;
+	Eigen::MatrixXd m_scriptE;
 
 	int index(int np, int m1) const {return m1 + (2*m_maxFourierHarmonic+1) * np;}
 
 	
 
 	
-
+	std::vector<double> nonLinearRadii(int steps, double rApo, double rPer); 
 	template <class T>
 	std::vector<double>  theta1Vector(T & df, std::vector<double> & radii, double om1);
 	template <class T>
@@ -82,14 +86,16 @@ private:
 	template <class T>
 	std::vector<double>  theta1DerivVector(T & df, std::vector<double> & radii, double om1);
 
-	
+	std::string scriptEfilename(const std::string dir) const 
+	{return dir + "/scriptE_" + std::to_string(m_maxRadialIndex) + '_' + std::to_string(m_fourierHarmonic) + ".out";}
+	Eigen::MatrixXd readInScriptE(const std::string dir);
 	
 };
-std::vector<double> nonLinearRadii(int steps, double rApo, double rPer)
+std::vector<double> ActionAngleBasisContainer::nonLinearRadii(int steps, double rApo, double rPer)
 {
 	std::vector<double> radii(steps);
 
-	double stepSize{0.5*M_PI/ ((double) steps - 1)}; // CHANGE THIS BACK
+	double stepSize{0.5*M_PI/ ((double) steps - 1)};
 
 	for (int i = 0; i < steps; ++i){
 		radii[i] = rPer + (rApo-rPer) * pow(sin(stepSize*i),2);
@@ -204,7 +210,26 @@ void ActionAngleBasisContainer::scriptW(Tbf & basisFunctions, Tdf & df, std::str
 		for (auto bfGrid = m_basisContainer.begin(); bfGrid != m_basisContainer.end(); ++bfGrid){
 		bfGrid -> save(directory, m_spacingSize); // We need to use -> as bfGrid is an interator
 	}
-	basisFunctions.scriptE(directory + "/scriptE_"+"Mestel_" + std::to_string(m_fourierHarmonic) + ".out");
+	basisFunctions.scriptE(scriptEfilename(directory));
 }
+
+Eigen::MatrixXd ActionAngleBasisContainer::readInScriptE(const std::string dir)
+{
+	std::ifstream inScriptE(scriptEfilename(dir));
+	Eigen::MatrixXd scriptE(m_maxRadialIndex+1, m_maxRadialIndex+1);
+
+	for (int i =0; i < scriptE.rows(); ++i)
+	{
+		for (int j = 0; j <scriptE.cols(); ++j){
+			 inScriptE >> scriptE(i,j);
+		}
+	}
+	inScriptE.close();
+	return scriptE;
+
+}
+
+
+
 
 #endif 

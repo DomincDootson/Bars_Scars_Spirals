@@ -122,11 +122,12 @@ Eigen::MatrixXd DFClass::dFdEgrid(const double spacing, const Eigen::MatrixXd & 
 	double E{}, J{};
 	for (int i = 1; i < dFdE.rows(); ++i)
 	{
-		for (int j = 0; j < i; ++j)
+		for (int j = 1; j < i; ++j)
 		{
 			E = rad2Energy(i * spacing,  j * spacing); 
 			J = rad2AngMom(i * spacing,  j * spacing); 
 			dFdE(i,j) = 0.5  * ((distFunc(E+0.001, J) - distFunc(E-0.001,J))/0.001)* om1(i,j);	
+			//0.5  * ((distFunc(E+0.001, J) - distFunc(E-0.001,J))/0.001)* om1(i,j);	
 		}
 	}
 	return dFdE;
@@ -138,15 +139,16 @@ Eigen::MatrixXd DFClass::dFdJgrid(const double spacing, const Eigen::MatrixXd & 
 	Eigen::MatrixXd dFdJ{Eigen::MatrixXd::Zero(om2.rows(), om2.cols())};
 	double E{}, J{};
 
-	for (int i = 0; i < dFdJ.rows(); ++i)
+	for (int i = 1; i < dFdJ.rows(); ++i)
 	{
-		for (int j = 0; j < i; ++j)
+		for (int j = 1; j < i; ++j)
 		{
 			E = rad2Energy(i * spacing,  j * spacing); 
 			J = rad2AngMom(i * spacing,  j * spacing); 
-			dFdJ(i,j) = om2(i,j)*(distFunc(E+0.001, J) - distFunc(E-0.001,J)) / (2*0.001) 
-						+ (distFunc(E, J+0.001) - distFunc(E,J-0.001)) / (2*0.001);
-			std::cout << i << " " << j << " " << dFdJ(i,j) << '\n';
+			dFdJ(i,j) = ///om2(i,j) * (distFunc(E+0.00001, J) - distFunc(E-0.00001,J)) / (2*0.00001) 
+			om2(i,j) * (distFunc(E+0.00001, J) - distFunc(E-0.00001,J)) / (2*0.00001) 
+						+ (distFunc(E, J+0.00001) - distFunc(E,J-0.00001)) / (2*0.00001);
+
 		}
 	}
 	return dFdJ;

@@ -175,13 +175,13 @@ template <class T>
 void PotentialDensityPairContainer<T>::scriptE(const std::string &filename) const
 {
 	std::ofstream out(filename);
-	saveParamters(out);
+	
 
 	for (int i = 0; i<= m_maxRadialIndex; ++i)
 	{
 		for(int j = 0; j<= m_maxRadialIndex; ++j)
 		{
-			out << m_scriptE(i,j) << " ";
+			out << real(m_scriptE(i,j)) << " ";
 		}
 		out << '\n';
 	}

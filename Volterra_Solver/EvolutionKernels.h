@@ -19,9 +19,10 @@ public:
 	~EvolutionKernels() {}
 
 	Eigen::MatrixXcd operator()(int timeIndex) const {return m_kernels[timeIndex];} 
+	Eigen::MatrixXcd& operator()(int timeIndex) {return m_kernels[timeIndex];} 
 	
 	template <class Tdf>
-	void kernelCreation(const Tdf & df, const ActionAngleBasisContainer & basisFunc); // SHould we pass it a script E here? and also a reference to a DF. --> Put sctio
+	void kernelCreation(const std::string fileName, const Tdf & df, const ActionAngleBasisContainer & basisFunc); // SHould we pass it a script E here? and also a reference to a DF. --> Put sctio
 	void getVolterraParams(const int maxRadialIndex, const int fourierHarmonic, const int numbTimeStep, const double timeStep);
 
 private:
@@ -62,21 +63,35 @@ void EvolutionKernels::gridSetUp(const Tdf & df, const ActionAngleBasisContainer
 	m_dfdEGrid = df.dFdEgrid(basisFunc.spacing(), m_om1Grid); 
 	m_dfdJGrid = df.dFdJgrid(basisFunc.spacing(), m_om2Grid); 	
 	m_elJacobian = df.energyAngMomJacobain(basisFunc.size(0), basisFunc.spacing());	
+
+	std::ofstream outE("de.csv"); std::ofstream outJ("dj.csv");
+
+	for (int i = 1; i < m_dfdEGrid.rows(); ++i)
+	{
+		for (int j = 1; j < m_dfdEGrid.cols()-1; ++j){
+			outE << m_dfdEGrid(i,j) << ',';
+			outJ << m_dfdJGrid(i,j) << ',';}
+	
+	outE << m_dfdEGrid(i, m_dfdEGrid.cols() -1) << '\n';
+	outJ << m_dfdJGrid(i, m_dfdJGrid.cols() -1) << '\n';}
 }
 
 template <class Tdf>
-void EvolutionKernels::kernelCreation(const Tdf & df, const ActionAngleBasisContainer & basisFunc)
+void EvolutionKernels::kernelCreation(const std::string fileName, const Tdf & df, const ActionAngleBasisContainer & basisFunc)
 {
 	// Might it be worth making sure that we've read in the construction parameters? 
-
+	Eigen::MatrixXd inverseScriptE{basisFunc.inverseScriptE()};
 	gridSetUp(df, basisFunc);
 	for (int timeIndex = 0; timeIndex < m_numbTimeSteps; ++timeIndex)
 	{
-		std::cout << timeIndex << " " << '\n';
 		kernelAtTime(basisFunc, timeIndex);
+		m_kernels[timeIndex] = inverseScriptE * m_kernels[timeIndex];
+		if (timeIndex % 100 == 0){
+			std::cout << "Fraction of kernels completed: " << round(100*timeIndex/((double) m_numbTimeSteps))<< '%' <<  '\n';
+		}
 	}
-
-	kernelWrite2File("kernelFileName.csv");
+	// scriptE multiplication 
+	kernelWrite2File(fileName);
 }
 
 void EvolutionKernels::kernelAtTime(const ActionAngleBasisContainer & basisFunc, const int timeIndex)
@@ -98,7 +113,6 @@ std::complex<double> EvolutionKernels::kernelElement(const int npRow, const int 
 {
 	Eigen::MatrixXcd integrand(basisFunc.size(0), basisFunc.size(1));
 	std::complex<double> unitComplex(0,1);
-	std::cout << time << '\n';	
 	for (int i = 0; i < integrand.rows(); ++i) 
 	{
 		for (int j = 1; j <= i; ++j)
@@ -106,13 +120,12 @@ std::complex<double> EvolutionKernels::kernelElement(const int npRow, const int 
 			integrand(i,j) = 0;
 			for (int m1 = -m_maxFourierHarmonic; m1 <= m_maxFourierHarmonic; ++m1) 
 			{
-				integrand(i,j) += basisFunc(npRow, m1, i, j)* basisFunc(npCol, m1, i, j)
-				*(m_fourierHarmonic*m_dfdJGrid(i,j) + m1*m_dfdEGrid(i,j)) // It seems like this is the line that is breaking it
-				*exp(-unitComplex*time * ((m1 * m_om1Grid(i,j) + m_fourierHarmonic * m_om2Grid(i,j))));	
+				integrand(i,j) += basisFunc(npRow, m1, i, j) * basisFunc(npCol, m1, i, j)
+				* (m_fourierHarmonic*m_dfdJGrid(i,j) +m1*m_dfdEGrid(i,j)) // It seems like this is the line that is breaking it				
+				* 	exp(-unitComplex*time * ((m1 * m_om1Grid(i,j) + m_fourierHarmonic * m_om2Grid(i,j))));	
 			}
 		}
 	}
-
 	return -unitComplex * (2*M_PI)*(2*M_PI) * integration2d(integrand); 
 }
 
@@ -155,6 +168,7 @@ void EvolutionKernels::kernelReadIn(const std::string & kernelFilename) // Needs
 	int maxRadialIndex, fourierHarmonic, numbTimeSteps, maxFourierHarmonic;
 	double timeStep, spacing; 
 	kernelIn >> maxRadialIndex >> fourierHarmonic >> numbTimeSteps >> maxFourierHarmonic >> timeStep >> spacing;
+	assert(numbTimeSteps == m_kernels.size() && "The read in kernel is not the same length as the Volterra Solver.");
 	double re{}, im{};
 	std::complex<double> unitComplex(0,1);
 
@@ -163,7 +177,7 @@ void EvolutionKernels::kernelReadIn(const std::string & kernelFilename) // Needs
 		for (int i = 0; i <= maxRadialIndex; ++ i){
 			for (int j = 0; j <= maxRadialIndex; ++j){
 				kernelIn >> re >> im;
-				m_kernels[time](i,j) = re + unitComplex*im; 			
+				m_kernels[time](i,j) = re + unitComplex*im;
 			}
 		}
 	} 

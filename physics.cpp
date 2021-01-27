@@ -19,10 +19,10 @@
 
 
 
-void generatingBF()
+void generatingBF(int m2)
 {
 	Mestel DF;
-	int m2{1};
+	
 	std::vector<double> params{4, 20};
 	PotentialDensityPairContainer<KalnajsBasis> PD(params, 10,m2);
 
@@ -38,11 +38,41 @@ void generatingKernels()
 	Mestel DF;
 
 
-	VolterraSolver solver(10, 1, 5, 0.01);
-	solver.generateKernel(DF, test);
+	VolterraSolver solver(10, 1, 2000, 0.01);
+	solver.generateKernel("kernelFileName.csv", DF, test);
 
-	VolterraSolver readingIn("kernelFileName.csv", 10, 1, 5, 0.01);
+	//VolterraSolver readingIn("kernelFileName.csv", 10, 1, 5, 0.01);
 }
+
+void somePerturbation()
+{
+	std::ofstream out("someperturbation");
+	out << 10 << '\n';
+	for (int i =0; i<2000; ++i)
+	{
+		for (int j = 0; j < 3; ++j)
+		{
+			out << 0.01*sin(M_PI * (i/2000.0)) << " " << 0 << " ";
+		}
+		for (int j = 3; j<10; ++j)
+		{
+			out << 0 << " " << 0 << " ";
+		}
+		out << 0 << " " << 0 << '\n'; 
+	}
+	out.close();
+}
+
+void testEvolution()
+{
+	somePerturbation();
+	VolterraSolver solver("kernelFileName.csv", 10, 1, 2000, 0.01);
+	solver.activeFraction(.1);	
+	solver.volterraSolver("evolution.csv", "someperturbation", true);
+	solver.resetActiveFraction();
+}
+
+
 
 
 void kalnajBasisFunctionsVaryingK() // Outputs the values of the density basis functions for plotting
