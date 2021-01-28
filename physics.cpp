@@ -60,6 +60,33 @@ void generatingKalnajsKernels(int m2)
 	//VolterraSolver readingIn("kernelFileName.csv", 10, 1, 5, 0.01);
 }
 
+
+void generatingGaussianKernels(int m2)
+{
+	ActionAngleBasisContainer test("GaussianLog", 24, m2, 10, 201, 20);
+	Mestel DF;
+
+
+	VolterraSolver solver(24, m2, 2000, 0.01);
+
+	std::string kernel = "Kernels/GaussianLog" +std::to_string(m2) +".out";
+	solver.generateKernel(kernel, DF, test);
+
+	VolterraSolver readingIn(kernel, 24, m2, 2000, 0.01);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 void somePerturbation()
 {
 	std::ofstream out("someperturbation");

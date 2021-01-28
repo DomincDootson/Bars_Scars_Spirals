@@ -81,7 +81,7 @@ void EvolutionKernels::kernelCreation(const std::string fileName, const Tdf & df
 		}
 	}
 	// scriptE multiplication 
-	kernelWrite2FileFlipped(fileName);
+	kernelWrite2File(fileName);
 }
 
 void EvolutionKernels::kernelAtTime(const ActionAngleBasisContainer & basisFunc, const int timeIndex)

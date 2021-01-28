@@ -8,9 +8,10 @@
 
 #include "../Potential_Density_Pair_Classes/PotentialDensityPairContainer.h"
 
+
 class Bar2D
 {
-public: // DO WE WANT TO GIVE IT AN INTIAL ANGULAR VELOCITY??????/
+public: 
 	template <class Tbf>
 	Bar2D(const Eigen::VectorXcd expansionCoeff, const Tbf& basisFunctions, const double omega0) :
 	m_theta{0}, m_omega{omega0}, m_alpha{0},
@@ -18,8 +19,10 @@ public: // DO WE WANT TO GIVE IT AN INTIAL ANGULAR VELOCITY??????/
 	m_momentOfInertia{momentOfInertia(basisFunctions)},
 	m_fourierHarmonic{basisFunctions.fourierHarmonic()},
 	m_scriptE{basisFunctions.getScriptE()}
-	{}
+	{v_theta.push_back(m_theta); v_omega.push_back(m_omega); v_alpha.push_back(m_alpha);}
 	~Bar2D() {} 
+
+	Eigen::VectorXcd barCoeff() const {return m_expansionCoeff;}
 
 	double torque(const Eigen::VectorXcd &diskCoeff) const;
 	template <class Tbf>
@@ -28,12 +31,13 @@ public: // DO WE WANT TO GIVE IT AN INTIAL ANGULAR VELOCITY??????/
 	void drift(const double timeStep);
 	void kick(const double timeStep, const Eigen::VectorXcd &diskCoeff);
 
-	void saveBarEvolution(std::ofstream &outPut) const;
+	void saveBarEvolution(std::string evolutionFilename) const;
 
 	
 private: 
 	double m_theta, m_omega, m_alpha; // Note that alpha = Torque/MOI.
 	Eigen::VectorXcd m_expansionCoeff;
+	std::vector<double> v_theta, v_omega, v_alpha; // We use these to keep track of the evolution of the bar 
 
 	const double m_momentOfInertia;  
 	const int m_fourierHarmonic;  
@@ -44,8 +48,12 @@ private:
 	Eigen::ArrayXXd rSquaredArray(const int nGrid, const double rMax) const;
 };
 
-void Bar2D::saveBarEvolution(std::ofstream &outPut) const {
-	outPut << m_theta << ',' << m_omega << ',' << m_alpha << '\n';
+void Bar2D::saveBarEvolution(const std::string evolutionFilename) const {
+	std::ofstream out(evolutionFilename);
+	for (int time = 0; time < v_theta.size(); ++time){
+		out << v_theta[time] << ',' << v_omega[time] << ',' << v_alpha[time] << ',' << m_momentOfInertia * v_alpha[time] << '\n';
+	}
+	out.close();
 }
 
 
@@ -88,12 +96,14 @@ void Bar2D::drift(const double timeStep){
 	
 	m_expansionCoeff *= exp(-unitComplex * (deltaTheta * m_fourierHarmonic));
 	m_theta += deltaTheta; 
+	v_theta.push_back(m_theta);
 }
 
 void Bar2D::kick(const double timeStep, const Eigen::VectorXcd &diskCoeff){
 	double oldAlpha = m_alpha;
 	m_alpha = torque(diskCoeff)/m_momentOfInertia;
 	m_omega = 0.5 * (oldAlpha + m_alpha) * timeStep;  // Is this formula correct?
+	v_alpha.push_back(m_alpha); v_omega.push_back(m_omega);
 }
 
 

@@ -9,7 +9,8 @@ class ExpansionCoeff
 public:
 	ExpansionCoeff(const int numbTimeStep, const int maxRadialIndex) : m_coeff(numbTimeStep) {
 		for (auto i = m_coeff.begin(); i != m_coeff.end(); ++i){
-			i -> resize(maxRadialIndex+1);
+			//i -> resize(maxRadialIndex+1);
+			i -> setZero(maxRadialIndex+1);
 		}
 	}
 	

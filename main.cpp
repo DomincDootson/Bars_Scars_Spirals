@@ -13,8 +13,10 @@ int main()
 	//generatingKernels(0);
 	//generatingKernels(1);
 	//generatingKernels(2);
-	generatingSpiralBF(1);
-	generatingSpiralBF(2);
+	//generatingSpiralBF(1);
+	//generatingSpiralBF(2);
+
+	generatingGaussianKernels(0);
 	//somePerturbation();
 	/*testEvolution(0);
 	testEvolution(1);
