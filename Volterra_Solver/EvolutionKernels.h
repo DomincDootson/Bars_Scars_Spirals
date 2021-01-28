@@ -38,7 +38,8 @@ private:
 
 	
 	void kernelReadIn(const std::string & kernelFilename);
-	void kernelWrite2File(const std::string & kernelFilename) const; //const std::string & kernelFilename) WE NEED TO ADD IN FILENAMES
+	void kernelWrite2File(const std::string & kernelFilename) const; 
+	void kernelWrite2FileFlipped(const std::string & kernelFilename) const; // Allows kernels to be output for old code
 	
 	std::complex<double> kernelElement(const int npRow, const int npCol, const ActionAngleBasisContainer & basisFunc, const double time) const;
 	void kernelAtTime(const ActionAngleBasisContainer & basisFunc, const int timeIndex); 
@@ -63,17 +64,6 @@ void EvolutionKernels::gridSetUp(const Tdf & df, const ActionAngleBasisContainer
 	m_dfdEGrid = df.dFdEgrid(basisFunc.spacing(), m_om1Grid); 
 	m_dfdJGrid = df.dFdJgrid(basisFunc.spacing(), m_om2Grid); 	
 	m_elJacobian = df.energyAngMomJacobain(basisFunc.size(0), basisFunc.spacing());	
-
-	std::ofstream outE("de.csv"); std::ofstream outJ("dj.csv");
-
-	for (int i = 1; i < m_dfdEGrid.rows(); ++i)
-	{
-		for (int j = 1; j < m_dfdEGrid.cols()-1; ++j){
-			outE << m_dfdEGrid(i,j) << ',';
-			outJ << m_dfdJGrid(i,j) << ',';}
-	
-	outE << m_dfdEGrid(i, m_dfdEGrid.cols() -1) << '\n';
-	outJ << m_dfdJGrid(i, m_dfdJGrid.cols() -1) << '\n';}
 }
 
 template <class Tdf>
@@ -91,7 +81,7 @@ void EvolutionKernels::kernelCreation(const std::string fileName, const Tdf & df
 		}
 	}
 	// scriptE multiplication 
-	kernelWrite2File(fileName);
+	kernelWrite2FileFlipped(fileName);
 }
 
 void EvolutionKernels::kernelAtTime(const ActionAngleBasisContainer & basisFunc, const int timeIndex)
@@ -151,6 +141,24 @@ void EvolutionKernels::kernelWrite2File(const std::string & kernelFilename) cons
 	out << m_maxRadialIndex << " " << m_fourierHarmonic << " " << m_numbTimeSteps << " " << m_maxFourierHarmonic << " " << m_timeStep << " " << m_spacing << '\n';
 	
 	for (int time = 0; time < m_numbTimeSteps; ++ time){
+		for (int i = 0; i<=m_maxRadialIndex; ++i){
+			for (int j = 0; j <= m_maxRadialIndex; ++j){
+				if (j == m_maxRadialIndex && i ==m_maxRadialIndex) {out << real(m_kernels[time](i,j)) << " " << imag(m_kernels[time](i,j)) <<'\n';}
+				else {out << real(m_kernels[time](i,j)) << " " << imag(m_kernels[time](i,j)) << " ";}
+			}
+		}
+	}
+	out.close();
+	std::cout << "Kernel saved to: " << kernelFilename << '\n';
+}
+
+
+void EvolutionKernels::kernelWrite2FileFlipped(const std::string & kernelFilename) const
+{
+	std::ofstream out(kernelFilename);
+	out << m_maxRadialIndex << " " << m_fourierHarmonic << " " << m_numbTimeSteps << " " << m_maxFourierHarmonic << " " << m_timeStep << " " << m_spacing << '\n';
+	
+	for (int time = m_numbTimeSteps-1; time > 0; --time){
 		for (int i = 0; i<=m_maxRadialIndex; ++i){
 			for (int j = 0; j <= m_maxRadialIndex; ++j){
 				if (j == m_maxRadialIndex && i ==m_maxRadialIndex) {out << real(m_kernels[time](i,j)) << " " << imag(m_kernels[time](i,j)) <<'\n';}

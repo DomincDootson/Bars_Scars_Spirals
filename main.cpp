@@ -11,29 +11,21 @@ int main()
 	//generatingBF(2);
 
 	//generatingKernels(0);
+	//generatingKernels(1);
+	//generatingKernels(2);
+	generatingSpiralBF(1);
+	generatingSpiralBF(2);
 	//somePerturbation();
-	//testEvolution();
-
-
-
-	//ActionAngleBasisContainer test(10, 0, 5, 101, 20); 
-	//test.scriptW(PD, DF, "Kalnajs");
-	/*Eigen::VectorXcd coef(25);
-
-	for (int i = 0; i<25; ++i){
-		coef(i) = i;
-	}
+	/*testEvolution(0);
+	testEvolution(1);
+	testEvolution(2);*/ 
+	
 	
 
-	Eigen::MatrixXcd potential = PD.potentialGrid(coef, 801, 20);
-	Eigen::MatrixXcd density = PD.densityGrid(coef, 801, 20);
-
-	std::cout << PD.potentialResolving(potential, 20) << '\n' << '\n'; 
-	std::cout << PD.densityResolving(density, 20) << '\n'; */ 
 
 
 
-	barTesting();
+	
 
 	// Things to do tomorrow
 	//	 1) get the code to put the basis funcitons into the right file

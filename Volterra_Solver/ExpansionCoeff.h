@@ -62,6 +62,7 @@ void ExpansionCoeff::coefficentReadIn(const std::string &filename)
 void ExpansionCoeff::write2File(const std::string & filename, const int skip) const 
 {
 	std::ofstream out(filename);
+	out << m_coeff.size() << '\n';
 	for (int time = 0; time < m_coeff.size(); time += skip)
 	{
 		for (int n = 0; n < m_coeff[time].size(); ++n)

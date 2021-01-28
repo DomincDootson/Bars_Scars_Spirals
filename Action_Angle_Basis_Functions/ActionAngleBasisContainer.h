@@ -184,7 +184,7 @@ void ActionAngleBasisContainer::scriptW(Tbf & basisFunctions, Tdf & df, std::str
 
 	for (int i = 1; i < om1Grid.rows(); ++i)
 	{
-		std::cout << "Fraction of rows completed: " << round(100*i/((double)  om1Grid.rows())) << '\n';
+		std::cout << "Fraction of rows completed: " << .1*round(1000*i/((double)  om1Grid.rows())) << "%" << '\n';
 		for (int j = 1; j<i; ++j)
 		{
 			double rApo{i*m_spacingSize}, rPer{j*m_spacingSize};

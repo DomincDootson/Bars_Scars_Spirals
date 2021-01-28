@@ -21,7 +21,7 @@
 
 
 
-void generatingBF(int m2)
+void generatingKalnajsBF(int m2)
 {
 	Mestel DF;
 	
@@ -33,15 +33,29 @@ void generatingBF(int m2)
 }
 
 
+void generatingSpiralBF(int m2)
+{
+	Mestel DF;
+	
+	std::vector<double> params{24, .5, 10};
+	PotentialDensityPairContainer<GaussianLogBasis> PD(params, 24,m2);
 
-void generatingKernels(int m2)
+	ActionAngleBasisContainer test(24, m2, 10, 201, 20); 
+	test.scriptW(PD, DF, "GaussianLog");
+}
+
+
+
+void generatingKalnajsKernels(int m2)
 {
 	ActionAngleBasisContainer test("Kalnajs", 10, m2, 5, 101, 20);
 	Mestel DF;
 
 
 	VolterraSolver solver(10, m2, 2000, 0.01);
-	solver.generateKernel("kernelFileName.csv", DF, test);
+
+	std::string kernel = "Kernels/Kalnajs" +std::to_string(m2) +".out";
+	solver.generateKernel(kernel, DF, test);
 
 	//VolterraSolver readingIn("kernelFileName.csv", 10, 1, 5, 0.01);
 }
@@ -65,10 +79,10 @@ void somePerturbation()
 	out.close();
 }
 
-void testEvolution()
+void testEvolution(int m2)
 {
 	somePerturbation();
-	VolterraSolver solver("kernelFileName.csv", 10, 0, 2000, 0.01);
+	VolterraSolver solver("kernelFileName.csv", 10, m2, 2000, 0.01);
 	solver.activeFraction(.25);	
 	solver.volterraSolver("evolution.csv", "someperturbation", true);
 	solver.resetActiveFraction();
@@ -109,3 +123,4 @@ void kalnajBasisFunctionsVaryingK() // Outputs the values of the density basis f
 	}
 	out.close();
 }
+
