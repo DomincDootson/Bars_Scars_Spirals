@@ -26,7 +26,7 @@ public:
 	Eigen::VectorXcd& operator()(int timeIndex) {return m_coeff[timeIndex];}
 	
 	void coefficentReadIn(const std::string &filename); 
-	void write2File(const std::string & filename, const int skip = 1) const;
+	void write2File(const std::string & filename, const int skip = 10) const;
 
 private:
 	

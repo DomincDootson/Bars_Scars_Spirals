@@ -38,6 +38,7 @@ double PotentialDensityPair::scriptWElement(int const m1, std::vector<double> co
 	for (int i = 1; i< nstep-1; ++i){
 		integral += (theta1Deriv[i]) * potential(radii[i]) * sin(2*stepSize*i) * stepSize * cos(m1*theta1[i] + m_fourierHarmonic*theta2[i]);				
 	}
+	if (integral != integral){return 0;}
 	return (radii.back() - radii.front()) * (integral/M_PI);
 }
 

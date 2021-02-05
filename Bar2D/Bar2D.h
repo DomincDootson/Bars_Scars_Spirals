@@ -31,7 +31,7 @@ public:
 	void drift(const double timeStep);
 	void kick(const double timeStep, const Eigen::VectorXcd &diskCoeff);
 
-	void saveBarEvolution(std::string evolutionFilename) const;
+	void saveBarEvolution(const std::string & evolutionFilename, const int skip = 10) const;
 
 	
 private: 
@@ -48,9 +48,9 @@ private:
 	Eigen::ArrayXXd rSquaredArray(const int nGrid, const double rMax) const;
 };
 
-void Bar2D::saveBarEvolution(const std::string evolutionFilename) const {
+void Bar2D::saveBarEvolution(const std::string & evolutionFilename, const int skip) const {
 	std::ofstream out(evolutionFilename);
-	for (int time = 0; time < v_theta.size(); ++time){
+	for (int time = 0; time < v_theta.size(); time += skip){
 		out << v_theta[time] << ',' << v_omega[time] << ',' << v_alpha[time] << ',' << m_momentOfInertia * v_alpha[time] << '\n';
 	}
 	out.close();
@@ -60,10 +60,11 @@ void Bar2D::saveBarEvolution(const std::string evolutionFilename) const {
 double Bar2D::torque(const Eigen::VectorXcd &diskCoeff) const // Torque = il * (A.scriptE.conj(B) - b.scriptE.conj(A))
 {
 	std::complex<double>    firstTerm{ m_expansionCoeff.dot(m_scriptE *  diskCoeff.conjugate()) };
-	std::complex<double> secondTerm{ diskCoeff.dot(m_scriptE *  m_expansionCoeff.conjugate()) }; 
+	//std::complex<double> secondTerm{ diskCoeff.dot(m_scriptE *  m_expansionCoeff.conjugate()) }; 
 	std::complex<double> unitComplex(0,1);
 	double l{ (double) m_fourierHarmonic};
-	return std::real(unitComplex * ((firstTerm - secondTerm) * l)); 
+
+	return std::real(unitComplex * ((firstTerm - conj(firstTerm)) * l)); 
 
 }
 
@@ -82,12 +83,14 @@ Eigen::ArrayXXd Bar2D::rSquaredArray(const int nGrid, const double rMax) const{
 template <class Tbf>
 double Bar2D::momentOfInertia(const Tbf& basisFunctions) const { // Ditto with this, a check wouldn't hurt 
 	int nGrid{801}; // Parameters that set the size of the array. 
-	double rMax{20}, stepSize{2*rMax/((double) nGrid-1)};
+	double rMax{20}, stepSize{2*rMax/((double) nGrid-1)}, totalMass{.01};
 
 	Eigen::ArrayXXd density{basisFunctions.densityArrayReal(m_expansionCoeff, nGrid, rMax)};
+	double normalisation{stepSize*stepSize*density.sum()};
+	
 	Eigen::ArrayXXd r2Array{rSquaredArray(nGrid, rMax)};
-	return stepSize*stepSize*(density*r2Array).sum();
-
+	std::cout << "Moment of Inertia " << totalMass*(stepSize*stepSize*(density*r2Array).sum())/normalisation << '\n';
+	return totalMass*(stepSize*stepSize*(density*r2Array).sum())/normalisation;
 }
 
 void Bar2D::drift(const double timeStep){
@@ -102,7 +105,7 @@ void Bar2D::drift(const double timeStep){
 void Bar2D::kick(const double timeStep, const Eigen::VectorXcd &diskCoeff){
 	double oldAlpha = m_alpha;
 	m_alpha = torque(diskCoeff)/m_momentOfInertia;
-	m_omega = 0.5 * (oldAlpha + m_alpha) * timeStep;  // Is this formula correct?
+	m_omega += 0.5 * (oldAlpha + m_alpha) * timeStep;  // Is this formula correct?
 	v_alpha.push_back(m_alpha); v_omega.push_back(m_omega);
 }
 

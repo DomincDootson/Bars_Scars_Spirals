@@ -28,11 +28,14 @@ public:
 	void generateKernel(const std::string fileName, const Tdf & df, const ActionAngleBasisContainer & basisFunc);// Come up with some standard way of naming kernels
 	void volterraSolver(const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent = true);
 	
-	void barRotation(Bar2D & bar, const std::string & outFilename, const std::string & evolutionFilename, const bool isSelfConsistent = true);
+	void barRotation(Bar2D & bar, const std::string & outFilename, const std::string & evolutionFilename, const bool isSelfConsistent = true, const bool isFreelyRotating = true);
 
 
 	void activeFraction(double xi);
 	void resetActiveFraction() {activeFraction(1/m_xi);}
+	void kernelWrite2fileFlipped(const std::string & kernelFilename) const{
+		m_kernels.kernelWrite2FileFlipped(kernelFilename);
+	}
 
 private:
 	const int m_maxRadialIndex, m_fourierHarmonic, m_numbTimeSteps, m_skip;
@@ -46,6 +49,7 @@ private:
 	
 	void printTimeIndex(const int timeIndex) {if (timeIndex % (m_skip*10) ==0) {std::cout << "Time step: " << timeIndex << '\n';}}
 	double selfConsistentDouble(bool isSelfConsistent) {if (isSelfConsistent) {return 1;} else {return 0;}}
+	double freelyRotatingDouble(bool isFreelyRotating) {if (isFreelyRotating) {return 1;} else {return 0;}}
 };
 
 template <class Tdf>
@@ -59,7 +63,6 @@ void VolterraSolver::volterraSolver(const std::string & outFilename, const std::
 {
 	m_perturbationCoef.coefficentReadIn(perturbationFilename);
 	Eigen::MatrixXcd identity{Eigen::MatrixXcd::Identity(m_maxRadialIndex+1, m_maxRadialIndex+1)};
-
 	double includeSelfConsistent{selfConsistentDouble(isSelfConsistent)};
 
 	for (int timeIndex = 1; timeIndex < m_numbTimeSteps; ++timeIndex){
@@ -81,23 +84,22 @@ Eigen::VectorXcd VolterraSolver::timeIntegration(const int timeIndex, const doub
 }
 
 
-void VolterraSolver::barRotation(Bar2D & bar, const std::string & outFilename, const std::string & evolutionFilename, const bool isSelfConsistent)
+void VolterraSolver::barRotation(Bar2D & bar, const std::string & outFilename, const std::string & evolutionFilename, const bool isSelfConsistent, const bool isFreelyRotating)
 {
 	Eigen::MatrixXcd identity{Eigen::MatrixXcd::Identity(m_maxRadialIndex+1, m_maxRadialIndex+1)};
-	double includeSelfConsistent{selfConsistentDouble(isSelfConsistent)};
-	
+	double includeSelfConsistent{selfConsistentDouble(isSelfConsistent)}; double freelyRotating{freelyRotatingDouble(isFreelyRotating)};
+	m_perturbationCoef(0) = bar.barCoeff();
 	for (int timeIndex = 1; timeIndex < m_numbTimeSteps; ++timeIndex){
 		printTimeIndex(timeIndex);
 
 		bar.drift(m_timeStep);
 		m_perturbationCoef(timeIndex) = bar.barCoeff(); // Could overload this function?? 
-
 		m_responseCoef(timeIndex) = m_responseCoef(0) + ((identity - includeSelfConsistent*0.5*m_kernels(timeIndex)).inverse()) 
 									* timeIntegration(timeIndex, includeSelfConsistent);
 
-		bar.kick(m_timeStep, m_responseCoef(timeIndex));
+		bar.kick(m_timeStep, freelyRotating*m_responseCoef(timeIndex)); // Check that this means the bar rotates at constant speed. 
 	}
-	m_perturbationCoef.write2File(outFilename);
+	m_responseCoef.write2File(outFilename);
 	bar.saveBarEvolution(evolutionFilename);
 }
 

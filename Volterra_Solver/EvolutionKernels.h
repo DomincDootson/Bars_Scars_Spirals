@@ -25,6 +25,7 @@ public:
 	void kernelCreation(const std::string fileName, const Tdf & df, const ActionAngleBasisContainer & basisFunc); // SHould we pass it a script E here? and also a reference to a DF. --> Put sctio
 	void getVolterraParams(const int maxRadialIndex, const int fourierHarmonic, const int numbTimeStep, const double timeStep);
 
+	void kernelWrite2FileFlipped(const std::string & kernelFilename) const;
 private:
 	std::vector<Eigen::MatrixXcd> m_kernels;
 
@@ -38,8 +39,9 @@ private:
 
 	
 	void kernelReadIn(const std::string & kernelFilename);
+	void evolutionParams(int maxRadialIndex, int fourierHarmonic, int numbTimeSteps, int maxFourierHarmonic, double timeStep, double spacing);
 	void kernelWrite2File(const std::string & kernelFilename) const; 
-	void kernelWrite2FileFlipped(const std::string & kernelFilename) const; // Allows kernels to be output for old code
+	//void kernelWrite2FileFlipped(const std::string & kernelFilename) const; // Allows kernels to be output for old code
 	
 	std::complex<double> kernelElement(const int npRow, const int npCol, const ActionAngleBasisContainer & basisFunc, const double time) const;
 	void kernelAtTime(const ActionAngleBasisContainer & basisFunc, const int timeIndex); 
@@ -79,8 +81,7 @@ void EvolutionKernels::kernelCreation(const std::string fileName, const Tdf & df
 		if (timeIndex % 100 == 0){
 			std::cout << "Fraction of kernels completed: " << round(100*timeIndex/((double) m_numbTimeSteps))<< '%' <<  '\n';
 		}
-	}
-	// scriptE multiplication 
+	}	
 	kernelWrite2File(fileName);
 }
 
@@ -140,9 +141,10 @@ void EvolutionKernels::kernelWrite2File(const std::string & kernelFilename) cons
 	std::ofstream out(kernelFilename);
 	out << m_maxRadialIndex << " " << m_fourierHarmonic << " " << m_numbTimeSteps << " " << m_maxFourierHarmonic << " " << m_timeStep << " " << m_spacing << '\n';
 	
-	for (int time = 0; time < m_numbTimeSteps; ++ time){
+	for (int time = 0; time < m_kernels.size(); ++ time){
 		for (int i = 0; i<=m_maxRadialIndex; ++i){
 			for (int j = 0; j <= m_maxRadialIndex; ++j){
+				std::cout << i << " " << j << '\n';
 				if (j == m_maxRadialIndex && i ==m_maxRadialIndex) {out << real(m_kernels[time](i,j)) << " " << imag(m_kernels[time](i,j)) <<'\n';}
 				else {out << real(m_kernels[time](i,j)) << " " << imag(m_kernels[time](i,j)) << " ";}
 			}
@@ -156,10 +158,11 @@ void EvolutionKernels::kernelWrite2File(const std::string & kernelFilename) cons
 void EvolutionKernels::kernelWrite2FileFlipped(const std::string & kernelFilename) const
 {
 	std::ofstream out(kernelFilename);
+
 	out << m_maxRadialIndex << " " << m_fourierHarmonic << " " << m_numbTimeSteps << " " << m_maxFourierHarmonic << " " << m_timeStep << " " << m_spacing << '\n';
-	
+	std::cout << m_numbTimeSteps << '\n';
 	for (int time = m_numbTimeSteps-1; time > 0; --time){
-		for (int i = 0; i<=m_maxRadialIndex; ++i){
+		for (int i = 0; i<=m_maxRadialIndex; ++i){			
 			for (int j = 0; j <= m_maxRadialIndex; ++j){
 				if (j == m_maxRadialIndex && i ==m_maxRadialIndex) {out << real(m_kernels[time](i,j)) << " " << imag(m_kernels[time](i,j)) <<'\n';}
 				else {out << real(m_kernels[time](i,j)) << " " << imag(m_kernels[time](i,j)) << " ";}
@@ -170,13 +173,23 @@ void EvolutionKernels::kernelWrite2FileFlipped(const std::string & kernelFilenam
 	std::cout << "Kernel saved to: " << kernelFilename << '\n';
 }
 
+void EvolutionKernels::evolutionParams(int maxRadialIndex, int fourierHarmonic, int numbTimeSteps, int maxFourierHarmonic, double timeStep, double spacing){
+	m_maxRadialIndex = maxRadialIndex; 
+	m_fourierHarmonic = fourierHarmonic;
+	m_numbTimeSteps = numbTimeSteps;
+	m_maxFourierHarmonic = maxFourierHarmonic;
+	m_timeStep = timeStep;
+	m_spacing = spacing;
+	assert(numbTimeSteps == m_kernels.size() && "The read in kernel is not the same length as the Volterra Solver.");
+}
+
 void EvolutionKernels::kernelReadIn(const std::string & kernelFilename) // Needs checking, but should be okay
 {
 	std::ifstream kernelIn(kernelFilename);
 	int maxRadialIndex, fourierHarmonic, numbTimeSteps, maxFourierHarmonic;
 	double timeStep, spacing; 
 	kernelIn >> maxRadialIndex >> fourierHarmonic >> numbTimeSteps >> maxFourierHarmonic >> timeStep >> spacing;
-	assert(numbTimeSteps == m_kernels.size() && "The read in kernel is not the same length as the Volterra Solver.");
+	evolutionParams(maxRadialIndex, fourierHarmonic, numbTimeSteps, maxFourierHarmonic, timeStep, spacing);
 	double re{}, im{};
 	std::complex<double> unitComplex(0,1);
 
@@ -191,11 +204,7 @@ void EvolutionKernels::kernelReadIn(const std::string & kernelFilename) // Needs
 	} 
 	kernelIn.close();
 	std::cout << "Kernel read in from: " << kernelFilename <<'\n';
-
 }
-
-
-
 #endif
 
 
