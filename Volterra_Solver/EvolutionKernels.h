@@ -144,7 +144,6 @@ void EvolutionKernels::kernelWrite2File(const std::string & kernelFilename) cons
 	for (int time = 0; time < m_kernels.size(); ++ time){
 		for (int i = 0; i<=m_maxRadialIndex; ++i){
 			for (int j = 0; j <= m_maxRadialIndex; ++j){
-				std::cout << i << " " << j << '\n';
 				if (j == m_maxRadialIndex && i ==m_maxRadialIndex) {out << real(m_kernels[time](i,j)) << " " << imag(m_kernels[time](i,j)) <<'\n';}
 				else {out << real(m_kernels[time](i,j)) << " " << imag(m_kernels[time](i,j)) << " ";}
 			}
@@ -185,6 +184,7 @@ void EvolutionKernels::evolutionParams(int maxRadialIndex, int fourierHarmonic, 
 
 void EvolutionKernels::kernelReadIn(const std::string & kernelFilename) // Needs checking, but should be okay
 {
+	std::cout << "Reading in kernel from: " << kernelFilename <<'\n';
 	std::ifstream kernelIn(kernelFilename);
 	int maxRadialIndex, fourierHarmonic, numbTimeSteps, maxFourierHarmonic;
 	double timeStep, spacing; 
@@ -203,7 +203,6 @@ void EvolutionKernels::kernelReadIn(const std::string & kernelFilename) // Needs
 		}
 	} 
 	kernelIn.close();
-	std::cout << "Kernel read in from: " << kernelFilename <<'\n';
 }
 #endif
 

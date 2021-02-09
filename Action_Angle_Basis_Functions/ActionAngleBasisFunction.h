@@ -67,7 +67,7 @@ void ActionAngleBasisFunction::checkParam(int basisRows, double step, int radial
 
 std::string ActionAngleBasisFunction::filename(std::string directory) const
 {
-	return directory + "/" + directory + "_" +std::to_string(m_radialIndex) + "_" + std::to_string(m_m1) + "_" + std::to_string(m_m2) + ".out";
+	return directory + "/" + "Kalnajs" + "_" +std::to_string(m_radialIndex) + "_" + std::to_string(m_m1) + "_" + std::to_string(m_m2) + ".out";
 }
 
 

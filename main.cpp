@@ -4,36 +4,10 @@
 int main()
 {
 
-
-	//Mestel DF;
-
-	//kalnajBasisFunctionsVaryingK();
-	//generatingBF(2);
-
-	//generatingSpiralBF(0);
-	//generatingKernels(1);
-	//generatingKernels(2);
-	
-	generatingSpiralBF(1);
-	generatingGaussianKernels(1);
-	
-	generatingSpiralBF(2);
-	generatingGaussianKernels(2);
-
-
-
-
-	//testEvolutionGaussian(2);
-	
-	//testEvolutionGaussian(0);
-	
-
-	//somePerturbation();
-	/*testEvolution(0);
-	testEvolution(1);
-	testEvolution(2);*/ 
-	//kernelFlipped();
-	//barVaryingAngularSpeed();
-
+	barVaryingRka();
 	return 0;
 }
+
+
+// Things to do,
+//	1) If the kernel file doesn't exist it will run the error wrong number of timesteps, can we make it check if the kernel exists? 

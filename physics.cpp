@@ -21,6 +21,8 @@ void gaussianScriptE(int m2)
 	PD.scriptE("gaussianScriptE.csv");
 }
 
+// Basis Function Generation //
+// ------------------------- // 
 
 void generatingKalnajsBF(int m2)
 {
@@ -33,7 +35,6 @@ void generatingKalnajsBF(int m2)
 	test.scriptW(PD, DF, "Kalnajs");
 }
 
-
 void generatingSpiralBF(int m2)
 {
 	Mestel DF;
@@ -45,7 +46,44 @@ void generatingSpiralBF(int m2)
 	test.scriptW(PD, DF, "GaussianLog");
 }
 
+void kalnajBFVaryingK()
+{
+	Mestel DF;
+	std::vector<double> Kka{4, 5, 6, 7};
+	for (int i = 0; i < 4; ++i){
+		
+		std::cout << "Calculationg BF for Kka: " << Kka[i] << '\n';
 
+		std::vector<double> params{Kka[i], 10};
+		PotentialDensityPairContainer<KalnajsBasis> PD(params, 10, 2);
+
+		ActionAngleBasisContainer test(10, 2, 5, 101, 10);
+		std::string file = "Kalnajs/Kalnajs_" + std::to_string((int) Kka[i]) + "_10";
+		test.scriptW(PD, DF, file);
+	}
+}
+
+void kalnajBFVaryingR()
+{
+	Mestel DF;
+	std::vector<double> Rka{5, 10, 15, 20};
+	for (int i = 0; i < 4; ++i){
+		
+		
+		std::cout << "Calculationg BF for Rka: " << Rka[i] << '\n';
+		std::vector<double> params{4, Rka[i]};
+		PotentialDensityPairContainer<KalnajsBasis> PD(params, 10, 2);
+
+		ActionAngleBasisContainer test(10, 2, 5, 101, 10);
+		std::string file = "Kalnajs/Kalnajs_4_" + std::to_string((int) Rka[i]);
+		test.scriptW(PD, DF, file);
+	}
+}
+
+
+
+// Kernel Generation //
+// ----------------- // 
 
 void generatingKalnajsKernels(int m2)
 {
@@ -73,9 +111,69 @@ void generatingGaussianKernels(int m2)
 	VolterraSolver readingIn(kernel, 24, m2, 2000, 0.01);
 }
 
+std::string kernelName(std::string dir, std::string stem, int Kka, int Rka, int m2)
+{
+	return dir + "/" + stem + "_" + std::to_string(Kka) + "_" + std::to_string(Rka) + "_" + std::to_string(m2) + ".out";
+}
+
+std::string kernelName(std::string dir, std::string stem, int Kka, double Rka, int m2) 
+{
+	return dir + "/" + stem + "_" + std::to_string(Kka) + "_" + std::to_string((int) round(Rka)) + "_" + std::to_string(m2) + ".out";
+}
 
 
+void kalnajsKernelsVaryingK() // Write in to use the new filename func
+{
+	Mestel DF;
+	std::vector<double> Kka{4, 5, 6, 7};
+	for (int i = 0; i < 4; ++i){
+		
+		std::cout << "Calculationg Kernels for Kka: " << Kka[i] << '\n';
+		std::string file = "Kalnajs/Kalnajs_" + std::to_string((int) Kka[i]) + "_10";
+		
 
+		ActionAngleBasisContainer test(file, 10, 2, 5, 101, 20);
+		VolterraSolver solver(10, 2, 2000, 0.01);
+		std::string kernel = "Kernels/Kalnajs_" + std::to_string((int) Kka[i]) +"_10_2.out";
+		solver.generateKernel(kernel, DF, test);
+	}
+}
+
+
+void kalnajsKernelsVaryingR() // Write in to use the new filename func
+{
+	Mestel DF;
+	std::vector<double> Rka{5, 10, 15, 20};
+	for (int i = 0; i < 4; ++i){
+		
+		std::cout << "Calculationg BF for Rka: " << Rka[i] << '\n';
+		std::string file = "Kalnajs/Kalnajs_4_" + std::to_string((int) Rka[i]);
+		
+
+		ActionAngleBasisContainer test(file, 10, 2, 5, 101, 20);
+		VolterraSolver solver(10, 2, 2000, 0.01);
+		std::string kernel = "Kernels/Kalnajs_4_" + std::to_string((int) Rka[i]) +"_2.out";
+		solver.generateKernel(kernel, DF, test);
+	}
+}
+
+void kernelFlipped(){
+	VolterraSolver solver0("Kernels/Kalnajs_0.out", 10, 0, 2000, 0.01);
+	solver0.activeFraction(.25);
+	solver0.kernelWrite2fileFlipped("KalnajsBlock0.out");
+
+	VolterraSolver solver1("Kernels/Kalnajs_1.out", 10, 1, 2000, 0.01);
+	solver1.activeFraction(.25);
+	solver1.kernelWrite2fileFlipped("KalnajsBlock1.out");
+	
+	VolterraSolver solver2("Kernels/Kalnajs_2.out", 10,2 , 2000, 0.01);
+	solver2.activeFraction(.25);
+	solver2.kernelWrite2fileFlipped("KalnajsBlock2.out");
+}
+
+
+// Test Evolution //
+// -------------- // 
 void kalnajsPerturbation()
 {
 	std::ofstream out("someperturbation");
@@ -140,28 +238,25 @@ void testEvolutionGaussian(int m2)
 	solver.resetActiveFraction();
 }
 
-
-
-void kernelFlipped(){
-	VolterraSolver solver0("Kernels/Kalnajs_0.out", 10, 0, 2000, 0.01);
+void spiralTestEvolution()
+{
+	VolterraSolver solver0("Kernels/GaussianLog_0.out", 24, 0, 2000, 0.01);
 	solver0.activeFraction(.25);
-	solver0.kernelWrite2fileFlipped("KalnajsBlock0.out");
+	solver0.volterraSolver("GaussianLogTest0.csv", "someperturbation", false);	
 
-	VolterraSolver solver1("Kernels/Kalnajs_1.out", 10, 1, 2000, 0.01);
+	VolterraSolver solver1("Kernels/GaussianLog_1.out", 24, 1, 2000, 0.01);
 	solver1.activeFraction(.25);
-	solver1.kernelWrite2fileFlipped("KalnajsBlock1.out");
-	
-	VolterraSolver solver2("Kernels/Kalnajs_2.out", 10,2 , 2000, 0.01);
-	solver2.activeFraction(.25);
-	solver2.kernelWrite2fileFlipped("KalnajsBlock2.out");
+	solver1.volterraSolver("GaussianLogTest1.csv", "someperturbation", false);	
 
+	VolterraSolver solver2("Kernels/GaussianLog_2.out", 24, 2, 2000, 0.01);
+	solver2.activeFraction(.25);
+	solver2.volterraSolver("GaussianLogTest2.csv", "someperturbation", false);	
 }
 
 
+// Paper 2 Functions // 
 
-// Bar Rotating Physics
-
-void kalnajBasisFunctionsVaryingK() // Outputs the values of the density basis functions for plotting
+void kalnajBasisFunctionsVaryingK() 
 {
 	std::vector<double> params{4, 10};
 	std::ofstream out("quad_Density_Functions.csv");
@@ -185,20 +280,6 @@ void kalnajBasisFunctionsVaryingK() // Outputs the values of the density basis f
 	}
 	out.close();
 }
-
-// Caclculation of the MOI. 
-
-void barTesting()
-{
-	std::vector<double> params{4, 20};
-	PotentialDensityPairContainer<KalnajsBasis> PD(params, 10,2);
-
-	Eigen::VectorXcd coef = Eigen::VectorXcd::Zero(11);
-	coef[0] = 1;
-	Bar2D bar(coef, PD, 0);
-
-}
-
 
 std::string evolutionFileName(std::string dir, double omega0)
 {
@@ -232,6 +313,63 @@ void barVaryingAngularSpeed()
 		solver.barRotation(bar, outFilename, evolutionFilename, true, true); 
 	}
 }
+
+void barVaryingKka()
+{
+	std::vector<int> Kka{4, 5, 6, 7};
+	for (int i = 0; i < 4; i++)
+	{
+		std::cout << "Evolution for Kka: " << Kka[i] << '\n';
+		std::string kernelFileName = kernelName("Kernels", "Kalnajs", Kka[i], 10, 2);
+		VolterraSolver solver(kernelFileName, 10, 2, 2000, 0.01);
+		solver.activeFraction(.25);	
+		 
+		Eigen::VectorXcd coef = Eigen::VectorXcd::Zero(11);
+		coef[0] = 1;
+		Bar2D bar(coef, 0);
+
+		std::string outFilename = coeffFileName("BarEvolution/VaryingKka", 0.01*Kka[i]);
+		std::string evolutionFilename = evolutionFileName("BarEvolution/VaryingKka", 0.01*Kka[i]);
+
+		solver.barRotation(bar, outFilename, evolutionFilename); 
+	}
+}
+
+void barVaryingRka()
+{
+	std::vector<double> Rka{5, 10, 15, 20};
+	for (int i = 0; i < 4; i++)
+	{
+		std::cout << "Evolution for Rka: " << Rka[i] << '\n';
+		std::string kernelFileName = kernelName("Kernels", "Kalnajs", 4, Rka[i], 2);
+		VolterraSolver solver(kernelFileName, 10, 2, 2000, 0.01);
+		solver.activeFraction(.25);	
+		 
+		Eigen::VectorXcd coef = Eigen::VectorXcd::Zero(11);
+		coef[0] = 1;
+		Bar2D bar(coef, 0);
+
+		std::string outFilename = coeffFileName("BarEvolution/VaryingRka", 0.01*Rka[i]);
+		std::string evolutionFilename = evolutionFileName("BarEvolution/VaryingRka", 0.01*Rka[i]);
+
+		solver.barRotation(bar, outFilename, evolutionFilename); 
+	}
+}
+
+
+void barTesting() // I think that we can get rid of this. 
+{
+	std::vector<double> params{4, 20};
+	PotentialDensityPairContainer<KalnajsBasis> PD(params, 10,2);
+
+	Eigen::VectorXcd coef = Eigen::VectorXcd::Zero(11);
+	coef[0] = 1;
+	Bar2D bar(coef, PD, 0);
+
+}
+
+
+
 
 
 

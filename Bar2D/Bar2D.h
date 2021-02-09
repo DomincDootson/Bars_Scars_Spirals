@@ -20,6 +20,17 @@ public:
 	m_fourierHarmonic{basisFunctions.fourierHarmonic()},
 	m_scriptE{basisFunctions.getScriptE()}
 	{v_theta.push_back(m_theta); v_omega.push_back(m_omega); v_alpha.push_back(m_alpha);}
+
+	Bar2D(const Eigen::VectorXcd expansionCoeff, const double omega0) :
+	m_theta{0}, m_omega{omega0}, m_alpha{0},
+	m_expansionCoeff{expansionCoeff},
+	m_momentOfInertia{1},
+	m_fourierHarmonic{2},
+	m_scriptE{Eigen::MatrixXd::Zero(m_expansionCoeff.size(), m_expansionCoeff.size())}
+	{v_theta.push_back(m_theta); v_omega.push_back(m_omega); v_alpha.push_back(m_alpha);}
+
+
+
 	~Bar2D() {} 
 
 	Eigen::VectorXcd barCoeff() const {return m_expansionCoeff;}
