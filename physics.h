@@ -1,5 +1,7 @@
 #ifndef PHYSICS
 #define PHYSICS 
+
+#include <string>
 // Could we possibly put comments to tell us what each of these functions do? 
 
 void gaussianScriptE(int m2); 
@@ -21,7 +23,7 @@ void generatingGaussianKernels(int m2);
 
 void kalnajsKernelsVaryingK();
 void kalnajsKernelsVaryingR();
-
+void kalnajsKernelsVaryingSigma(int l);
 
 // Provides some test evolutions
 
@@ -31,6 +33,8 @@ void testEvolutionGaussian(int m2); // Does evolution for singular l harmonic
 void spiralTestEvolution(); // Does evolution for the test plot in paper 1
 
 
+// Paper 1 Functions //
+void barKickingPerturbations();
 
 
 // Paper 2 functions
@@ -44,6 +48,10 @@ void barVaryingRka();
 
 
 void kalnajBasisFunctionsVaryingK(); // 
+
+
+// Misc 
+void savingPotentialArrays(std::string dir);
 
 
 

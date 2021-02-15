@@ -1,10 +1,22 @@
 #include "physics.h"
-	
 
 int main()
 {
+	//barKickingPerturbations();
+	//kalnajsKernelsVaryingSigma(2);
+	//generatingKalnajsBF(1);
+	kalnajsKernelsVaryingSigma(1);
+	
+	
 
-	barVaryingRka();
+
+	//kalnajsKernelsVaryingK();
+	//kalnajsKernelsVaryingR();
+	/*barVaryingAngularSpeed(); // Genereates data for different rotational speeds of bars
+	barVaryingKka();
+	barVaryingRka();*/
+	
+	
 	return 0;
 }
 

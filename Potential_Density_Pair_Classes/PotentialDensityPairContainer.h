@@ -50,6 +50,9 @@ public:
 	Eigen::VectorXcd potentialResolving(const Eigen::ArrayXXcd &potentialArray, const double rMax) const; // Not great at resolving l =0
 	Eigen::VectorXcd densityResolving(const Eigen::ArrayXXcd &densityArray, const double rMax) const;
 
+	std::vector<double> oneDdensity(const std::vector<double> & radii, Eigen::VectorXcd &coeff) const;
+
+
 	Eigen::MatrixXd getScriptE() const {return m_scriptE;}
 
 
@@ -131,8 +134,7 @@ Eigen::VectorXcd PotentialDensityPairContainer<T>::potentialResolving(const Eige
 		Eigen::ArrayXXcd densityArray{((m_potentialDensityContainer[i].densityGrid(potentialArray.rows(), rMax)).conjugate())};
 		coefficents(i) = spacing*spacing*(densityArray * potentialArray).sum();
 	}
-	return -(m_scriptE.inverse())*coefficents; // WE NEED TO DO MULTIPLICATION BY SCRIPTE
-	// Do mulitplication by E 
+	return -(m_scriptE.inverse())*coefficents; 
 }
 
 template <class T>
@@ -147,8 +149,7 @@ Eigen::VectorXcd PotentialDensityPairContainer<T>::densityResolving(const Eigen:
 		Eigen::ArrayXXcd potentialArray{((m_potentialDensityContainer[i].potentialGrid(densityArray.rows(), rMax)).conjugate())};
 		coefficents(i) = spacing*spacing*(potentialArray * densityArray).sum();
 	}
-	return -(m_scriptE.inverse())*coefficents; // WE NEED TO DO MULTIPLICATION BY SCRIPTE
-	// Do mulitplication by E 
+	return -(m_scriptE.inverse())*coefficents; 
 }
 
 
@@ -201,6 +202,20 @@ Eigen::MatrixXd PotentialDensityPairContainer<T>::scriptE() const
 		}
 	}
 	return scriptE; 
+}
+
+template <class T>
+std::vector<double> PotentialDensityPairContainer<T>::oneDdensity(const std::vector<double> & radii, Eigen::VectorXcd &coeff) const
+{
+	std::vector<double> densityVector;
+	for (auto r = radii.begin(); r != radii.end(); ++r){
+			std::complex<double> den{0};
+			for (int n = 0; n <= m_maxRadialIndex; ++n){
+				den += coeff[n] * density(*r, n);
+			}
+			densityVector.push_back(real(den));
+		}
+	return densityVector;	
 }
 
 

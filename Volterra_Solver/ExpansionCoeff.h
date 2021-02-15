@@ -4,14 +4,22 @@
 #include <vector>
 #include <cmath>
 
+#include "../Potential_Density_Pair_Classes/PotentialDensityPairContainer.h"
+
 class ExpansionCoeff
 {
 public:
 	ExpansionCoeff(const int numbTimeStep, const int maxRadialIndex) : m_coeff(numbTimeStep) {
 		for (auto i = m_coeff.begin(); i != m_coeff.end(); ++i){
-			//i -> resize(maxRadialIndex+1);
 			i -> setZero(maxRadialIndex+1);
 		}
+	}
+
+		ExpansionCoeff(const Eigen::VectorXcd t0Coeff, const int numbTimeStep, const int maxRadialIndex) : m_coeff(numbTimeStep) {
+		for (auto i = m_coeff.begin(); i != m_coeff.end(); ++i){			
+			i -> setZero(maxRadialIndex+1);
+		}
+		m_coeff[0] = t0Coeff;
 	}
 	
 	ExpansionCoeff(const std::string & filename, const int numbTimeStep) : m_coeff(numbTimeStep) 
@@ -27,12 +35,13 @@ public:
 	
 	void coefficentReadIn(const std::string &filename); 
 	void write2File(const std::string & filename, const int skip = 10) const;
+	
+	template <class Tbf>
+	void writeDensity2File(const std::string & outFilename, const Tbf & bf, const int m_skip) const; 
 
 private:
 	
-	std::vector<Eigen::VectorXcd> m_coeff;
-	
-
+	std::vector<Eigen::VectorXcd> m_coeff;	
 };
 char sign(double number){
 	if (number < 0){ return '-';}
@@ -58,12 +67,9 @@ void ExpansionCoeff::coefficentReadIn(const std::string &filename)
 }
 
 
-
-
 void ExpansionCoeff::write2File(const std::string & filename, const int skip) const 
 {
 	std::ofstream out(filename);
-	out << m_coeff.size() << '\n';
 	for (int time = 0; time < m_coeff.size(); time += skip)
 	{
 		for (int n = 0; n < m_coeff[time].size(); ++n)
@@ -79,5 +85,35 @@ void ExpansionCoeff::write2File(const std::string & filename, const int skip) co
 	std::cout << "Evolution saved to: " << filename << '\n';
 	out.close();
 }
+
+void outputVector(std::ofstream & out, std::vector<double> vec){
+	for (auto i = vec.begin(); i != vec.end() - 1; ++i){
+		out << *i <<',';
+	}
+	out << vec.back() << '\n';
+}
+
+std::vector<double> radiiVector(double rMax, int nStep){
+	double step{rMax/((double) nStep)};
+	std::vector<double> radii;
+	for (double radius = 0; radius <= rMax; radius += step){
+		radii.push_back(radius);
+	}
+	return radii;
+}
+
+template <class Tbf>
+void ExpansionCoeff::writeDensity2File(const std::string & outFilename, const Tbf & bf, const int skip) const 
+{
+	std::ofstream out(outFilename);
+	std::vector<double> radii = radiiVector(10, 200);
+	outputVector(out, radii);
+	for (int time = 0; time < m_coeff.size(); time += skip){
+		std::vector<double> densityOnLine = bf.oneDdensity(radii, m_coeff[time]);
+		outputVector(out, densityOnLine);
+	}
+	out.close();
+}
+
 
 #endif

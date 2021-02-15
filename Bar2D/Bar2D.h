@@ -26,7 +26,7 @@ public:
 	m_expansionCoeff{expansionCoeff},
 	m_momentOfInertia{1},
 	m_fourierHarmonic{2},
-	m_scriptE{Eigen::MatrixXd::Zero(m_expansionCoeff.size(), m_expansionCoeff.size())}
+	m_scriptE{Eigen::MatrixXd::Identity(m_expansionCoeff.size(), m_expansionCoeff.size())}
 	{v_theta.push_back(m_theta); v_omega.push_back(m_omega); v_alpha.push_back(m_alpha);}
 
 
