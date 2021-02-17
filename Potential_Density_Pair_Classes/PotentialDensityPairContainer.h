@@ -50,7 +50,7 @@ public:
 	Eigen::VectorXcd potentialResolving(const Eigen::ArrayXXcd &potentialArray, const double rMax) const; // Not great at resolving l =0
 	Eigen::VectorXcd densityResolving(const Eigen::ArrayXXcd &densityArray, const double rMax) const;
 
-	std::vector<double> oneDdensity(const std::vector<double> & radii, Eigen::VectorXcd &coeff) const;
+	std::vector<double> oneDdensity(const std::vector<double> & radii, const Eigen::VectorXcd &coeff) const;
 
 
 	Eigen::MatrixXd getScriptE() const {return m_scriptE;}
@@ -205,7 +205,7 @@ Eigen::MatrixXd PotentialDensityPairContainer<T>::scriptE() const
 }
 
 template <class T>
-std::vector<double> PotentialDensityPairContainer<T>::oneDdensity(const std::vector<double> & radii, Eigen::VectorXcd &coeff) const
+std::vector<double> PotentialDensityPairContainer<T>::oneDdensity(const std::vector<double> & radii, const Eigen::VectorXcd &coeff) const
 {
 	std::vector<double> densityVector;
 	for (auto r = radii.begin(); r != radii.end(); ++r){

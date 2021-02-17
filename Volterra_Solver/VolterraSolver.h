@@ -21,7 +21,7 @@ public:
 	m_maxRadialIndex{maxRadialIndex}, m_fourierHarmonic{fourierHarmonic}, m_numbTimeSteps{numbTimeSteps}, m_skip{10}, m_timeStep{timeStep}, m_xi{1},
 	m_kernels(kernelFilename, m_numbTimeSteps),
 	m_responseCoef(m_numbTimeSteps, m_maxRadialIndex), m_perturbationCoef(m_numbTimeSteps, m_maxRadialIndex) {} 
-	
+	 
 	~VolterraSolver() {}
 
 	template <class Tdf>
@@ -84,10 +84,10 @@ void VolterraSolver::volterraSolver(const Tbf & bf, const std::string & outFilen
 	m_perturbationCoef.coefficentReadIn(perturbationFilename);
 	Eigen::MatrixXcd identity{Eigen::MatrixXcd::Identity(m_maxRadialIndex+1, m_maxRadialIndex+1)};
 	double includeSelfConsistent{selfConsistentDouble(isSelfConsistent)};
-
 	for (int timeIndex = 1; timeIndex < m_numbTimeSteps; ++timeIndex){
 		printTimeIndex(timeIndex);
-		m_responseCoef(timeIndex) = m_responseCoef(0) + ((identity - includeSelfConsistent*0.5*m_kernels(timeIndex)).inverse()) 
+
+		m_responseCoef(timeIndex) = m_responseCoef(0) + ((identity - includeSelfConsistent*0.5*m_kernels(timeIndex)).inverse())
 									* timeIntegration(timeIndex, includeSelfConsistent);
 	}
 	m_responseCoef.writeDensity2File(outFilename, bf, m_skip);

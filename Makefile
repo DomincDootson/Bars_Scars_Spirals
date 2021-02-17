@@ -14,11 +14,21 @@ BasisFunctions : main.o physics.o
 
 
 
-main.o : main.cpp
+main.o : main.cpp Physics_Functions/barEvolutionFunctions.h Physics_Functions/densityEvolutionFunctions.h Physics_Functions/generalFunctions.h
 	$(CXX) $(CXXFLAGS) -c main.cpp
 
-physics.o : physics.cpp $(HEADERFILES)
-	$(CXX) $(CXXFLAGS) -c physics.cpp
+
+#physics.o : physics.cpp $(HEADERFILES)
+#	$(CXX) $(CXXFLAGS) -c physics.cpp
+
+generalFunctions.o : Physics_Functions/generalFunctions.cpp $(HEADERFILES)
+	$(CXX) $(CXXFLAGS) -c Physics_Functions/generalFunctions.cpp
+
+densityEvolutionFunctions.o : Physics_Functions/densityEvolutionFunctions.cpp $(HEADERFILES)
+	$(CXX) $(CXXFLAGS) -c Physics_Functions/densityEvolutionFunctions.cpp
+
+barEvolutionFunctions.o : Physics_Functions/barEvolutionFunctions.cpp $(HEADERFILES)
+	$(CXX) $(CXXFLAGS) -c Physics_Functions/barEvolutionFunctions.cpp
 
 clean : 
 	@rm -f *.o

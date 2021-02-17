@@ -1,11 +1,15 @@
-#include "physics.h"
+//#include "physics.h"
+
+#include "Physics_Functions/barEvolutionFunctions.h"
+#include "Physics_Functions/densityEvolutionFunctions.h"
+#include "Physics_Functions/generalFunctions.h"
 
 int main()
 {
-	//barKickingPerturbations();
-	//kalnajsKernelsVaryingSigma(2);
-	//generatingKalnajsBF(1);
-	kalnajsKernelsVaryingSigma(1);
+	//diskKickingPerturbations();
+	diskKicking();
+	
+	
 	
 	
 

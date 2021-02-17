@@ -33,9 +33,11 @@ public:
 	Eigen::VectorXcd operator()(int timeIndex) const {return m_coeff[timeIndex];}
 	Eigen::VectorXcd& operator()(int timeIndex) {return m_coeff[timeIndex];}
 	
-	void coefficentReadIn(const std::string &filename); 
+	void coefficentReadIn(const std::string &filename);
+
 	void write2File(const std::string & filename, const int skip = 10) const;
-	
+	void writePerturbation2File(const std::string &filename) const;
+
 	template <class Tbf>
 	void writeDensity2File(const std::string & outFilename, const Tbf & bf, const int m_skip) const; 
 
@@ -85,6 +87,27 @@ void ExpansionCoeff::write2File(const std::string & filename, const int skip) co
 	std::cout << "Evolution saved to: " << filename << '\n';
 	out.close();
 }
+
+void ExpansionCoeff::writePerturbation2File(const std::string &filename) const
+{
+	std::ofstream out(filename);
+	out << m_coeff[0].size()-1 << '\n';
+	for (int time = 0; time < m_coeff.size(); ++time)
+	{
+		for (int n = 0; n < m_coeff[time].size(); ++n)
+		{
+			if (n == m_coeff[time].size() -1){
+				out << real(m_coeff[time](n)) << " " << imag(m_coeff[time](n))  << '\n';
+			}
+			else{
+			out << real(m_coeff[time](n)) << " " << imag(m_coeff[time](n))  << " ";
+			}
+		}
+	}
+	std::cout << "Evolution saved to: " << filename << '\n';
+	out.close();
+}
+
 
 void outputVector(std::ofstream & out, std::vector<double> vec){
 	for (auto i = vec.begin(); i != vec.end() - 1; ++i){
