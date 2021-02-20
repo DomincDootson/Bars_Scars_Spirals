@@ -19,6 +19,16 @@
 #include "barEvolutionFunctions.h"
 
 
+std::string kernelName(std::string dir, std::string stem, int Kka, int Rka, int m2)
+{
+	return dir + "/" + stem + "_" + std::to_string(Kka) + "_" + std::to_string(Rka) + "_" + std::to_string(m2) + ".out";
+}
+
+std::string kernelName(std::string dir, std::string stem, int Kka, double Rka, int m2) 
+{
+	return dir + "/" + stem + "_" + std::to_string(Kka) + "_" + std::to_string((int) round(Rka)) + "_" + std::to_string(m2) + ".out";
+}
+
 
 void kalnajBFVaryingK()
 {

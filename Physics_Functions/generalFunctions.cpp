@@ -16,7 +16,6 @@
 
 #include "../Bar2D/Bar2D.h"
 
-#include "generalFunctions.h"
 
 void gaussianScriptE(int m2)
 {

@@ -3,11 +3,16 @@
 #include "Physics_Functions/barEvolutionFunctions.h"
 #include "Physics_Functions/densityEvolutionFunctions.h"
 #include "Physics_Functions/generalFunctions.h"
+#include <iostream>
 
 int main()
 {
+	
+
+	std::cout<< "Main funciton has compied\n";
+
 	//diskKickingPerturbations();
-	diskKicking();
+	//diskKicking();
 	
 	
 	

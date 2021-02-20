@@ -3,7 +3,7 @@
 
 void kalnajsKernelsVaryingSigma(int l);
 void diskKickingPerturbations();
-void diskKicking();
+//void diskKicking();
 
 
 #endif

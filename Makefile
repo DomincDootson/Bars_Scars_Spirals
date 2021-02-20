@@ -1,34 +1,44 @@
+# First give all the flags for the complier
+
 CXX = g++
 CXXFLAGS = -O3 -std=c++2a -Wall 
-
-HEADERFILES = Action_Angle_Basis_Functions/ActionAngleBasisContainer.h Potential_Density_Pair_Classes/KalnajsBasis.h Potential_Density_Pair_Classes/GaussianLogBasis.h Potential_Density_Pair_Classes/PotentialDensityPairContainer.h DF_Class/Mestel.h \
-		Volterra_Solver/VolterraSolver.h Volterra_Solver/EvolutionKernels.h Volterra_Solver/ExpansionCoeff.h DF_Class/DFClass.h Action_Angle_Basis_Functions/ActionAngleBasisFunction.h Potential_Density_Pair_Classes/PotentialDensityPair.h Bar2D/Bar2D.h
-
-
-all : BasisFunctions 
-
-BasisFunctions : main.o physics.o
-	$(CXX) $(CXXFLAGS) -o main main.o physics.o
+INCLUDES = -I/Action_Angle_Basis_Functions -I/DF_Class -I/Potential_Density_Pair_Classes -I/Volterra_Solver -I/Physics_Functions
 
 
 
+# Label all the different files that we want to compile and how they link
+
+FILE_DIR = Physics_Functions
+
+BAR = bar
+BAR_SRC = $(FILE_DIR)/barEvolution.cpp $(FILE_DIR)/barEvolutionFunctions.cpp 
+BAR_OBJ = $(FILE_DIR)/barEvolution.o $(FILE_DIR)/barEvolutionFunctions.o 
 
 
-main.o : main.cpp Physics_Functions/barEvolutionFunctions.h Physics_Functions/densityEvolutionFunctions.h Physics_Functions/generalFunctions.h
-	$(CXX) $(CXXFLAGS) -c main.cpp
+DENSITY = density
+DENSITY_SRC = $(FILE_DIR)/densityEvolution.cpp $(FILE_DIR)/densityEvolutionFunctions.cpp 
+DENSITY_OBJ = $(FILE_DIR)/densityEvolution.o $(FILE_DIR)/densityEvolutionFunctions.o
+
+GENERAL = general
+GENERAL_SRC = $(FILE_DIR)/general.cpp $(FILE_DIR)/generalFunctions.cpp 
+GENERAL_OBJ = $(FILE_DIR)/generalFunctions.o  $(FILE_DIR)/general.o
 
 
-#physics.o : physics.cpp $(HEADERFILES)
-#	$(CXX) $(CXXFLAGS) -c physics.cpp
+# Define all the rules
 
-generalFunctions.o : Physics_Functions/generalFunctions.cpp $(HEADERFILES)
-	$(CXX) $(CXXFLAGS) -c Physics_Functions/generalFunctions.cpp
+all : $(BAR) $(DENSITY) $(GENERAL)
 
-densityEvolutionFunctions.o : Physics_Functions/densityEvolutionFunctions.cpp $(HEADERFILES)
-	$(CXX) $(CXXFLAGS) -c Physics_Functions/densityEvolutionFunctions.cpp
+$(BAR): $(BAR_OBJ)
+	$(CXX) $(CXXFLAGS) -o $@ $^ 
 
-barEvolutionFunctions.o : Physics_Functions/barEvolutionFunctions.cpp $(HEADERFILES)
-	$(CXX) $(CXXFLAGS) -c Physics_Functions/barEvolutionFunctions.cpp
+$(DENSITY): $(DENSITY_OBJ)
+	$(CXX) $(CXXFLAGS) -o $@ $^ 
 
-clean : 
-	@rm -f *.o
+$(GENERAL): $(GENERAL_OBJ)
+	$(CXX) $(CXXFLAGS) -o $@ $^ 
+
+
+# Define the rule for making .o from .cpp files 
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $< 
+

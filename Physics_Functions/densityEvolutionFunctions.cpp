@@ -17,8 +17,6 @@
 #include "../Bar2D/Bar2D.h"
 
 
-#include "densityEvolutionFunctions.h"
-
 void kalnajsKernelsVaryingSigma(int l)
 {
 	std::vector<double> littleSigma{.25, .35, .50};
@@ -63,11 +61,11 @@ void outPutPerturbation(const T & pd, double littleSigma, double radius, int num
 	ExpansionCoeff holding(t0Coeff, numbTimeSteps, pd.maxRadialIndex());
 	holding.writePerturbation2File(perturbationFilename(littleSigma, radius, pd.fourierHarmonic()));
 }
-
+ 
 
 void diskKickingPerturbations()
 {
-	std::vector<double> radii {.1,.5,1, 2, 3, 5};
+	std::vector<double> radii {.1,.5,1, 2, 3, 5,15};
 
 	std::vector<double> params{4, 20};
 	PotentialDensityPairContainer<KalnajsBasis> pd0(params, 10,0), pd1(params, 10, 1), pd2(params, 10, 2);
@@ -75,7 +73,7 @@ void diskKickingPerturbations()
 	for (auto i = radii.begin(); i != radii.end(); ++i){
 		outPutPerturbation(pd0, .25, *i); outPutPerturbation(pd1, .25, *i); outPutPerturbation(pd2, .25, *i);
 		outPutPerturbation(pd0, .35, *i); outPutPerturbation(pd1, .35, *i); outPutPerturbation(pd2, .35, *i);
-		outPutPerturbation(pd0, .50, *i); outPutPerturbation(pd1, .50, *i); outPutPerturbation(pd2, .50, *i);
+		outPutPerturbation(pd0, .50, *i); outPutPerturbation(pd1, .50, *i); outPutPerturbation(pd2, .50, *i); 
 	}
 }
 
@@ -86,12 +84,12 @@ void individualDiskKicking(const T & pd, double littleSigma, double radius)
 	std::string perturbationFile{perturbationFilename(littleSigma, radius, angHarmonic)};
 	std::string densityFile{kickingDensityFilename(littleSigma, radius, angHarmonic)};
 	std::string kernel = "Disk_Kicking/littleSigma_" + std::to_string((int) round(littleSigma*100)) + "/Kalnajs"+ "_" + std::to_string(angHarmonic) +".out";
-
+	std::cout << "Solving: " << littleSigma << " " << radius << " " << angHarmonic <<'\n';
 	VolterraSolver solver(kernel, pd.maxRadialIndex(), angHarmonic, 2000, 0.025);
 	solver.activeFraction(.25);
 	solver.volterraSolver(pd, densityFile, perturbationFile, true);
 }
-
+ 
 
 
 
@@ -100,7 +98,7 @@ void diskKicking()
 	std::vector<double> params{4, 20};
 	PotentialDensityPairContainer<KalnajsBasis> pd0(params, 10,0), pd1(params, 10, 1), pd2(params, 10, 2);
 
-	std::vector<double> littleSigma{.25, .35, .50}, radii{.1, .5, 1, 2, 5};
+	std::vector<double> littleSigma{.25, .35, .50}, radii{.1, .5, 1, 2, 5, 15};
 
 	for (auto s = littleSigma.begin(); s != littleSigma.end(); ++s){
 		for (auto radius = radii.begin(); radius != radii.end(); ++radius){
@@ -110,6 +108,3 @@ void diskKicking()
 		}
 	}
 }
-
-
-
