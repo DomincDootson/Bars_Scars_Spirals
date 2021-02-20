@@ -2,5 +2,6 @@
 /GaussianLog
 /scriptE
 
+/Density_Kicking/*.out 
 *.o 
  

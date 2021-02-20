@@ -50,6 +50,7 @@ private:
 	EvolutionKernels m_kernels;
 	ExpansionCoeff m_responseCoef, m_perturbationCoef;
 
+	void solveVolterraEquation(const std::string & perturbationFilename, const bool isSelfConsistent);
 	Eigen::VectorXcd timeIntegration(const int timeIndex, const double includeSelfConsistent) const;	
 	
 	void printTimeIndex(const int timeIndex) {if (timeIndex % (m_skip*10) ==0) {std::cout << "Time step: " << timeIndex << '\n';}}
@@ -64,32 +65,28 @@ void VolterraSolver::generateKernel(const std::string fileName, const Tdf & df, 
 	m_kernels.kernelCreation(fileName, df, basisFunc);
 }
 
-void VolterraSolver::volterraSolver(const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent) 
+void VolterraSolver::solveVolterraEquation(const std::string & perturbationFilename, const bool isSelfConsistent)
 {
 	m_perturbationCoef.coefficentReadIn(perturbationFilename);
 	Eigen::MatrixXcd identity{Eigen::MatrixXcd::Identity(m_maxRadialIndex+1, m_maxRadialIndex+1)};
 	double includeSelfConsistent{selfConsistentDouble(isSelfConsistent)};
-
 	for (int timeIndex = 1; timeIndex < m_numbTimeSteps; ++timeIndex){
 		printTimeIndex(timeIndex);
 		m_responseCoef(timeIndex) = m_responseCoef(0) + ((identity - includeSelfConsistent*0.5*m_kernels(timeIndex)).inverse()) 
 									* timeIntegration(timeIndex, includeSelfConsistent);
 	}
+}
+
+void VolterraSolver::volterraSolver(const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent) 
+{
+	solveVolterraEquation(perturbationFilename, isSelfConsistent);
 	m_responseCoef.write2File(outFilename, m_skip);
 }
 
 template <class Tbf>
 void VolterraSolver::volterraSolver(const Tbf & bf, const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent)
 {
-	m_perturbationCoef.coefficentReadIn(perturbationFilename);
-	Eigen::MatrixXcd identity{Eigen::MatrixXcd::Identity(m_maxRadialIndex+1, m_maxRadialIndex+1)};
-	double includeSelfConsistent{selfConsistentDouble(isSelfConsistent)};
-	for (int timeIndex = 1; timeIndex < m_numbTimeSteps; ++timeIndex){
-		printTimeIndex(timeIndex);
-
-		m_responseCoef(timeIndex) = m_responseCoef(0) + ((identity - includeSelfConsistent*0.5*m_kernels(timeIndex)).inverse())
-									* timeIntegration(timeIndex, includeSelfConsistent);
-	}
+	solveVolterraEquation(perturbationFilename, isSelfConsistent);
 	m_responseCoef.writeDensity2File(outFilename, bf, m_skip);
 } 
 

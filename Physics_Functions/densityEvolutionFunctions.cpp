@@ -47,7 +47,7 @@ std::string perturbationFilename(double littleSigma, double radius, int fourierH
 std::string kickingDensityFilename(double littleSigma, double radius, int fourierHarmonic)
 {
 	return "Disk_Kicking/littleSigma_" + std::to_string((int) round(100*littleSigma)) + 
-			"/Density" + std::to_string((int) round(10*radius)) + "_" +std::to_string(fourierHarmonic) + ".out";
+			"/Density" + std::to_string((int) round(10*radius)) + "_" +std::to_string(fourierHarmonic) + ".csv";
 }
 
 template <typename T>
