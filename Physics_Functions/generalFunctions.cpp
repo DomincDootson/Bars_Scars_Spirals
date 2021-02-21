@@ -181,7 +181,7 @@ void testEvolutionKalanajs(int m2)
 	kalnajsPerturbation();
 	VolterraSolver solver("kernelFileName.csv", 10, m2, 2000, 0.01);
 	solver.activeFraction(.25);	
-	solver.volterraSolver("evolution.csv", "someperturbation", true);
+	solver.coefficentEvolution("evolution.csv", "someperturbation", true);
 	solver.resetActiveFraction();
 }
 
@@ -192,7 +192,7 @@ void testEvolutionGaussian(int m2)
 	std::string kernel = "Kernels/GaussianLog" +std::to_string(m2) +".out";
 	VolterraSolver solver(kernel, 24, m2, 2000, 0.01);
 	solver.activeFraction(1/9.5);
-	solver.volterraSolver("evolution.csv", "someperturbation", false);
+	solver.coefficentEvolution("evolution.csv", "someperturbation", false);
 	solver.resetActiveFraction();
 }
 
@@ -200,15 +200,15 @@ void spiralTestEvolution()
 {
 	VolterraSolver solver0("Kernels/GaussianLog_0.out", 24, 0, 2000, 0.01);
 	solver0.activeFraction(.25);
-	solver0.volterraSolver("GaussianLogTest0.csv", "someperturbation", false);	
+	solver0.coefficentEvolution("GaussianLogTest0.csv", "someperturbation", false);	
 
 	VolterraSolver solver1("Kernels/GaussianLog_1.out", 24, 1, 2000, 0.01);
 	solver1.activeFraction(.25);
-	solver1.volterraSolver("GaussianLogTest1.csv", "someperturbation", false);	
+	solver1.coefficentEvolution("GaussianLogTest1.csv", "someperturbation", false);	
 
 	VolterraSolver solver2("Kernels/GaussianLog_2.out", 24, 2, 2000, 0.01);
 	solver2.activeFraction(.25);
-	solver2.volterraSolver("GaussianLogTest2.csv", "someperturbation", false);	
+	solver2.coefficentEvolution("GaussianLogTest2.csv", "someperturbation", false);	
 }
 
 

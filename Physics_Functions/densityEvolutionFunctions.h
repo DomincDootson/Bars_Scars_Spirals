@@ -2,8 +2,12 @@
 #define DENSITYEVOLUTIONFUNCTIONS
 
 void kalnajsKernelsVaryingSigma(int l);
+
 void diskKickingPerturbations();
-//void diskKicking();
+
+void diskKicking();
+
+void energyEvolution();
 
 
 #endif

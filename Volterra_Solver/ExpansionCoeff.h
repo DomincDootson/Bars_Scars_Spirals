@@ -33,6 +33,10 @@ public:
 	Eigen::VectorXcd operator()(int timeIndex) const {return m_coeff[timeIndex];}
 	Eigen::VectorXcd& operator()(int timeIndex) {return m_coeff[timeIndex];}
 	
+	std::vector<double> energyEvolution(const Eigen::MatrixXd & scriptE);
+
+
+
 	void coefficentReadIn(const std::string &filename);
 
 	void write2File(const std::string & filename, const int skip = 10) const;
@@ -45,11 +49,21 @@ private:
 	
 	std::vector<Eigen::VectorXcd> m_coeff;	
 };
+
 char sign(double number){
 	if (number < 0){ return '-';}
 	else {return '+';}
 }
 
+std::vector<double> ExpansionCoeff::energyEvolution(const Eigen::MatrixXd & scriptE)
+{
+	std::vector<double> energy;
+	for (auto i = m_coeff.begin(); i != m_coeff.end(); ++i){
+		double holding = -2 * real((*i).dot(scriptE * (*i)));
+		energy.push_back(holding);
+	}
+	return energy;
+}
 
 void ExpansionCoeff::coefficentReadIn(const std::string &filename)
 {

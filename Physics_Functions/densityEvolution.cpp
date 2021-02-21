@@ -1,7 +1,11 @@
 #include "densityEvolutionFunctions.h"
 #include <iostream>
+
 int main()
 {
-	std::cout << "Hello this is Density Evolution\n";
+	//diskKickingPerturbations();
+	//diskKicking();
+
+	energyEvolution();
 	return 0;
 }

@@ -27,18 +27,20 @@ public:
 	template <class Tdf>
 	void generateKernel(const std::string fileName, const Tdf & df, const ActionAngleBasisContainer & basisFunc);// Come up with some standard way of naming kernels
 	
-	void volterraSolver(const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent = true);
+	void coefficentEvolution(const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent = true);
 	
 	template <class Tbf>
-	void volterraSolver(const Tbf & bf, const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent = true);
+	void densityEvolution(const Tbf & bf, const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent = true);
 
+	template <class Tbf>
+	std::vector<double> energyEvolution(const Tbf & bf, const std::string & perturbationFilename, const bool isSelfConsistent = true);
 
 	void barRotation(Bar2D & bar, const std::string & outFilename, const std::string & evolutionFilename, const bool isSelfConsistent = true, const bool isFreelyRotating = true);
 
 
 	void activeFraction(double xi);
 	void resetActiveFraction() {activeFraction(1/m_xi);}
-	void kernelWrite2fileFlipped(const std::string & kernelFilename) const{
+	void kernelWrite2fileFlipped(const std::string & kernelFilename) const {
 		m_kernels.kernelWrite2FileFlipped(kernelFilename);
 	}
 
@@ -53,7 +55,7 @@ private:
 	void solveVolterraEquation(const std::string & perturbationFilename, const bool isSelfConsistent);
 	Eigen::VectorXcd timeIntegration(const int timeIndex, const double includeSelfConsistent) const;	
 	
-	void printTimeIndex(const int timeIndex) {if (timeIndex % (m_skip*10) ==0) {std::cout << "Time step: " << timeIndex << '\n';}}
+	void printTimeIndex(const int timeIndex) {if (timeIndex % (m_skip*10) == 0) {std::cout << "Time step: " << timeIndex << '\n';}}
 	double selfConsistentDouble(bool isSelfConsistent) {if (isSelfConsistent) {return 1;} else {return 0;}}
 	double freelyRotatingDouble(bool isFreelyRotating) {if (isFreelyRotating) {return 1;} else {return 0;}}
 };
@@ -77,19 +79,6 @@ void VolterraSolver::solveVolterraEquation(const std::string & perturbationFilen
 	}
 }
 
-void VolterraSolver::volterraSolver(const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent) 
-{
-	solveVolterraEquation(perturbationFilename, isSelfConsistent);
-	m_responseCoef.write2File(outFilename, m_skip);
-}
-
-template <class Tbf>
-void VolterraSolver::volterraSolver(const Tbf & bf, const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent)
-{
-	solveVolterraEquation(perturbationFilename, isSelfConsistent);
-	m_responseCoef.writeDensity2File(outFilename, bf, m_skip);
-} 
-
 Eigen::VectorXcd VolterraSolver::timeIntegration(const int timeIndex, const double includeSelfConsistent) const // Should we make this a memeber function? 
 {
 	Eigen::VectorXcd integral = 0.5 * m_timeStep * m_kernels(timeIndex) * (m_perturbationCoef(0) + includeSelfConsistent*m_responseCoef(0));
@@ -98,6 +87,27 @@ Eigen::VectorXcd VolterraSolver::timeIntegration(const int timeIndex, const doub
 	}
 	integral += 0.5 * m_timeStep * m_kernels(0) * m_perturbationCoef(timeIndex);	
 	return integral; 
+}
+
+void VolterraSolver::coefficentEvolution(const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent) 
+{
+	solveVolterraEquation(perturbationFilename, isSelfConsistent);
+	m_responseCoef.write2File(outFilename, m_skip);
+}
+
+template <class Tbf>
+void VolterraSolver::densityEvolution(const Tbf & bf, const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent)
+{
+	solveVolterraEquation(perturbationFilename, isSelfConsistent);
+	m_responseCoef.writeDensity2File(outFilename, bf, m_skip);
+} 
+
+
+template <class Tbf>
+std::vector<double> VolterraSolver::energyEvolution(const Tbf & bf, const std::string & perturbationFilename, const bool isSelfConsistent)
+{
+	solveVolterraEquation(perturbationFilename, isSelfConsistent);
+	return m_responseCoef.energyEvolution(bf.scriptE());
 }
 
 

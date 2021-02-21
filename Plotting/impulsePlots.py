@@ -1,25 +1,10 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import csv
-from cmath import *
-
 import matplotlib.animation as animation
 
+from generalPlottingFunctions import *
+
+
 def impulseDensityName(littleSigma, radius, angHarmonic):
-	return "../Disk_Kicking/littleSigma_" + str(round(littleSigma*100)) + "/Density" + str(round(radius*10)) +"_" + str(angHarmonic) + ".out" 
-
-
-def readingInRealCSV(filename): # Reads in the basis functions
-	with open(filename) as csv_file:
-		csv_reader = csv.reader(csv_file, delimiter = ',')
-		data = []
-
-		for row in csv_reader:
-			lst = [float(i) for i in row]
-			data.append(lst)
-
-		return np.asarray(data)
-
+	return "../Disk_Kicking/littleSigma_" + str(round(littleSigma*100)) + "/Density" + str(round(radius*10)) +"_" + str(angHarmonic) + ".csv" 
 
 def densityEvolutionPlot(littleSigma, timestep = 0.25):
 	
@@ -62,9 +47,7 @@ def densityEvolutionPlot(littleSigma, timestep = 0.25):
 	
 	axs[0,0].legend()
 	fig.suptitle(r"$\sigma_{r} =$ "+str(littleSigma))
-
-
-
+	
 	plt.show()
 
 	

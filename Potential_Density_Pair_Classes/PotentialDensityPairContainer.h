@@ -23,7 +23,7 @@ public:
 		{
 			m_potentialDensityContainer.emplace_back(params, i, m_fourierHarmonic);
 		}
-		m_scriptE = scriptE();
+		m_scriptE = calculateScriptE();
 	}
 
 	~PotentialDensityPairContainer() {}
@@ -36,7 +36,9 @@ public:
 	double   density(const double radius, const int n) const;
 
 	void scriptE(const std::string &filename) const;
-	Eigen::MatrixXd scriptE() const;
+	Eigen::MatrixXd calculateScriptE() const;
+
+	Eigen::MatrixXd scriptE() const {return m_scriptE;}
 
 	int maxRadialIndex() const {return m_maxRadialIndex;}
 	int fourierHarmonic() const {return m_fourierHarmonic;}
@@ -191,7 +193,7 @@ void PotentialDensityPairContainer<T>::scriptE(const std::string &filename) cons
 }
 
 template <class T>
-Eigen::MatrixXd PotentialDensityPairContainer<T>::scriptE() const
+Eigen::MatrixXd PotentialDensityPairContainer<T>::calculateScriptE() const
 {
 	Eigen::MatrixXd scriptE = Eigen::MatrixXd::Zero(m_maxRadialIndex+1, m_maxRadialIndex+1);
 	for (int i = 0; i<= m_maxRadialIndex; ++i)
