@@ -3,8 +3,20 @@ import matplotlib.animation as animation
 from generalPlottingFunctions import *
 
 
-def impulseDensityName(littleSigma, radius, angHarmonic):
-	return "../Disk_Kicking/littleSigma_" + str(round(littleSigma*100)) + "/Density" + str(round(radius*10)) +"_" + str(angHarmonic) + ".csv" 
+## MIGHT IT BE WORTH CONVERTING THE DENSITY EVOLUTION INTO A BIG OLD DATA STRUCTURE A LA THE ENERGY ONE? 
+## 		--> YES ALMOST CERTAINLY
+
+def impulseDensityName(littleSigma, radius, angHarmonic, testParticle = False):
+	filename = "../Disk_Kicking/littleSigma_" + str(round(littleSigma*100)) + "/Density" + str(round(radius*10)) +"_" + str(angHarmonic) 
+	if testParticle:
+		filename += "_Test"
+	return (filename + ".csv")
+
+def twoDdensityName(littleSigma, radius, angHarmonic, testParticle = False):
+	filename = "../Disk_Kicking/littleSigma_" + str(round(littleSigma*100)) + "/Density2D" + str(round(radius*10)) +"_" + str(angHarmonic) 
+	if testParticle:
+		filename += "_Test"
+	return (filename + ".csv")
 
 def densityEvolutionPlot(littleSigma, timestep = 0.25):
 	
@@ -51,6 +63,55 @@ def densityEvolutionPlot(littleSigma, timestep = 0.25):
 	plt.show()
 
 	
+
+
+def densityAtMaxEnergy(energySelf, energyTest, radii):
+	littleSigma = energySelf.little_sigma()
+	angHarmonic = energySelf.ang_harmonic()
+
+	maxTimeIndexSelf, maxTimeIndexTest = [], []
+	for s in range(np.shape(littleSigma)[0]):
+		holdingSelf, holdingTest =[], []
+		for l in range(np.shape(angHarmonic)[0]):
+			holdingSelf.append(energySelf.index_Max_Energy(littleSigma[s], angHarmonic[l], radii[l]))
+			holdingTest.append(energyTest.index_Max_Energy(littleSigma[s], angHarmonic[l], radii[l]))
+
+		maxTimeIndexSelf.append(holdingSelf)
+		maxTimeIndexTest.append(holdingTest)
+
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
+	fig, axs = plt.subplots(np.shape(littleSigma)[0], np.shape(angHarmonic)[0], sharex = True)
+
+	data = []
+	for s in littleSigma:
+		holdingAng = []
+		for l in angHarmonic:
+			holdingRadius = []
+			holdingRadius.append(readingInRealCSV(impulseDensityName(s, radii[int(l)], int(l))))
+			holdingRadius.append(readingInRealCSV(impulseDensityName(s, radii[int(l)], int(l), True)))
+			
+			holdingAng.append(holdingRadius)
+		data.append(holdingAng)
+
+	for i in range(np.shape(littleSigma)[0]):
+		for j in range(np.shape(angHarmonic)[0]):
+			print(maxTimeIndexSelf[i][j])
+			axs[i,j].plot(data[i][j][0][0,:], data[i][j][0][maxTimeIndexSelf[i][j],:], color = 'firebrick')
+			axs[i,j].plot(data[i][j][1][0,:], data[i][j][1][maxTimeIndexTest[i][j],:], color = 'cornflowerblue')
+
+	for l in range(np.shape(angHarmonic)[0]):
+		axs[0,l].set_title(r"$\ell_{p}=$ " + str(int(angHarmonic[l])) + r" $r_{n}=$ "+str(radii[l])+r"$r_{0}$")
+
+	for s in range(np.shape(littleSigma)[0]):
+		axs[s, 0].set_ylabel(r"$\sigma_{r}=$ " + str(littleSigma[s]) + r"$v_{c}$")
+
+	axs[-1, 1].set_xlabel(r"Radius $[r_{0}]]$")
+	fig.suptitle("Density at Peak Energy")
+
+	plt.show()
+
+
 
 def densityAnimation(littleSigma, radius, timestep = 0.25):
 
@@ -100,4 +161,55 @@ def densityAnimation(littleSigma, radius, timestep = 0.25):
 	plt.show()
 
 
-densityAnimation(0.25, 1)
+'''test = EnergyEvolutionData("KalnajsEnergyEvolutionTest.csv")
+selfConsistent = EnergyEvolutionData("KalnajsEnergyEvolution.csv")
+densityAtMaxEnergy(selfConsistent, test, [1.8,2,2.7])
+'''
+
+
+def densityAnimation2D(littleSigma, radius, angHarmonic):
+	flatternedDensity = list(readingInRealCSV(twoDdensityName(littleSigma, radius, angHarmonic)))
+	nRows, nCols = int(sqrt(np.size(flatternedDensity[0]))), int(sqrt(np.size(flatternedDensity[0]))) # Assume square
+
+
+	density2D = [np.reshape(array[:nRows*nCols], (nRows, nCols,)) for array in flatternedDensity] 	
+	maxValues, minValues = [np.amax(each) for each in density2D],  [np.amin(each) for each in density2D]
+		
+	
+	Writer = animation.writers['ffmpeg']
+	writer = Writer(fps=300, metadata=dict(artist='Me'))
+
+	fig, axs = plt.subplots(1,1)
+	ims = []
+
+
+
+	spacing = 20/(nCols-1)
+	centre = (nCols-1)*0.5
+
+	x = np.arange(-10,10+spacing, spacing)
+	y = np.arange(-10,10+spacing, spacing)
+	XX, YY = np.meshgrid(x, y)
+	
+	#axs.xaxis.set_animated(True)
+
+	for time in range(len(density2D)):
+		#axis,  = axs.contour(XX, YY, density2D[time], 6, colors = 'k')
+		contourFilled = axs.imshow(density2D[time], vmin = min(minValues) , vmax = max(maxValues), extent = (-10,10,-10,10,))
+		title = fig.text(.4,.9,(r"Time: " +str(round(50*time/len(density2D),2))))
+		ims.append([contourFilled, title])
+
+
+	fig.subplots_adjust(right=0.8)
+	cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+	cbar = plt.colorbar(contourFilled, cax=cbar_ax)
+
+	ani = animation.ArtistAnimation(fig, ims, interval=30)
+	plt.show()
+
+
+
+densityAnimation2D(.25, 2, 2)
+
+
+#densityAnimation(0.25, 1)

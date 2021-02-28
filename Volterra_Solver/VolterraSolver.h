@@ -27,6 +27,7 @@ public:
 	template <class Tdf>
 	void generateKernel(const std::string fileName, const Tdf & df, const ActionAngleBasisContainer & basisFunc);// Come up with some standard way of naming kernels
 	
+	void solveVolterraEquation(const std::string & perturbationFilename, const bool isSelfConsistent);
 	void coefficentEvolution(const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent = true);
 	
 	template <class Tbf>
@@ -40,9 +41,10 @@ public:
 
 	void activeFraction(double xi);
 	void resetActiveFraction() {activeFraction(1/m_xi);}
-	void kernelWrite2fileFlipped(const std::string & kernelFilename) const {
-		m_kernels.kernelWrite2FileFlipped(kernelFilename);
-	}
+	void kernelWrite2fileFlipped(const std::string & kernelFilename) const { m_kernels.kernelWrite2FileFlipped(kernelFilename);}
+
+	template <class Tbf>
+	void density2dEvolution(const std::string & outFilename, const Tbf & bf, const int skip = 20) const {m_responseCoef.write2dDensity2File(outFilename, bf, skip);}
 
 private:
 	const int m_maxRadialIndex, m_fourierHarmonic, m_numbTimeSteps, m_skip;
@@ -52,7 +54,6 @@ private:
 	EvolutionKernels m_kernels;
 	ExpansionCoeff m_responseCoef, m_perturbationCoef;
 
-	void solveVolterraEquation(const std::string & perturbationFilename, const bool isSelfConsistent);
 	Eigen::VectorXcd timeIntegration(const int timeIndex, const double includeSelfConsistent) const;	
 	
 	void printTimeIndex(const int timeIndex) {if (timeIndex % (m_skip*10) == 0) {std::cout << "Time step: " << timeIndex << '\n';}}

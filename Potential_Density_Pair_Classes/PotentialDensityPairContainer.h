@@ -112,13 +112,12 @@ Eigen::ArrayXXcd PotentialDensityPairContainer<T>::potentialArray(const Eigen::V
 
 template <class T>
 Eigen::ArrayXXd   PotentialDensityPairContainer<T>::densityArrayReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const{
-	return (potentialArray(coefficents, nGrid, rMax) + potentialArray(coefficents, nGrid, rMax).conjugate()).real();
+	return (densityArray(coefficents, nGrid, rMax) + densityArray(coefficents, nGrid, rMax).conjugate()).real();
 }
-
 
 template <class T>
 Eigen::ArrayXXd PotentialDensityPairContainer<T>::potentialArrayReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const{
-	return (densityArray(coefficents, nGrid, rMax) + densityArray(coefficents, nGrid, rMax).conjugate()).real(); 
+	return (potentialArray(coefficents, nGrid, rMax) + potentialArray(coefficents, nGrid, rMax).conjugate()).real(); 
 }
 
 

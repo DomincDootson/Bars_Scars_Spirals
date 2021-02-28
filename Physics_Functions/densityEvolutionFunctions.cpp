@@ -1,8 +1,8 @@
 #include <iostream>
-#include <typeinfo>
 #include <Eigen/Dense>
 #include <vector>
 #include <complex>
+#include <cstring>
 
 #include "../Potential_Density_Pair_Classes/KalnajsBasis.h"
 #include "../Potential_Density_Pair_Classes/GaussianLogBasis.h"
@@ -20,19 +20,38 @@ const int NUMBTIMESTEPS{2000}; // some global paramters for the Volterra Solver
 const double DELTAT{0.025};
 const double XI{.5};
 
-std::string perturbationFilename(double littleSigma, double radius, int fourierHarmonic)
+bool SELF{false}; 
+
+std::string isTestParticle()
 {
-	return "Disk_Kicking/littleSigma_" + std::to_string((int) round(100*littleSigma)) + 
-			"/Perturbation_" + std::to_string((int) round(10*radius)) + "_" +std::to_string(fourierHarmonic) + ".out";
+	if (!SELF)
+	{
+		return "_test";
+	}
+	return "";
 }
 
-std::string kickingDensityFilename(double littleSigma, double radius, int fourierHarmonic)
-{
+std::string perturbationFilename(const double littleSigma, const double radius, const int fourierHarmonic){
 	return "Disk_Kicking/littleSigma_" + std::to_string((int) round(100*littleSigma)) + 
-			"/Density" + std::to_string((int) round(10*radius)) + "_" +std::to_string(fourierHarmonic) + ".csv";
+			"/Perturbation_" + std::to_string((int) round(10*radius)) + "_" +std::to_string(fourierHarmonic) + isTestParticle() + ".out";
 }
 
-std::string kernelFilename(double littleSigma, int fourierHarmonic){
+std::string kickingCoefFilename(const double littleSigma, const double radius, const int fourierHarmonic){
+	return "Disk_Kicking/littleSigma_" + std::to_string((int) round(100*littleSigma)) + 
+			"/Coeff" + std::to_string((int) round(10*radius)) + "_" +std::to_string(fourierHarmonic) + isTestParticle() +".csv";
+}
+
+std::string kickingDensityFilename(const double littleSigma, const double radius, const int fourierHarmonic){
+	return "Disk_Kicking/littleSigma_" + std::to_string((int) round(100*littleSigma)) + 
+			"/Density" + std::to_string((int) round(10*radius)) + "_" +std::to_string(fourierHarmonic) + isTestParticle() +".csv";
+}
+
+std::string density2dFilename(const double littleSigma, const double radius, const int fourierHarmonic){
+	return "Disk_Kicking/littleSigma_" + std::to_string((int) round(100*littleSigma)) + 
+			"/Density2D" + std::to_string((int) round(10*radius)) + "_" +std::to_string(fourierHarmonic) + isTestParticle() + ".csv";
+}
+
+std::string kernelFilename(const double littleSigma, const int fourierHarmonic){
 	return "Disk_Kicking/littleSigma_" + std::to_string((int) round(100*littleSigma)) + 
 			"/Kalnajs" + "_" +std::to_string(fourierHarmonic) + ".out";
 }
@@ -44,7 +63,12 @@ std::vector<double> littleSigmas(){
 }
 
 std::vector<double> perturbationRadii() {
-	return {.1,.5,1, 2, 3, 5,15};
+	/*std::vector<double> holding;
+	for (double radius = .5; radius <= 5; radius +=.1){
+		holding.push_back(radius);
+	}
+	return holding;*/
+	return {7};
 }
 
 void kalnajsKernelsVaryingSigma(int l)
@@ -66,6 +90,9 @@ void kalnajsKernelsVaryingSigma(int l)
 	}
 }
 
+// Perturbation Functions // 
+// ---------------------- //
+
 template <typename T>
 void outPutPerturbation(const T & pd, double littleSigma, double radius, int numbTimeSteps = NUMBTIMESTEPS)
 {
@@ -78,6 +105,21 @@ void outPutPerturbation(const T & pd, double littleSigma, double radius, int num
 	holding.writePerturbation2File(perturbationFilename(littleSigma, radius, pd.fourierHarmonic()));
 }
  
+void cleaningPerturbations()
+{
+	std::vector<double> littleSigma{littleSigmas()}, radii{perturbationRadii()}, angHarmonic{0,1,2};
+	for (auto s = littleSigma.begin(); s != littleSigma.end(); ++s){
+		for (auto r = radii.begin(); r != radii.end(); ++r){
+			for (auto l = angHarmonic.begin(); l != angHarmonic.end(); ++l){
+				if (!remove(perturbationFilename(*s, *r, *l).c_str()))
+				{
+					std::cout << "Sucessfully deleted: " << perturbationFilename(*s, *r, *l) << '\n';
+				}
+			}
+		}
+	}
+}
+
 void diskKickingPerturbations()
 {
 	std::vector<double> littleSigma{littleSigmas()}, radii{perturbationRadii()};
@@ -94,6 +136,41 @@ void diskKickingPerturbations()
 	}
 }
 
+// Coefficent Evolution //
+// -------------------- //
+
+void indivdualCoeffEvolution(const int nRadialHarmonics, const int angHarmonic, const double littleSigma, const double radius){
+	std::string perturbationFile{perturbationFilename(littleSigma, radius, angHarmonic)};
+	std::string coeff{kickingCoefFilename(littleSigma, radius, angHarmonic)};
+	std::string kernel{kernelFilename(littleSigma, angHarmonic)};
+	std::cout << "Solving: " << littleSigma << " " << radius << " " << angHarmonic <<'\n';
+	
+
+	VolterraSolver solver(kernel, nRadialHarmonics , angHarmonic, NUMBTIMESTEPS, DELTAT);
+	solver.activeFraction(XI);
+	solver.coefficentEvolution(coeff, perturbationFile, SELF);
+}
+
+void coefficentEvolution()
+{
+	diskKickingPerturbations();
+	std::vector<double> littleSigma{littleSigmas()}, radii{perturbationRadii()};
+
+	for (auto s = littleSigma.begin(); s != littleSigma.end(); ++s){
+		for (auto radius = radii.begin(); radius != radii.end(); ++radius){
+			indivdualCoeffEvolution(10, 0, *s, *radius);
+			indivdualCoeffEvolution(10, 1, *s, *radius);
+			indivdualCoeffEvolution(10, 2, *s, *radius);
+		}
+	}
+	cleaningPerturbations();
+}
+
+
+// 1D Density Evolution //
+// -------------------- //
+
+
 template <typename T>
 void individualDiskKicking(const T & pd, double littleSigma, double radius)
 {
@@ -106,11 +183,12 @@ void individualDiskKicking(const T & pd, double littleSigma, double radius)
 
 	VolterraSolver solver(kernel, pd.maxRadialIndex(), angHarmonic, NUMBTIMESTEPS, DELTAT);
 	solver.activeFraction(XI);
-	solver.densityEvolution(pd, densityFile, perturbationFile, true);
+	solver.densityEvolution(pd, densityFile, perturbationFile, SELF);
 }
  
 void diskKicking()
 {
+	diskKickingPerturbations();
 	std::vector<double> params{4, 20};
 	PotentialDensityPairContainer<KalnajsBasis> pd0(params, 10,0), pd1(params, 10, 1), pd2(params, 10, 2);
 
@@ -123,8 +201,32 @@ void diskKicking()
 			individualDiskKicking(pd2, *s, *radius);
 		}
 	}
+	cleaningPerturbations();
 }
 
+// 2D Density Evolution //
+// -------------------- //
+
+void density2D(double littleSigma, double radius, int angHarmonic){
+	std::vector<double> params{4, 20};
+	PotentialDensityPairContainer<KalnajsBasis> pd{params, 10, angHarmonic};	
+
+	std::string perturbationFile{perturbationFilename(littleSigma, radius, angHarmonic)};
+	outPutPerturbation(pd, littleSigma, radius);
+
+	std::string kernel{kernelFilename(littleSigma, angHarmonic)};
+	VolterraSolver solver(kernel, pd.maxRadialIndex(), angHarmonic, NUMBTIMESTEPS, DELTAT);
+	solver.activeFraction(XI);
+
+	solver.solveVolterraEquation(perturbationFile, SELF);
+
+	std::string outFilename{density2dFilename(littleSigma, radius, angHarmonic)};
+	solver.density2dEvolution(outFilename, pd);
+}
+
+
+// Energy Evolution //
+// ---------------- // 
 
 void outPutEnergy(std::ofstream & out, const std::vector<double> & energies, double littleSigma, int angHarmonic, double radius){
 	int skip{10};
@@ -145,19 +247,18 @@ std::vector<double> individualEnergyEvolution(const Tbf & pd, double littleSigma
 
 	VolterraSolver solver(kernel, pd.maxRadialIndex(), angHarmonic, NUMBTIMESTEPS, DELTAT);
 	solver.activeFraction(XI);
-	return solver.energyEvolution(pd, perturbationFile, true);
+	return solver.energyEvolution(pd, perturbationFile, SELF);
 }
 
 
 void energyEvolution()
 {
+	diskKickingPerturbations();
 	std::vector<double> params{4, 20};
 	PotentialDensityPairContainer<KalnajsBasis> pd0{params, 10, 0}, pd1{params, 10, 1}, pd2{params, 10, 2};
-
 	std::vector<PotentialDensityPairContainer<KalnajsBasis>> potentialDensityPairs{pd0, pd1, pd2};
 	
 	std::vector<double> littleSigma{littleSigmas()}, radii{perturbationRadii()};
-
 	std::ofstream out("Disk_Kicking/Energy_Evolution/KalnajsEnergyEvolution.csv");
 
 	for (auto s = littleSigma.begin(); s != littleSigma.end(); ++s){
@@ -169,7 +270,8 @@ void energyEvolution()
 		}
 	} 	
 	out.close();
+	cleaningPerturbations();
 }
 
-
+// 4) Add a function that loooks at the evolution of indivdual coef
 // 5) ADD SOME GLOBAL VARIABLES ?? 

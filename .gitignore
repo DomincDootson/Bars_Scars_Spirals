@@ -3,5 +3,7 @@
 /scriptE
 
 /Density_Kicking/*.out 
+/Density_Kicking/Density2D*.out 
 *.o 
+*.csv
  

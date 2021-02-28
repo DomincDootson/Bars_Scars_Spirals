@@ -2,7 +2,9 @@
 #define DFCLASS 
 
 #include <cmath>
+#include <vector>
 #include <Eigen/Dense>
+#include <random>
 
 
 class DFClass
@@ -22,9 +24,17 @@ public:
 
 	Eigen::MatrixXd energyAngMomJacobain(const int size, const double spacing) const;
 
+	double density(const double radius) const;
+	void cumulativeDensity(const std::string fileName) const;
+	double radiusSampling(const double uniformDistNumb, const std::vector<double> & cumulativeDensity, const double spacing) const;
+	virtual double vRSampling() const = 0; 
+	double vPhiSampling(const double radius, const double vr, std::uniform_real_distribution<double>  uniform) const; 
+
 protected: 	
 	virtual double potential(double radius) const = 0;
 	virtual double distFunc(double E, double J) const = 0;
+	virtual double jMax(const double radius) const = 0;
+	virtual double dfMax(const double radius, const double vR) const = 0;
 
 	double rad2Energy(double rApo, double rPer) const 
 	{
@@ -47,6 +57,9 @@ protected:
 	}
 
 };
+
+// Function for linear calculation //
+// ------------------------------- //
 
 
 double DFClass::omega1(double rApo, double rPer) const // what to do for circular orbits?
@@ -175,6 +188,79 @@ Eigen::MatrixXd DFClass::energyAngMomJacobain(const int size, const double spaci
 		}
 	}
 	return jacobian;
+}
+
+// Functions for n Body //
+// -------------------- //
+
+double DFClass::density(const double radius) const // Maybe include some integration constants
+{
+	int nSteps{2000}, nStepsRadial{3000}; 
+	double density{0}, stepVPHI{}, stepVR{}, energy{0}, vPhi{0}, vrIntegral{}; // FIGURE OUT THE STEP SIZE
+	
+	for (int i = 1; i<nSteps; ++i) // Outer integral is over J (don't start at J = 0, as f(J) = 0)
+	{
+		vPhi = (i * stepVPHI);
+		vrIntegral = 0;
+		for (int k = 0; k < nStepsRadial; ++k) // Remember df is even in vr. 
+		{
+			energy = 0.5* (vPhi*vPhi) + 0.5*(k*stepVR)*(k*stepVR) + potential(radius);
+			vrIntegral += 2*stepVR*distFunc(energy, vPhi*radius);
+		}
+
+		density += stepVPHI*vrIntegral;
+	}
+	return density;
+}
+
+
+void DFClass::cumulativeDensity(const std::string fileName) const 
+{
+	std::vector<double> densityArray, cumulative;
+	double spacing{.1};
+
+	densityArray.push_back(0); cumulative.push_back(0); int n{1};
+	do
+	{
+		densityArray.push_back(2*M_PI * (spacing* n) * density(n*spacing));	
+		cumulative.push_back(spacing * densityArray.back() + cumulative.back());
+		n += 1;
+	} while (n*spacing < 10 || (densityArray.back()/cumulative.back() > .001));
+
+
+	std::ofstream out(fileName);
+	out << n << " " << spacing << '\n';
+	for (int i = 0; i < n; ++i)	{out << i * spacing << " " << cumulative[i]/cumulative.back() << '\n';}
+	out.close();
+}
+
+double DFClass::radiusSampling(const double uniformDistNumb, const std::vector<double> & cumulativeDensity, const double spacing) const 
+{
+	int nLower, nUpper;
+	for (int i = 0; i < cumulativeDensity.size(); ++i)
+	{
+		if ((cumulativeDensity[i] < uniformDistNumb) && (cumulativeDensity[i+1] > uniformDistNumb))
+		{nLower = i; nUpper = i+1;
+		return (nLower + (uniformDistNumb - cumulativeDensity[nLower])/(cumulativeDensity[nUpper] - cumulativeDensity[nLower]))*spacing; // Put into the loop to kill it once we have the required values
+		}
+	}
+}
+
+// Some virtual function that does the vr sampling 
+
+double DFClass::vPhiSampling(const double radius, const double vr, std::uniform_real_distribution<double> uniform) const 
+{
+	double J, f, E, maxJ{jMax(radius)}, maxF{dfMax(radius, vr)};
+	std::random_device generator;
+
+	do // Rejection sampling
+	{
+		J = uniform(generator) * maxJ;
+		f = uniform(generator) * maxF;
+		E = 0.5*vr*vr + 0.5*(J/radius)*(J/radius) + potential(radius);
+	} while (f > distFunc(E,J)); 
+	
+	return (J/radius);
 }
 
 

@@ -23,6 +23,10 @@ private:
 	const double m_vc, m_r0, m_littleSigma, m_q, m_xi, m_rInner, m_rOuter, m_nuTaper, m_muTaper;
 	double innerTaper(double J) const;
 	double outerTaper(double J) const;
+	
+	virtual double jMax(const double radius) const;
+	virtual double dfMax(const double radius, const double vR) const;
+	virtual double vRSampling() const; 
 };
 
 double Mestel::innerTaper(double J) const{
@@ -33,7 +37,6 @@ double Mestel::outerTaper(double J) const{
 	return 1/(1+pow(J/(m_rOuter*m_vc), m_muTaper));
 }
 
-
 double Mestel::distFunc(double E, double J) const // Note that we have set G = 1
 {
 	return  innerTaper(J)*outerTaper(J) *(m_xi)*pow((J/(m_r0*m_vc)), m_q) * exp(-E/pow(m_littleSigma,2)) * 
@@ -41,5 +44,25 @@ double Mestel::distFunc(double E, double J) const // Note that we have set G = 1
 	sqrt(M_PI)*tgamma(0.5*m_q+0.5)*pow(m_littleSigma,2+m_q), -1)); 
 
 }
+
+
+double Mestel::vRSampling() const {
+	std::random_device generator; std::normal_distribution<double> vrDF(0, m_littleSigma);
+	return vrDF(generator);
+}
+
+
+double Mestel::jMax(const double radius) const{
+	if (radius > m_rOuter) {return 5 * m_rOuter * m_vc;}
+	else {return sqrt(2) * 5 * m_littleSigma * radius;}
+}
+
+double Mestel::dfMax(const double radius, const double vR) const {
+	return distFunc(sqrt(m_q*m_littleSigma*m_vc), 0.5*vR*vR +0.5*m_q*pow(m_littleSigma,2)+potential(radius));
+}
+
+
+
+
 
 #endif

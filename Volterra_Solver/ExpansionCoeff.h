@@ -43,7 +43,9 @@ public:
 	void writePerturbation2File(const std::string &filename) const;
 
 	template <class Tbf>
-	void writeDensity2File(const std::string & outFilename, const Tbf & bf, const int m_skip) const; 
+	void writeDensity2File(const std::string & outFilename, const Tbf & bf, const int skip) const; 
+	template <class Tbf>
+	void write2dDensity2File(const std::string & outFilename, const Tbf & bf, const int skip) const; 
 
 private:
 	
@@ -69,6 +71,7 @@ void ExpansionCoeff::coefficentReadIn(const std::string &filename)
 {
 	std::ifstream inFile(filename);
 	int maxRadialIndex; inFile >> maxRadialIndex;
+	std::cout << "Reading perturbation in from: " << filename << '\n';
 	assert(maxRadialIndex +1 == m_coeff[0].size() && "The perturbation does't have the same size as perturbation vector.");
 
 	double real, imag;
@@ -130,6 +133,16 @@ void outputVector(std::ofstream & out, std::vector<double> vec){
 	out << vec.back() << '\n';
 }
 
+void outputArray(std::ofstream & out, Eigen::ArrayXXd array){
+	for (int i = 0; i < array.cols(); ++i){
+		for (int j =0; j <array.rows(); ++j){
+			out << array(i,j) << ',';
+		}
+	}
+
+	out << array(array.rows()-1, array.cols()-1) << '\n';
+}
+
 std::vector<double> radiiVector(double rMax, int nStep){
 	double step{rMax/((double) nStep)};
 	std::vector<double> radii;
@@ -148,6 +161,18 @@ void ExpansionCoeff::writeDensity2File(const std::string & outFilename, const Tb
 	for (int time = 0; time < m_coeff.size(); time += skip){
 		std::vector<double> densityOnLine = bf.oneDdensity(radii, m_coeff[time]);
 		outputVector(out, densityOnLine);
+	}
+	out.close();
+}
+
+template <class Tbf>
+void ExpansionCoeff::write2dDensity2File(const std::string & outFilename, const Tbf & bf, const int skip) const
+{
+	std::ofstream out(outFilename);
+	for (int time = 0; time < m_coeff.size(); time += skip){
+		if (time % (skip*10) == 0) {std::cout << "Outputting density for: " << time << '\n';}
+		Eigen::ArrayXXd density = bf.densityArrayReal(m_coeff[time], 201, 10); // I suppose this could always be make quicker by saving the individual arrays for each bf
+		outputArray(out, density);
 	}
 	out.close();
 }

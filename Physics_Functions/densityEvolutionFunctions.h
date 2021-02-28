@@ -3,11 +3,11 @@
 
 void kalnajsKernelsVaryingSigma(int l);
 
-void diskKickingPerturbations();
+void coefficentEvolution();
 
 void diskKicking();
+void density2D(double littleSigma, double radius, int angHarmonic);
 
 void energyEvolution();
-
 
 #endif
