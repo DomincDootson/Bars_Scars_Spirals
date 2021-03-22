@@ -26,6 +26,7 @@ public:
 	void save(const std::string directory, double step) const;
 	double operator()(int i, int j) const {return m_basisGrid(i,j);}
 	double& operator()(int i, int j) {return m_basisGrid(i,j);} // This allows us to assign values.
+	Eigen::MatrixXd get() const {return m_basisGrid;}
 
 	int m1() const {return m_m1;}
 private:

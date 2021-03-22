@@ -24,6 +24,11 @@ public:
 	 
 	~VolterraSolver() {}
 
+	Eigen::VectorXcd     responseCoef(const int timeIndex) {return     m_responseCoef(timeIndex);}
+	Eigen::VectorXcd perturbationCoef(const int timeIndex) {return m_perturbationCoef(timeIndex);}
+
+
+
 	template <class Tdf>
 	void generateKernel(const std::string fileName, const Tdf & df, const ActionAngleBasisContainer & basisFunc);// Come up with some standard way of naming kernels
 	
@@ -37,7 +42,6 @@ public:
 	std::vector<double> energyEvolution(const Tbf & bf, const std::string & perturbationFilename, const bool isSelfConsistent = true);
 
 	void barRotation(Bar2D & bar, const std::string & outFilename, const std::string & evolutionFilename, const bool isSelfConsistent = true, const bool isFreelyRotating = true);
-
 
 	void activeFraction(double xi);
 	void resetActiveFraction() {activeFraction(1/m_xi);}

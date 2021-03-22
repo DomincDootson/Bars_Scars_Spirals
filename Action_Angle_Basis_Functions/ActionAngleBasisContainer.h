@@ -55,6 +55,7 @@ public:
 	int maxFourierHarmonic() const {return m_maxFourierHarmonic;}
 
 	double operator()(int np, int m1, int i, int j) const {return m_basisContainer[(m_maxFourierHarmonic + m1) + (2*m_maxFourierHarmonic+1) * np](i,j);}
+	Eigen::MatrixXd operator()(int np, int m1) const {return m_basisContainer[(m_maxFourierHarmonic + m1) + (2*m_maxFourierHarmonic+1) * np].get();}
 
 	template <class T>
 	Eigen::MatrixXd omega1Grid(const T & distFunction) const;
