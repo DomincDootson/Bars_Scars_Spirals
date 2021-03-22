@@ -4,6 +4,9 @@
 #include <vector>
 #include <complex>
 
+#include <thread>
+#include <functional>
+
 #include <Eigen/Dense>
 
 #include "../Action_Angle_Basis_Functions/ActionAngleBasisContainer.h"
@@ -45,6 +48,9 @@ private:
 	
 	std::complex<double> kernelElement(const int npRow, const int npCol, const ActionAngleBasisContainer & basisFunc, const double time) const;
 	void kernelAtTime(const ActionAngleBasisContainer & basisFunc, const int timeIndex); 
+	void multipleKernelAtTime(const ActionAngleBasisContainer & basisFunc, const int timeIndex, const int nCores);
+
+	void print() { std::cout << "hello\n";}
 
 	std::complex<double> integration2d(const Eigen::MatrixXcd & grid2Integrate) const;
 };
@@ -71,23 +77,48 @@ void EvolutionKernels::gridSetUp(const Tdf & df, const ActionAngleBasisContainer
 template <class Tdf>
 void EvolutionKernels::kernelCreation(const std::string fileName, const Tdf & df, const ActionAngleBasisContainer & basisFunc)
 {
-	// Might it be worth making sure that we've read in the construction parameters? 
-	Eigen::MatrixXd inverseScriptE{basisFunc.inverseScriptE()};
+	/*Eigen::MatrixXd inverseScriptE{basisFunc.inverseScriptE()};
 	gridSetUp(df, basisFunc);
 	for (int timeIndex = 0; timeIndex < m_numbTimeSteps; ++timeIndex)
 	{
-		kernelAtTime(basisFunc, timeIndex);
+		kernelAtTime(basisFunc, timeIndex); // MUTLITHREAD THIS? 
 		m_kernels[timeIndex] = inverseScriptE * m_kernels[timeIndex];
 		if (timeIndex % 100 == 0){
 			std::cout << "Fraction of kernels completed: " << round(100*timeIndex/((double) m_numbTimeSteps))<< '%' <<  '\n';
 		}
 	}	
+	kernelWrite2File(fileName);*/ 
+	Eigen::MatrixXd inverseScriptE{basisFunc.inverseScriptE()};
+	gridSetUp(df, basisFunc);
+	int nCores{2};
+
+	for (int timeIndex = 0; timeIndex < m_numbTimeSteps; timeIndex += nCores)
+	{
+		multipleKernelAtTime(basisFunc, timeIndex, nCores);
+		if (timeIndex % 100 == 0){
+			std::cout << "Fraction of kernels completed: " << round(100*timeIndex/((double) m_numbTimeSteps))<< '%' <<  '\n';
+		}
+	}	
+	//PUT INTO NEW LOOP m_kernels[timeIndex] = inverseScriptE * m_kernels[timeIndex];
+	for (int timeIndex = 0; timeIndex < m_numbTimeSteps; ++timeIndex) {m_kernels[timeIndex] = inverseScriptE * m_kernels[timeIndex];}
 	kernelWrite2File(fileName);
+
+}
+
+
+void EvolutionKernels::multipleKernelAtTime(const ActionAngleBasisContainer & basisFunc, const int timeIndex, const int nCores)
+{
+	std::vector<std::thread> threads;
+	for (int i = 0; i < nCores; ++i){
+		threads.push_back(std::thread( [&, this, basisFunc, timeIndex, i] {kernelAtTime(basisFunc, timeIndex +i);} ));
+	}
+	for (auto &th : threads) {
+	th.join();
+	}
 }
 
 void EvolutionKernels::kernelAtTime(const ActionAngleBasisContainer & basisFunc, const int timeIndex)
 {
-	
 	m_kernels[timeIndex] = (Eigen::MatrixXcd::Zero(m_maxRadialIndex+1, m_maxRadialIndex+1));
 	for (int i = 0; i <= m_maxRadialIndex; ++i)
 	{
@@ -179,6 +210,7 @@ void EvolutionKernels::evolutionParams(int maxRadialIndex, int fourierHarmonic, 
 	m_maxFourierHarmonic = maxFourierHarmonic;
 	m_timeStep = timeStep;
 	m_spacing = spacing;
+	std::cout << numbTimeSteps <<'\n';
 	assert(numbTimeSteps == m_kernels.size() && "The read in kernel is not the same length as the Volterra Solver.");
 }
 

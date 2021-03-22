@@ -44,6 +44,7 @@ ActionAngleBasisFunction::ActionAngleBasisFunction(std::string dir, int np, int 
 	int rbasisRows{}, rradialIndex{}, rm1{}, rm2{}; 
 	double rstep{};
 	inFile >> rbasisRows >> rstep >> rradialIndex >> rm1 >> rm2;
+	std::cout << "Reading in action-angle basis function from: " << filename(dir) << '\n';
 	checkParam(rbasisRows, rstep, rradialIndex, rm1, rm2);
 	// some test function
 	

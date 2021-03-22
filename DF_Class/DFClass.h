@@ -13,6 +13,9 @@ public:
 	DFClass() {}
 	~DFClass() {}
 
+	virtual double potential(double radius) const = 0;
+	virtual double distFunc(double E, double J) const = 0;
+
 	double omega1(double rApo, double rPer) const;
 	double omega2(double rApo, double rPer) const;
 	double theta1(double radius, double rApo, double rPer, double omega1) const;
@@ -25,14 +28,24 @@ public:
 	Eigen::MatrixXd energyAngMomJacobain(const int size, const double spacing) const;
 
 	double density(const double radius) const;
+	double maxDensityRadius() const; 
 	void cumulativeDensity(const std::string fileName) const;
-	double radiusSampling(const double uniformDistNumb, const std::vector<double> & cumulativeDensity, const double spacing) const;
-	virtual double vRSampling() const = 0; 
-	double vPhiSampling(const double radius, const double vr, std::uniform_real_distribution<double>  uniform) const; 
+	
+	double radiusSampling(const double uniformDistNumb, const std::vector<double> & cumulativeDensity) const; 
+	std::vector<double> readInCumulativeDensity(const std::string & fileName) const;
+
+	double vPhiSampling(const double radius, const double vr) const;//  I want to put this in the DF_Class
+	virtual double vRSampling() const = 0; // I WANT THIS TO BE VIRTUAL, BUT IT IS NOT WORKING
+	
+	double xAccel(const double xPos, const double yPos) const;
+	double yAccel(const double xPos, const double yPos) const;
 
 protected: 	
-	virtual double potential(double radius) const = 0;
-	virtual double distFunc(double E, double J) const = 0;
+	
+	
+	virtual double vRScale() const = 0; // Give the upper limit for marganlising over
+	virtual double vPhiScale() const = 0;
+	
 	virtual double jMax(const double radius) const = 0;
 	virtual double dfMax(const double radius, const double vR) const = 0;
 
@@ -139,8 +152,7 @@ Eigen::MatrixXd DFClass::dFdEgrid(const double spacing, const Eigen::MatrixXd & 
 		{
 			E = rad2Energy(i * spacing,  j * spacing); 
 			J = rad2AngMom(i * spacing,  j * spacing); 
-			dFdE(i,j) = 0.5  * ((distFunc(E+0.001, J) - distFunc(E-0.001,J))/0.001)* om1(i,j);	
-			//0.5  * ((distFunc(E+0.001, J) - distFunc(E-0.001,J))/0.001)* om1(i,j);	
+			dFdE(i,j) = 0.5  * ((distFunc(E+0.001, J) - distFunc(E-0.001,J))/0.001)* om1(i,j);		
 		}
 	}
 	return dFdE;
@@ -158,7 +170,7 @@ Eigen::MatrixXd DFClass::dFdJgrid(const double spacing, const Eigen::MatrixXd & 
 		{
 			E = rad2Energy(i * spacing,  j * spacing); 
 			J = rad2AngMom(i * spacing,  j * spacing); 
-			dFdJ(i,j) = ///om2(i,j) * (distFunc(E+0.00001, J) - distFunc(E-0.00001,J)) / (2*0.00001) 
+			dFdJ(i,j) =
 			om2(i,j) * (distFunc(E+0.00001, J) - distFunc(E-0.00001,J)) / (2*0.00001) 
 						+ (distFunc(E, J+0.00001) - distFunc(E,J-0.00001)) / (2*0.00001);
 
@@ -195,8 +207,8 @@ Eigen::MatrixXd DFClass::energyAngMomJacobain(const int size, const double spaci
 
 double DFClass::density(const double radius) const // Maybe include some integration constants
 {
-	int nSteps{2000}, nStepsRadial{3000}; 
-	double density{0}, stepVPHI{}, stepVR{}, energy{0}, vPhi{0}, vrIntegral{}; // FIGURE OUT THE STEP SIZE
+	int nSteps{1000}, nStepsRadial{1500}; 
+	double density{0}, stepVPHI{vPhiScale()/nSteps}, stepVR{vRScale()/nSteps}, energy{0}, vPhi{0}, vrIntegral{}; // FIGURE OUT THE STEP SIZE
 	
 	for (int i = 1; i<nSteps; ++i) // Outer integral is over J (don't start at J = 0, as f(J) = 0)
 	{
@@ -225,6 +237,7 @@ void DFClass::cumulativeDensity(const std::string fileName) const
 		densityArray.push_back(2*M_PI * (spacing* n) * density(n*spacing));	
 		cumulative.push_back(spacing * densityArray.back() + cumulative.back());
 		n += 1;
+		std::cout << n * spacing << " " << densityArray.back() << '\n';
 	} while (n*spacing < 10 || (densityArray.back()/cumulative.back() > .001));
 
 
@@ -234,10 +247,41 @@ void DFClass::cumulativeDensity(const std::string fileName) const
 	out.close();
 }
 
-double DFClass::radiusSampling(const double uniformDistNumb, const std::vector<double> & cumulativeDensity, const double spacing) const 
+std::vector<double> DFClass::readInCumulativeDensity(const std::string & fileName) const{
+	std::ifstream inFile; inFile.open(fileName);
+	int n; double spacing;
+	inFile >> n >> spacing;
+
+	std::vector<double> cumulative = {spacing};
+	for (int i = 0; i < n; ++i){
+		double radius, value;
+		inFile >> radius >>value;
+		cumulative.push_back(value);
+	}
+	inFile.close();
+	return cumulative;
+}
+
+double DFClass::maxDensityRadius() const // Assume that there is only one turning point 
+{
+	std::vector<double> densityArray = {0};
+	double stepSize{0.1}; int size{(int) densityArray.size()};
+	do
+	{
+		densityArray.push_back(density(size*stepSize));
+		size = densityArray.size();
+	} while (densityArray[size-1] >  densityArray[size-2]);
+	
+	double gradBeforeTP{abs(densityArray[size-2] - densityArray[size-3])}, gradAfterTP{abs(densityArray[size-1] - densityArray[size-2])};
+	return stepSize * (size-1.5) + stepSize * (gradBeforeTP)/(gradBeforeTP + gradAfterTP); // Linearly interpolate
+}
+
+
+double DFClass::radiusSampling(const double uniformDistNumb, const std::vector<double> & cumulativeDensity) const 
 {
 	int nLower, nUpper;
-	for (int i = 0; i < cumulativeDensity.size(); ++i)
+	double spacing = cumulativeDensity.front();
+	for (int i = 1; i < cumulativeDensity.size(); ++i)
 	{
 		if ((cumulativeDensity[i] < uniformDistNumb) && (cumulativeDensity[i+1] > uniformDistNumb))
 		{nLower = i; nUpper = i+1;
@@ -248,20 +292,40 @@ double DFClass::radiusSampling(const double uniformDistNumb, const std::vector<d
 
 // Some virtual function that does the vr sampling 
 
-double DFClass::vPhiSampling(const double radius, const double vr, std::uniform_real_distribution<double> uniform) const 
+double DFClass::vPhiSampling(const double radius, const double vr) const 
 {
-	double J, f, E, maxJ{jMax(radius)}, maxF{dfMax(radius, vr)};
+	
+	double J, f, E, maxJ{1}, maxF{1};// maxJ{jMax(radius)}, maxF{dfMax(radius, vr)};
+	
 	std::random_device generator;
+	std::uniform_real_distribution<double> uniform(0,1);
 
 	do // Rejection sampling
 	{
 		J = uniform(generator) * maxJ;
 		f = uniform(generator) * maxF;
+
 		E = 0.5*vr*vr + 0.5*(J/radius)*(J/radius) + potential(radius);
 	} while (f > distFunc(E,J)); 
 	
 	return (J/radius);
+	
 }
+
+
+// Some accel functions for the nnBody
+
+double DFClass::xAccel(const double xPos, const double yPos) const{
+	double spacing{0.001}, rInner{sqrt(pow(xPos-spacing ,2) + yPos*yPos)}, rOuter{sqrt(pow(xPos+spacing ,2) + yPos*yPos)};
+	return -(1/(2*spacing)) * (potential(rOuter) - potential(rInner));
+}
+
+double DFClass::yAccel(const double xPos, const double yPos) const{
+	double spacing{0.001}, rInner{sqrt(pow(yPos-spacing ,2) + xPos*xPos)}, rOuter{sqrt(pow(yPos+spacing ,2) + xPos*xPos)};
+	return -(1/(2*spacing)) * (potential(rOuter) - potential(rInner));
+}
+
+
 
 
 #endif

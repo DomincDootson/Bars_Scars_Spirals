@@ -18,9 +18,13 @@
 
 const int NUMBTIMESTEPS{2000}; // some global paramters for the Volterra Solver
 const double DELTAT{0.025};
-const double XI{.5};
+double XI{.5};
 
-bool SELF{false}; 
+bool SELF{true}; 
+
+void makeSelfConsistent() {SELF = true;}
+void makeTestParticle()   {SELF = false;}
+
 
 std::string isTestParticle()
 {
@@ -63,13 +67,27 @@ std::vector<double> littleSigmas(){
 }
 
 std::vector<double> perturbationRadii() {
-	/*std::vector<double> holding;
-	for (double radius = .5; radius <= 5; radius +=.1){
+	std::vector<double> holding;
+	for (double radius = .5; radius <= 7; radius +=.1){
 		holding.push_back(radius);
 	}
-	return holding;*/
-	return {7};
+	return holding;
 }
+
+void kalnajBF()
+{
+	Mestel DF;
+	double Rka{15};
+	std::vector<double> params{4, Rka};
+	for (int i =0; i<=2; ++i){
+		PotentialDensityPairContainer<KalnajsBasis> PD(params, 10, i);
+
+		ActionAngleBasisContainer test(10, i, 5, 101, 10);
+		std::string file = "Kalnajs/Kalnajs_4_" + std::to_string((int) Rka); // Use file function name here
+		test.scriptW(PD, DF, file);
+	} 	
+}
+
 
 void kalnajsKernelsVaryingSigma(int l)
 {
@@ -77,7 +95,7 @@ void kalnajsKernelsVaryingSigma(int l)
 	
 	std::string file = "Kalnajs/Kalnajs_4_20";
 	ActionAngleBasisContainer test(file, 10, l, 5, 101, 20);
-	
+
 	VolterraSolver solver(10, l, NUMBTIMESTEPS, DELTAT);
 	for (int i = 0; i < littleSigma.size(); ++i){
 		
@@ -88,6 +106,24 @@ void kalnajsKernelsVaryingSigma(int l)
 		
 		solver.generateKernel(kernel, DF, test);
 	}
+}
+
+void maxDensityRadii(){
+	std::ofstream out("../maxDensity.csv");
+	std::vector littleSigma{littleSigmas()};
+	for (int i = 0; i < littleSigma.size()-1; ++i) {out << littleSigma[i] << ',';}
+	out << littleSigma.back() << '\n';
+
+	for (double rInner = .1; rInner < 5; rInner += .1){
+		out << rInner << ',';
+		std::cout << rInner << '\n';
+		for (auto i = 0; i < littleSigma.size(); ++i){
+			Mestel DF(1, 1, littleSigma[i], 1, rInner);
+			if (i < littleSigma.size() -1){ out << DF.maxDensityRadius() << ',';}
+			else {out << DF.maxDensityRadius() << '\n';}
+		}
+	}
+	out.close(); 
 }
 
 // Perturbation Functions // 
@@ -135,6 +171,44 @@ void diskKickingPerturbations()
 		}
 	}
 }
+
+void vectorLine2File(std::ofstream & out, const std::vector<double> & vector)
+{
+	for (auto it = vector.begin(); it != vector.end()-1; ++it){
+		out << *it << ',';
+	}
+	out << vector.back() << '\n';
+}
+
+std::vector<double> radii4Line(int rMax = 10, int nStep = 100){
+	double step{rMax/((double) nStep-1)};
+	std::vector<double> radii;
+
+	for (int i = 0; i < nStep; ++i){
+		radii.push_back(i*step);
+	}
+	return radii;
+}
+
+void plottingPerturbations()
+{
+	Eigen::VectorXcd coeff(11);
+	std::vector<double> params{4, 20}, radii{perturbationRadii()}, radii4Output{radii4Line()};
+	PotentialDensityPairContainer<KalnajsBasis> pd1{params, 10, 1};
+
+	std::ofstream out("Disk_Kicking/PlottingPerturbation.csv");
+
+	for (auto r = radii.begin(); r != radii.end(); r += 1){
+		for (int n = 0; n < coeff.size(); ++n){
+			coeff[n] = pd1.potential(*r, n);
+		}
+		out << *r << ','; 
+		vectorLine2File(out, pd1.oneDpotential(radii4Output, coeff));
+		std::cout << *r << '\n';
+	}
+	out.close();
+}
+
 
 // Coefficent Evolution //
 // -------------------- //
@@ -251,7 +325,7 @@ std::vector<double> individualEnergyEvolution(const Tbf & pd, double littleSigma
 }
 
 
-void energyEvolution()
+void energyEvolution(const std::string & energyFilename)
 {
 	diskKickingPerturbations();
 	std::vector<double> params{4, 20};
@@ -259,7 +333,7 @@ void energyEvolution()
 	std::vector<PotentialDensityPairContainer<KalnajsBasis>> potentialDensityPairs{pd0, pd1, pd2};
 	
 	std::vector<double> littleSigma{littleSigmas()}, radii{perturbationRadii()};
-	std::ofstream out("Disk_Kicking/Energy_Evolution/KalnajsEnergyEvolution.csv");
+	std::ofstream out(energyFilename);
 
 	for (auto s = littleSigma.begin(); s != littleSigma.end(); ++s){
 		for (auto pd = potentialDensityPairs.begin(); pd != potentialDensityPairs.end(); ++pd){
@@ -272,6 +346,3 @@ void energyEvolution()
 	out.close();
 	cleaningPerturbations();
 }
-
-// 4) Add a function that loooks at the evolution of indivdual coef
-// 5) ADD SOME GLOBAL VARIABLES ?? 

@@ -23,7 +23,7 @@ def coeffEvolutionPlot(littleSigma, radius):
 	plt.rc('text', usetex=True)
 	plt.rc('font', family='serif')
 
-	fig, axs = plt.subplots(len(modes), len(angHarmonics), sharex = True, sharey = True)
+	fig, axs = plt.subplots(len(modes), len(angHarmonics), sharex = True, sharey = False)
 	time = np.linspace(0,50, np.shape(data[0])[0])
 	for i in modes:
 		for j in angHarmonics:
@@ -89,7 +89,6 @@ def rootPlotting(littleSigma):
 
 
 
-
-rootPlotting(.25)
+coeffEvolutionPlot(.25, 5)
 
 

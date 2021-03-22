@@ -19,8 +19,7 @@ public:
 	m_potentialDensityContainer{}, m_maxRadialIndex{maxN}, m_fourierHarmonic{l}, 
 	m_scriptE{Eigen::MatrixXd::Zero(m_maxRadialIndex+1, m_maxRadialIndex+1)}
 	{
-		for (int i = 0; i <= m_maxRadialIndex ; ++i)
-		{
+		for (int i = 0; i <= m_maxRadialIndex ; ++i){
 			m_potentialDensityContainer.emplace_back(params, i, m_fourierHarmonic);
 		}
 		m_scriptE = calculateScriptE();
@@ -49,10 +48,14 @@ public:
 	Eigen::ArrayXXd   densityArrayReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
 	Eigen::ArrayXXd potentialArrayReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
 
+	std::vector<double> oneDdensity(const std::vector<double> & radii, const Eigen::VectorXcd &coeff) const;
+	std::vector<double> oneDpotential(const std::vector<double> & radii, const Eigen::VectorXcd &coeff) const;
+
+
 	Eigen::VectorXcd potentialResolving(const Eigen::ArrayXXcd &potentialArray, const double rMax) const; // Not great at resolving l =0
 	Eigen::VectorXcd densityResolving(const Eigen::ArrayXXcd &densityArray, const double rMax) const;
 
-	std::vector<double> oneDdensity(const std::vector<double> & radii, const Eigen::VectorXcd &coeff) const;
+	
 
 
 	Eigen::MatrixXd getScriptE() const {return m_scriptE;}
@@ -120,7 +123,33 @@ Eigen::ArrayXXd PotentialDensityPairContainer<T>::potentialArrayReal(const Eigen
 	return (potentialArray(coefficents, nGrid, rMax) + potentialArray(coefficents, nGrid, rMax).conjugate()).real(); 
 }
 
+template <class T>
+std::vector<double> PotentialDensityPairContainer<T>::oneDdensity(const std::vector<double> & radii, const Eigen::VectorXcd &coeff) const
+{
+	std::vector<double> densityVector;
+	for (auto r = radii.begin(); r != radii.end(); ++r){
+			std::complex<double> den{0};
+			for (int n = 0; n <= m_maxRadialIndex; ++n){
+				den += coeff[n] * density(*r, n);
+			}
+			densityVector.push_back(real(den));
+		}
+	return densityVector;	
+}
 
+template <class T>
+std::vector<double> PotentialDensityPairContainer<T>::oneDpotential(const std::vector<double> & radii, const Eigen::VectorXcd &coeff) const
+{
+	std::vector<double> potentialVector;
+	for (auto r = radii.begin(); r != radii.end(); ++r){
+			std::complex<double> pot{0};
+			for (int n = 0; n <= m_maxRadialIndex; ++n){
+				pot += coeff[n] * potential(*r, n);
+			}
+			potentialVector.push_back(real(pot));
+		}
+	return potentialVector;		
+}
 
 // Resolving function
 template <class T>
@@ -204,20 +233,4 @@ Eigen::MatrixXd PotentialDensityPairContainer<T>::calculateScriptE() const
 	}
 	return scriptE; 
 }
-
-template <class T>
-std::vector<double> PotentialDensityPairContainer<T>::oneDdensity(const std::vector<double> & radii, const Eigen::VectorXcd &coeff) const
-{
-	std::vector<double> densityVector;
-	for (auto r = radii.begin(); r != radii.end(); ++r){
-			std::complex<double> den{0};
-			for (int n = 0; n <= m_maxRadialIndex; ++n){
-				den += coeff[n] * density(*r, n);
-			}
-			densityVector.push_back(real(den));
-		}
-	return densityVector;	
-}
-
-
 #endif 

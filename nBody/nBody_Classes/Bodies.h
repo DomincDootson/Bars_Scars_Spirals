@@ -6,47 +6,64 @@
 #include <Eigen/Dense>
 
 #include "../../Potential_Density_Pair_Classes/PotentialDensityPairContainer.h"
+#include "../../DF_Class/Mestel.h"
+#include "../../DF_Class/DFClass.h"
 
 class Bodies {
 public:
   Bodies(const int N) : m(N), xy(2*N), vxvy(2*N), n(N) {}
-  Bodies(std::string fileName, const int numbParticles);
+
+  template <class Tdf>
+  Bodies(std::string fileName, const Tdf & df, int numbParticles);
 
   ~Bodies() {}
  
   std::valarray<double> m, xy, vxvy;
   const int n;
   
+  void samplingDF();
+
   // some public functions that do the outputting of the coefficents
   std::valarray<double> radius(double softening2 = 0) const;
   std::valarray<double>  angle() const ;
 
   template <class Tbf>
   Eigen::VectorXcd responseCoefficents(const Tbf & bf, const double xi) const;
+
+private:
+  void convert2Cartesian();
 };
 
-
-Bodies::Bodies(std::string fileName, int numbParticles) : m(numbParticles), xy(2*numbParticles), vxvy(2*numbParticles), n(numbParticles)
+template <class Tdf>
+Bodies::Bodies(std::string fileName, const Tdf & df, int numbParticles) : m(numbParticles), xy(2*numbParticles), vxvy(2*numbParticles), n(numbParticles)
 {
-  /*particle2D * holdingParticle;
-  holdingParticle = new particle2D[n];
+  std::random_device generator;
+  std::uniform_real_distribution<double> uniform(0,1);
+  std::vector<double> cumulativeDensity = df.readInCumulativeDensity(fileName);
+  for (int i = 0; i < 2*numbParticles; i += 2){
+    xy[i]     = df.radiusSampling(uniform(generator), cumulativeDensity);
+    xy[i+1]   = 2 * M_PI * uniform(generator);
 
-  particleSampling(holdingParticle, n, fileName); 
-
-  double weight{1/((double) n)};
-  for (int i = 0; i < n; ++i)
-  {
-    
-    m[i] = weight;
-    xy[2*i]   = holdingParticle[i].x;
-    xy[2*i+1] = holdingParticle[i].y;
-
-    vxvy[2*i]   = holdingParticle[i].px;
-    vxvy[2*i+1] = holdingParticle[i].py;
+    vxvy[i]   = df.vRSampling();
+    std::cout << "Sampling vPhi\n";
+    vxvy[i+1] = df.vPhiSampling(xy[i], vxvy[i]);
   }
-
-  delete [] holdingParticle;*/ 
+  convert2Cartesian();
 }
+
+
+void Bodies::convert2Cartesian() {
+
+  for (int i =0; i < 2*n; i += 2){
+    double r{xy[i]}, theta{xy[i+1]}, vr{vxvy[i]}, vPhi{vxvy[i+1]};
+    xy[i]     = r * cos(theta); 
+    xy[i+1]   = r * sin(theta);
+    vxvy[i]   = cos(theta)*vr - sin(theta)*vPhi;
+    vxvy[i+1] = sin(theta)*vr + cos(theta)*vPhi;
+  }
+}
+
+
 
 std::valarray<double> Bodies::radius(double softening2) const 
 {
@@ -59,6 +76,9 @@ std::valarray<double> Bodies::radius(double softening2) const
 
   return radius;
 }
+
+
+
 
 std::valarray<double>  Bodies::angle() const // Please for the love of god tidy this up
 {

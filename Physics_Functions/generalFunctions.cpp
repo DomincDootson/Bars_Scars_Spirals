@@ -93,14 +93,24 @@ void kalnajBFVaryingR()
 
 void generatingKalnajsKernels(int m2)
 {
-	ActionAngleBasisContainer test("Kalnajs", 10, m2, 5, 101, 20);
+	ActionAngleBasisContainer test("Kalnajs/Kalnajs_4_20", 10, m2, 5, 101, 20);
 	Mestel DF;
 
 
-	VolterraSolver solver(10, m2, 2000, 0.01);
+	/*VolterraSolver solver(10, m2, 2000, 0.025);
 
-	std::string kernel = "Kernels/Kalnajs" +std::to_string(m2) +".out";
+	std::string kernel = "test2000.out";//"Kernels/Kalnajs" +std::to_string(m2) +".out";
 	solver.generateKernel(kernel, DF, test);
+
+	VolterraSolver solver1(10, m2, 1000, 0.05);
+
+	std::string kernel1 = "test1000.out";//"Kernels/Kalnajs" +std::to_string(m2) +".out";
+	solver1.generateKernel(kernel1, DF, test);*/
+
+	VolterraSolver solver2(10, m2, 100, 0.5);
+
+	std::string kernel2 = "test100.out";//"Kernels/Kalnajs" +std::to_string(m2) +".out";
+	solver2.generateKernel(kernel2, DF, test);
 }
 
 void generatingGaussianKernels(int m2)
@@ -132,15 +142,15 @@ void kernelFlipped(){
 }
 
 
-void kalnajsPerturbation()
+void kalnajsPerturbation(int nStep)
 {
 	std::ofstream out("someperturbation");
 	out << 10 << '\n';
-	for (int i =0; i<2000; ++i)
+	for (int i =0; i<nStep; ++i)
 	{
 		for (int j = 0; j < 3; ++j)
 		{
-			out << 0.01*sin(M_PI * (i/2000.0)) << " " << 0 << " ";
+			out << 0.01*sin(M_PI * (i/(double) nStep)) << " " << 0 << " ";
 		}
 		for (int j = 3; j<10; ++j)
 		{
@@ -178,10 +188,11 @@ void gaussianPerturbation()
 
 void testEvolutionKalanajs(int m2)
 {
-	kalnajsPerturbation();
-	VolterraSolver solver("kernelFileName.csv", 10, m2, 2000, 0.01);
+	kalnajsPerturbation(100);
+	std::cout << "Here\n";
+	VolterraSolver solver("test100.out", 10, m2, 100, 0.5);
 	solver.activeFraction(.25);	
-	solver.coefficentEvolution("evolution.csv", "someperturbation", true);
+	solver.coefficentEvolution("evolution100.csv", "someperturbation", true);
 	solver.resetActiveFraction();
 }
 

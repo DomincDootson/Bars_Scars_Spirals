@@ -36,6 +36,13 @@ class EnergyEvolutionData(): # This holds the data output by the C++ code
 		self.m_data = readingInRealCSV(ENERGY_DIR + filename)
 		self.m_timeStep = timeStep
 
+	def __init__(self, filename, rInner, rOuter, timeStep = 0.25):
+		self.m_data = readingInRealCSV(ENERGY_DIR + filename)
+		self.m_rInner = rInner
+		self.m_rOuter = rOuter
+		self.m_timeStep = timeStep
+
+
 	def check_Agreement(self, row, littleSigma, angHarmonic, radius):
 		if (self.m_data[row, 0] == littleSigma) & (self.m_data[row, 1] == angHarmonic) & (self.m_data[row,2] == radius):
 			return True
@@ -80,7 +87,27 @@ class EnergyEvolutionData(): # This holds the data output by the C++ code
 				return i
 
 	def time_Max_Energy(self, littleSigma, angHarmonic, radius):
-		return self.m_timeStep * self.index_Max_Energy(littleSigma, angHarmonic, radius)
+		maxIndex = self.index_Max_Energy(littleSigma, angHarmonic, radius)
+		energy = self.energy_evolution(littleSigma, angHarmonic, radius)
+		if energy[maxIndex] == energy[-1]:
+			return self.m_timeStep * maxIndex
+
+		gradBefore, gradAfter = abs((energy[maxIndex]- energy[maxIndex-1])), abs((energy[maxIndex+1]- energy[maxIndex]))
+		return self.m_timeStep *( (maxIndex-.5) +  gradBefore/(gradAfter+gradBefore)) 
 
 	def time_Max_Energy_All_Radii(self, littleSigma, angHarmonic):
 		return [self.time_Max_Energy(littleSigma, angHarmonic, radius) for radius in self.radii()]
+
+
+def maxDensity():
+	data = readingInRealCSV("../Disk_Kicking/maxDensity.csv")
+	rInner = data[1:,0]
+	print(rInner)
+	for s in range(1, np.shape(data)[1]):
+		plt.plot(rInner, data[1:, s]-rInner, label = r"$\sigma_{r}=$ " + str(data[0,s]))
+
+	plt.ylabel(r"$R_{Max Density}- R_{i}$")
+	plt.xlabel(r"$R_{i}$")
+
+	plt.legend()
+	plt.show()
