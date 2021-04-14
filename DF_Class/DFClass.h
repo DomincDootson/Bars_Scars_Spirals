@@ -5,6 +5,7 @@
 #include <vector>
 #include <Eigen/Dense>
 #include <random>
+#include <fstream>
 
 
 class DFClass
@@ -16,10 +17,13 @@ public:
 	virtual double potential(double radius) const = 0;
 	virtual double distFunc(double E, double J) const = 0;
 
+	double rad2Energy(double rApo, double rPer) const;
+	double rad2AngMom(double rApo, double rPer) const;
+
 	double omega1(double rApo, double rPer) const;
 	double omega2(double rApo, double rPer) const;
 	double theta1(double radius, double rApo, double rPer, double omega1) const;
-	double theta2(double radius, double rApo, double rPer, double omega2) const;
+	double theta2(double radius, double rApo, double rPer, double omega2) const; // Note this is really theta2 - phi 
 	double theta1Deriv(double radius, double rApo, double rPer, double omega1) const;
 
 	Eigen::MatrixXd dFdEgrid(const double spacing, const Eigen::MatrixXd & om1) const;
@@ -40,6 +44,8 @@ public:
 	double xAccel(const double xPos, const double yPos) const;
 	double yAccel(const double xPos, const double yPos) const;
 
+
+
 protected: 	
 	
 	
@@ -49,27 +55,29 @@ protected:
 	virtual double jMax(const double radius) const = 0;
 	virtual double dfMax(const double radius, const double vR) const = 0;
 
-	double rad2Energy(double rApo, double rPer) const 
-	{
-		assert(rPer <= rApo);
-		if (rPer == rApo)
-		{
-			return 0.5 + potential(rPer); // PROPER FUNCTION THAT USES THIS
-		}
-		return (pow(rApo,2)*potential(rApo) -pow(rPer,2)*potential(rPer)) / (rApo*rApo - rPer*rPer);
-	}
 
-	double rad2AngMom(double rApo, double rPer) const
-	{
-		assert(rPer <= rApo);
-		if (rPer == rApo)
-		{
-			return rPer; // WE NEED TO INCLUDE A PROPER FUNCITON THAT DOES THIS
-		}
-		return pow(2*(potential(rApo) - potential(rPer))/ (pow(rPer ,-2) - pow(rApo ,-2)), 0.5);	
-	}
 
 };
+
+double DFClass::rad2Energy(double rApo, double rPer) const 
+{
+	assert(rPer <= rApo);
+	if (rPer == rApo)
+	{
+		return 0.5 + potential(rPer);
+	}
+	return (pow(rApo,2)*potential(rApo) -pow(rPer,2)*potential(rPer)) / (rApo*rApo - rPer*rPer);
+}
+
+double DFClass::rad2AngMom(double rApo, double rPer) const
+{
+	assert(rPer <= rApo);
+	if (rPer == rApo)
+	{
+		return rPer;
+	}
+	return pow(2*(potential(rApo) - potential(rPer))/ (pow(rPer ,-2) - pow(rApo ,-2)), 0.5);	
+}
 
 // Function for linear calculation //
 // ------------------------------- //
@@ -237,20 +245,21 @@ void DFClass::cumulativeDensity(const std::string fileName) const
 		densityArray.push_back(2*M_PI * (spacing* n) * density(n*spacing));	
 		cumulative.push_back(spacing * densityArray.back() + cumulative.back());
 		n += 1;
-		std::cout << n * spacing << " " << densityArray.back() << '\n';
-	} while (n*spacing < 10 || (densityArray.back()/cumulative.back() > .001));
+		//std::cout << n * spacing << " " << densityArray.back() << '\n';
+		if ( (n * spacing) ==static_cast<int>(n * spacing)) {std::cout << "Finding cumulative density for point: " << n*spacing << " Density: " <<  cumulative.back()<< '\n';}
+	} while (n*spacing < 10 || n*spacing <20); //|| (densityArray.back()/cumulative.back() > .001)
 
 
 	std::ofstream out(fileName);
-	out << n << " " << spacing << '\n';
+	out << n << " " << spacing << " " << cumulative.back() <<'\n';
 	for (int i = 0; i < n; ++i)	{out << i * spacing << " " << cumulative[i]/cumulative.back() << '\n';}
 	out.close();
 }
 
-std::vector<double> DFClass::readInCumulativeDensity(const std::string & fileName) const{
+std::vector<double> DFClass::readInCumulativeDensity(const std::string & fileName) const{ // I am not sure why this must be a memeber function.... 
 	std::ifstream inFile; inFile.open(fileName);
-	int n; double spacing;
-	inFile >> n >> spacing;
+	int n; double spacing, normalisation;
+	inFile >> n >> spacing >> normalisation;
 
 	std::vector<double> cumulative = {spacing};
 	for (int i = 0; i < n; ++i){
@@ -295,7 +304,7 @@ double DFClass::radiusSampling(const double uniformDistNumb, const std::vector<d
 double DFClass::vPhiSampling(const double radius, const double vr) const 
 {
 	
-	double J, f, E, maxJ{1}, maxF{1};// maxJ{jMax(radius)}, maxF{dfMax(radius, vr)};
+	double J, f, E, maxJ{jMax(radius)}, maxF{dfMax(radius, vr)};
 	
 	std::random_device generator;
 	std::uniform_real_distribution<double> uniform(0,1);

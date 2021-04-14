@@ -19,12 +19,14 @@ public:
 	double density(double r) const; 
 	double potential(double r) const; 
 
+	double r0() const;
+	double sigma() const;
+
 private:
 	const int m_maxIndex;
 	const double m_innerRadius, m_outerRadius, m_r0, m_sigma;
 	
-	double r0() const;
-	double sigma() const;
+	
 };
 
 double GaussianLogBasis::r0() const

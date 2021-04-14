@@ -8,9 +8,8 @@
 class PotentialDensityPair
 {
 public:
-	PotentialDensityPair(int n, int l) 
-	:
-		m_fourierHarmonic{l}, m_radialIndex{n}, m_G(1), m_rMax{0} {}
+	PotentialDensityPair(int n, int l) : m_fourierHarmonic{l}, m_radialIndex{n}, m_G(1), m_rMax{0} 
+	{}
 	
 	virtual ~PotentialDensityPair() {}
 
@@ -26,7 +25,6 @@ public:
 
 protected:
 
-	Eigen::ArrayXXcd m_potentialGrid, m_densityGrid;
 	const int m_fourierHarmonic, m_radialIndex;
 	const int m_G;
 	
@@ -91,7 +89,6 @@ Eigen::ArrayXXcd PotentialDensityPair::densityGrid(const int nGrid, const double
 			else {grid(i,j) = 0;}
 		}
 	}
-	//m_densityGrid = grid;
 	return grid;
 }
 
@@ -112,7 +109,6 @@ Eigen::ArrayXXcd PotentialDensityPair::potentialGrid(const int nGrid, const doub
 			}
 		}
 	}
-	//grid = m_potentialGrid;
 	return grid;
 }
 

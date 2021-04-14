@@ -16,11 +16,11 @@
 
 #include "../Bar2D/Bar2D.h"
 
-const int NUMBTIMESTEPS{2000}; // some global paramters for the Volterra Solver
-const double DELTAT{0.025};
-double XI{.5};
+const int NUMBTIMESTEPS{200}; // some global paramters for the Volterra Solver
+const double DELTAT{0.25};
+double XI{.15};
 
-bool SELF{true}; 
+bool SELF{false}; 
 
 void makeSelfConsistent() {SELF = true;}
 void makeTestParticle()   {SELF = false;}
@@ -55,9 +55,9 @@ std::string density2dFilename(const double littleSigma, const double radius, con
 			"/Density2D" + std::to_string((int) round(10*radius)) + "_" +std::to_string(fourierHarmonic) + isTestParticle() + ".csv";
 }
 
-std::string kernelFilename(const double littleSigma, const int fourierHarmonic){
+std::string kernelFilename(const double littleSigma, const int fourierHarmonic, const std::string & bfName = "Kalnajs"){
 	return "Disk_Kicking/littleSigma_" + std::to_string((int) round(100*littleSigma)) + 
-			"/Kalnajs" + "_" +std::to_string(fourierHarmonic) + ".out";
+			"/" + bfName + "_" +std::to_string(fourierHarmonic) + ".out";
 }
 
 
@@ -106,11 +106,12 @@ void kalnajsKernelsVaryingSigma(int l)
 		
 		solver.generateKernel(kernel, DF, test);
 	}
-}
+} 
+
 
 void maxDensityRadii(){
 	std::ofstream out("../maxDensity.csv");
-	std::vector littleSigma{littleSigmas()};
+	std::vector<double> littleSigma{littleSigmas()};
 	for (int i = 0; i < littleSigma.size()-1; ++i) {out << littleSigma[i] << ',';}
 	out << littleSigma.back() << '\n';
 
@@ -141,9 +142,9 @@ void outPutPerturbation(const T & pd, double littleSigma, double radius, int num
 	holding.writePerturbation2File(perturbationFilename(littleSigma, radius, pd.fourierHarmonic()));
 }
  
-void cleaningPerturbations()
+void cleaningPerturbations(const std::vector<double> & radii)
 {
-	std::vector<double> littleSigma{littleSigmas()}, radii{perturbationRadii()}, angHarmonic{0,1,2};
+	std::vector<double> littleSigma{littleSigmas()}, angHarmonic{0,1,2};
 	for (auto s = littleSigma.begin(); s != littleSigma.end(); ++s){
 		for (auto r = radii.begin(); r != radii.end(); ++r){
 			for (auto l = angHarmonic.begin(); l != angHarmonic.end(); ++l){
@@ -171,6 +172,7 @@ void diskKickingPerturbations()
 		}
 	}
 }
+// SPIRAL EQU //
 
 void vectorLine2File(std::ofstream & out, const std::vector<double> & vector)
 {
@@ -237,7 +239,7 @@ void coefficentEvolution()
 			indivdualCoeffEvolution(10, 2, *s, *radius);
 		}
 	}
-	cleaningPerturbations();
+	cleaningPerturbations(radii);
 }
 
 
@@ -275,7 +277,7 @@ void diskKicking()
 			individualDiskKicking(pd2, *s, *radius);
 		}
 	}
-	cleaningPerturbations();
+	cleaningPerturbations(radii);
 }
 
 // 2D Density Evolution //
@@ -303,7 +305,7 @@ void density2D(double littleSigma, double radius, int angHarmonic){
 // ---------------- // 
 
 void outPutEnergy(std::ofstream & out, const std::vector<double> & energies, double littleSigma, int angHarmonic, double radius){
-	int skip{10};
+	int skip{1};
 	out << littleSigma << ',' << angHarmonic << ',' << radius << ',';
 	for (int i = 0; i<energies.size()-skip; i += skip){
 		out << energies[i] <<',';
@@ -312,11 +314,11 @@ void outPutEnergy(std::ofstream & out, const std::vector<double> & energies, dou
 }
 
 template <class Tbf>
-std::vector<double> individualEnergyEvolution(const Tbf & pd, double littleSigma, double radius)
+std::vector<double> individualEnergyEvolution(const Tbf & pd, double littleSigma, double radius, const std::string & bfName = "Kalnajs")
 {
 	int angHarmonic{pd.fourierHarmonic()};
 	std::string perturbationFile{perturbationFilename(littleSigma, radius, angHarmonic)};
-	std::string kernel{kernelFilename(littleSigma, angHarmonic)};
+	std::string kernel{kernelFilename(littleSigma, angHarmonic, bfName)};
 	std::cout << "Solving: " << littleSigma << " " << radius << " " << angHarmonic <<'\n';
 
 	VolterraSolver solver(kernel, pd.maxRadialIndex(), angHarmonic, NUMBTIMESTEPS, DELTAT);
@@ -344,5 +346,111 @@ void energyEvolution(const std::string & energyFilename)
 		}
 	} 	
 	out.close();
-	cleaningPerturbations();
+	cleaningPerturbations(radii);
+}
+
+
+// Gaussian Function // 
+// ----------------- //
+
+void generatingSpiralBF(const std::string & dir, const double innerTaper, const double outerTaper)
+{
+	Mestel DF(1, 1, .25, 1, innerTaper, outerTaper);
+	
+	std::vector<double> params{24, .5, 15};
+ 	
+	for (int m2 = 0; m2 <= 2; ++m2){
+	 	PotentialDensityPairContainer<GaussianLogBasis> PD(params, 24,m2);
+
+		ActionAngleBasisContainer test(24, m2, 10, 301, 20); 
+		test.scriptW(PD, DF, dir);
+	}
+}
+
+std::vector<int> guassianLogIndicies(const int lower = 5, const int upper = 15){
+	std::vector<int> indicies;
+	for (int i = lower; i <= upper; ++i){indicies.push_back(i);}
+		return indicies;
+}
+
+template <class T>
+std::vector<double> r0list(const T & pd)
+{
+	std::vector<double> r0;
+	std::vector<int> indicies{guassianLogIndicies()};
+	for (auto n = indicies.begin(); n != indicies.end(); ++n){
+		r0.push_back(pd(*n).r0());
+		std::cout << pd(*n).r0() << '\n';
+	}
+	return r0;
+}
+
+void GaussianLogKernelsVaryingSigma(int l, double rInner, double rOuter, const std::string & dir = "GaussianLog")
+{
+	std::vector<double> littleSigma{littleSigmas()};
+	
+	ActionAngleBasisContainer test(dir, 24, l, 7, 301, 20);
+
+	VolterraSolver solver(24, l, NUMBTIMESTEPS, DELTAT);
+	for (int i = 0; i < littleSigma.size(); ++i){
+		
+		std::cout << "Calculating kernel for littleSigma: " << littleSigma[i] << '\n';
+		Mestel DF(1, 1, littleSigma[i], 1, rInner, rOuter);
+		
+		std::string kernel{kernelFilename(littleSigma[i], l, "GaussianLog")};
+		
+		solver.generateKernel(kernel, DF, test);
+	}
+} 
+
+void outPutPerturbationLG(const PotentialDensityPairContainer<GaussianLogBasis>  & pd, int index, double littleSigma, double radius, int numbTimeSteps = NUMBTIMESTEPS) //Gaussian version
+{
+	Eigen::VectorXcd t0Coeff = Eigen::VectorXcd::Zero(pd.maxRadialIndex()+1);
+	
+	t0Coeff[index] = .1/pd.potential(radius, index); // normalise them so the all the pushes are the same size. 
+	
+
+	ExpansionCoeff holding(t0Coeff, numbTimeSteps, pd.maxRadialIndex());
+	holding.writePerturbation2File(perturbationFilename(littleSigma, radius, pd.fourierHarmonic()));
+}
+
+
+void diskKickingLGPerturbations()
+{
+	std::vector<double> params{24, .5, 15};
+	PotentialDensityPairContainer<GaussianLogBasis> pd0(params, 24,0), pd1(params, 24, 1), pd2(params, 24, 2);
+	
+	std::vector<double> littleSigma{littleSigmas()}, radii{r0list(pd0)}; 
+	std::vector<int> indicies{guassianLogIndicies()};
+
+	for (auto s = littleSigma.begin(); s != littleSigma.end(); ++s){
+		for (int n = 0; n < radii.size(); ++n){
+			outPutPerturbationLG(pd0, indicies[n], *s, radii[n]);	
+			outPutPerturbationLG(pd1, indicies[n], *s, radii[n]);	
+			outPutPerturbationLG(pd2, indicies[n], *s, radii[n]);	
+		}
+	}	
+}
+
+void diskKickingLGEnergy(const std::string & energyFilename)
+{
+	diskKickingLGPerturbations();
+	
+	std::vector<double> params{24, .5, 15};
+	PotentialDensityPairContainer<GaussianLogBasis> pd0(params, 24,0), pd1(params, 24, 1), pd2(params, 24, 2);
+	std::vector<PotentialDensityPairContainer<GaussianLogBasis>> potentialDensityPairs{pd0, pd1, pd2};
+	
+	std::vector<double> littleSigma{littleSigmas()}, radii{r0list(pd0)};
+	std::ofstream out(energyFilename);
+
+	for (auto s = littleSigma.begin(); s != littleSigma.end(); ++s){
+		for (auto pd = potentialDensityPairs.begin(); pd != potentialDensityPairs.end(); ++pd){
+			for (auto r = radii.begin(); r != radii.end(); ++r){
+				std::vector<double> energies = individualEnergyEvolution(*pd, *s, *r, "GaussianLog");
+				outPutEnergy(out, energies, *s, pd -> fourierHarmonic(), *r);
+			}
+		}
+	} 	
+	out.close();
+	cleaningPerturbations(radii);
 }

@@ -1,6 +1,6 @@
 from generalPlottingFunctions import *
 
-#test = EnergyEvolutionData("KalnajsEnergyEvolutionTest.csv")
+test = EnergyEvolutionData("GaussianLogEnergy_10_100.csv",0,0)
 #selfConsistent = EnergyEvolutionData("KalnajsEnergyEvolution.csv")
 
 
@@ -53,11 +53,11 @@ def maxEnergyDifferentRadii(energyEvolution, energyEvolutionTest):
 		for j in range(np.shape(angHarmonic)[0]):
 			data = energyEvolution.max_Energy(littleSigma[i], angHarmonic[j])
 			norm = np.amax(np.absolute(data[:25,1]))
-			axs[i,j].plot(data[:,0], data[:,1]/norm, label = 'Self Consistent', color = 'firebrick')
+			axs[i,j].plot(data[:,0], data[:,1], label = 'Self Consistent', color = 'firebrick')
 
 			data = energyEvolutionTest.max_Energy(littleSigma[i], angHarmonic[j])
 			norm = np.amax(np.absolute(data[:25,1]))
-			axs[i,j].plot(data[:,0], data[:,1]/norm, label = 'Test Particle', color = 'cornflowerblue')
+			axs[i,j].plot(data[:,0], data[:,1], label = 'Test Particle', color = 'cornflowerblue')
 
 
 	for l in range(np.shape(angHarmonic)[0]):
@@ -109,13 +109,13 @@ def timeMaxEnergyDifferentRadii(energyEvolution, energyEvolutionTest):
 
 
 
-def taperExtension(rInner, rOuter, test = False):
+def taperExtension(rInner, rOuter, filename = "KalnajsEnergyEvolution", test = False):
 	
 	if rInner >= 1:
-		filename = "KalnajsEnergyEvolution_"+str(int(10*rInner))+"_"+str(rOuter) 
+		filename = filename + "_" + str(int(10*rInner))+"_"+str(rOuter) 
 	else:
 		order = abs(floor(log(rInner,10)))
-		filename = "KalnajsEnergyEvolution_" + order*"0"+str(int((10**order)*rInner))+"_"+str(rOuter)
+		filename = filename + "_"   + order*"0"+str(int((10**order)*rInner))+"_"+str(rOuter)
 
 	if (test):
 		return filename+"_Test.csv"
@@ -237,26 +237,43 @@ def timeMaxEnergyDifferentTapers(rInner, rOuter):
 
 	plt.show()
 
+def taperLabel(rInner, rOuter):
+	return r"$R_{i} = $ " +str(rInner) + r", $R_{o} = $ " + str(rOuter) 
 
-rInner,rOuter = [.1, .5, 1.3, 1, 2], [10, 10, 10, 10, 10]
-rInner,rOuter = [.1, .5, 1, 1.3, 2], [10, 10, 10, 10, 10]
-maxEnergyDifferentTapers(rInner, rOuter)
-#rInner, rOuter = [1], [10]
-#maxEnergyDifferentTapersl1Harmonic(rInner, rOuter)
-# #timeMaxEnergyDifferentTapers(rInner, rOuter)
+def gaussianVaryingTapers(listOfEnergies):
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
+	fig, axs = plt.subplots(3,3)
+	radii = listOfEnergies[0].radii()
+	nSigmas, littleSigma = np.shape(listOfEnergies[0].little_sigma())[0], listOfEnergies[0].little_sigma()
+	angHarmonic = listOfEnergies[0].ang_harmonic()
 
-selfConsistent = EnergyEvolutionData("KalnajsEnergyEvolution_10_15.csv", 1, 15) 
-test = EnergyEvolutionData("KalnajsEnergyEvolution_10_15.csv", 1, 15)
+	for s in range(nSigmas):
+		for l in listOfEnergies[0].ang_harmonic():
+			for i in range(len(listOfEnergies)):
+				print(listOfEnergies[i].max_Energy(littleSigma[s], l))
+				axs[s, int(l)].plot(radii, listOfEnergies[i].max_Energy(littleSigma[s], l), label = taperLabel(listOfEnergies[i].m_rInner, listOfEnergies[i].m_rOuter))
+
+	
+	axs[-1,-1].legend()	
+	
+	for l in range(np.shape(angHarmonic)[0]):
+		axs[0, l].set_title(r"$\ell_{p} = $ " + str(angHarmonic[l]))
+
+	for s in range(np.shape(littleSigma)[0]):
+		axs[s, 0].set_ylabel(r"$\sigma_{r} = $ " + str(littleSigma[s]) + r"$v_{c}$")		
+	
+	plt.show()
 
 
-maxEnergyDifferentRadii(selfConsistent,test)
+listOfEnergies = [EnergyEvolutionData("GaussianLogEnergy_5_150.csv",0.5,15), EnergyEvolutionData("GaussianLogEnergy_10_150.csv",1,15), EnergyEvolutionData("GaussianLogEnergy_20_150.csv",2,15)]
+gaussianVaryingTapers(listOfEnergies)
+listOfEnergies = [EnergyEvolutionData("GaussianLogEnergy_10_100.csv",1,10), EnergyEvolutionData("GaussianLogEnergy_10_150.csv",1,15), EnergyEvolutionData("GaussianLogEnergy_10_175.csv",1,17.5)]
+gaussianVaryingTapers(listOfEnergies)
 
 
-# energyEvolutionGivenRadius(selfConsistent, test,1)
-# energyEvolutionGivenRadius(selfConsistent, test,2)
-# energyEvolutionGivenRadius(selfConsistent, test,3)
-# energyEvolutionGivenRadius(selfConsistent, test,5)
 
-# maxEnergyDifferentRadii(selfConsistent, test)
 
-# timeMaxEnergyDifferentRadii(selfConsistent, test)
+
+
+

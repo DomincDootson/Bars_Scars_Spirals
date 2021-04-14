@@ -1,35 +1,52 @@
 from generalPlottingFunctions import *
 
 
-def plottingImpulsePerturbations():	
-
-	data = readingInRealCSV("../Disk_Kicking/PlottingPerturbation.csv")
-	radii = np.linspace(0,10, np.shape(data)[1]-1)
-	rNudge = [6, 46]
-	
-	
-	for r in rNudge:
-		plt.plot(radii, data[r, 1:])
-		print(np.amax(data[r, 1:]))
-		plt.plot([data[r, 0], data[r, 0]], [0, (np.amax(data[r, 1:]))], color = 'grey')
-	
-	plt.xlabel("Radius")
-	plt.ylabel("Potential")
-	plt.show()
-
-def differentTimeSteps():
-	n = 5
-	data2000 = readingInComplexCSV("evolution2000.csv")
-	plt.plot(np.linspace(0,50, np.shape(data2000)[0]), np.absolute(data2000[:, n]))
-
-	data100 = readingInComplexCSV("evolution100.csv")
-	plt.plot(np.linspace(0,50, np.shape(data100)[0]), np.absolute(data100[:, n]))
-	
-	data200 = readingInComplexCSV("evolution200.csv")
-	plt.plot(np.linspace(0,50, np.shape(data200)[0]), np.absolute(data200[:, n]))
-	
-	plt.show()
 
 
-#plottingImpulsePerturbations()
-differentTimeSteps()
+#new = readingInComplexCSV("kalnajsTest.csv")
+
+
+n = 0
+old = readingInComplexCSV("evolution200.csv")
+plt.plot(np.linspace(0,200, 200), np.absolute(old[:,n]), label = 'Linear calculation')
+new = readingInComplexCSV("other.csv")
+plt.plot(np.absolute(new[:,n]), label = 'New n body')
+
+new = readingInComplexCSV("kalnajsTest.csv")
+#plt.plot(np.absolute(9.7*new[:,n]), label = 'Old n body')
+plt.legend()
+plt.show()
+'''
+n = 0
+new = readingInRealCSV("particlePositionFront.csv")
+plt.plot(new[:,n+0], new[:,n+1])
+
+
+
+new = readingInRealCSV("particlePositionBack.csv")
+plt.plot(new[:,n+0], new[:,n+1])
+
+
+new = readingInRealCSV("particlePositionOld.csv")
+plt.plot(new[:,n+4], new[:,n+5])
+plt.plot(new[:,n+0], new[:,n+1],'--')
+
+plt.show()
+
+n = 4
+data = readingInRealOUT("../nBody/particleSamples.csv")
+radius = np.power(np.power(data[:,1],2)+np.power(data[:,2],2), 0.5)
+angMom = (np.multiply(data[:,1], data[:,4]) + np.multiply(data[:,2], data[:,3]))/radius
+vR = (radius*(data[:,3]+data[:,4]))/(data[:,1]+data[:,2])
+
+plt.hist(data[:,4], bins =1000)
+print(np.shape(data))
+data = readingInRealOUT("../nBody/Bodies/particleSamples.out")
+radius = np.power(np.power(data[:,1],2)+np.power(data[:,2],2), 0.5)
+angMom = (np.multiply(data[:,1], data[:,4]) + np.multiply(data[:,2], data[:,3]))/radius
+vR = (radius*(data[:,3]+data[:,4]))/(data[:,1]+data[:,2])
+
+
+plt.hist(data[:,4], bins =1000, alpha = .5)
+print(np.shape(data))
+plt.show()'''

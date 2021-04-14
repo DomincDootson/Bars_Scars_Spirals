@@ -1,6 +1,8 @@
 #ifndef BAREVOLUTIONFUNCTIONS
 #define BAREVOLUTIONFUNCTIONS
 
+#include <Eigen/Dense>
+
 void kalnajBFVaryingK();
 void kalnajBFVaryingR();
 
@@ -11,5 +13,7 @@ void kalnajsKernelsVaryingR();
 void barVaryingAngularSpeed(); 
 void barVaryingKka();
 void barVaryingRka();
+
+void gaussianBarEvolution();
 
 #endif

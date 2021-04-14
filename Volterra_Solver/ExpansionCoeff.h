@@ -97,13 +97,15 @@ void ExpansionCoeff::coefficentReadInConstructor(const std::string &filename)
 
 	double real, imag;
 	std::complex<double> unitComplex(0,1);
+	int time{0};
 	for (auto it = m_coeff.begin(); it != m_coeff.end(); ++it){
 		it -> setZero(maxRadialIndex+1);
 	 	for (int n = 0; n < it -> size(); ++ n) {
 	 		inFile >> real >> imag;
 	 		(*it)(n) = real + unitComplex * imag;
 	 	}
-	 } 
+	 }
+
 	inFile.close();
 }
 
@@ -191,7 +193,7 @@ template <class Tbf>
 void ExpansionCoeff::write2dDensity2File(const std::string & outFilename, const Tbf & bf, const int skip) const
 {
 	std::ofstream out(outFilename);
-	for (int time = 0; time < m_coeff.size(); time += skip){
+	for (int time = skip; time < m_coeff.size(); time += skip){ // We don't need time = 0
 		if (time % (skip*10) == 0) {std::cout << "Outputting density for: " << time << '\n';}
 		Eigen::ArrayXXd density = bf.densityArrayReal(m_coeff[time], 201, 10); // I suppose this could always be make quicker by saving the individual arrays for each bf
 		outputArray(out, density);

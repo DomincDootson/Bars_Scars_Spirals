@@ -16,7 +16,7 @@ public:
 	Bar2D(const Eigen::VectorXcd expansionCoeff, const Tbf& basisFunctions, const double omega0) :
 	m_theta{0}, m_omega{omega0}, m_alpha{0},
 	m_expansionCoeff{expansionCoeff},
-	m_momentOfInertia{momentOfInertia(basisFunctions)},
+	m_momentOfInertia{1}, //m_momentOfInertia{momentOfInertia(basisFunctions)},
 	m_fourierHarmonic{basisFunctions.fourierHarmonic()},
 	m_scriptE{basisFunctions.getScriptE()}
 	{v_theta.push_back(m_theta); v_omega.push_back(m_omega); v_alpha.push_back(m_alpha);}
@@ -40,7 +40,7 @@ public:
 	double momentOfInertia(const Tbf& basisFunctions) const;
 
 	void drift(const double timeStep);
-	void kick(const double timeStep, const Eigen::VectorXcd &diskCoeff);
+	void kick(const double timeStep, const Eigen::VectorXcd &diskCoeff, const double freelyRotating);
 
 	void saveBarEvolution(const std::string & evolutionFilename, const int skip = 10) const;
 
@@ -70,12 +70,12 @@ void Bar2D::saveBarEvolution(const std::string & evolutionFilename, const int sk
 
 double Bar2D::torque(const Eigen::VectorXcd &diskCoeff) const // Torque = il * (A.scriptE.conj(B) - b.scriptE.conj(A))
 {
-	std::complex<double>    firstTerm{ m_expansionCoeff.dot(m_scriptE *  diskCoeff.conjugate()) };
-	//std::complex<double> secondTerm{ diskCoeff.dot(m_scriptE *  m_expansionCoeff.conjugate()) }; 
+	std::complex<double>    firstTerm{ m_expansionCoeff.dot(m_scriptE *  diskCoeff) }; // So the dot product of complex vectors
+	std::complex<double> secondTerm{ diskCoeff.dot(m_scriptE *  m_expansionCoeff) }; // has the conjugation built in
 	std::complex<double> unitComplex(0,1);
 	double l{ (double) m_fourierHarmonic};
-
-	return std::real(unitComplex * ((firstTerm - conj(firstTerm)) * l)); 
+	
+	return std::real(unitComplex * ((firstTerm - secondTerm) * l)); 
 
 }
 
@@ -108,16 +108,17 @@ void Bar2D::drift(const double timeStep){
 	std::complex<double> unitComplex(0,1);
 	double deltaTheta{m_omega*timeStep + 0.5 * m_alpha * timeStep * timeStep}; 
 	
-	m_expansionCoeff *= exp(-unitComplex * (deltaTheta * m_fourierHarmonic));
+	m_expansionCoeff *= exp(-unitComplex * (deltaTheta * m_fourierHarmonic)); 
 	m_theta += deltaTheta; 
 	v_theta.push_back(m_theta);
 }
 
-void Bar2D::kick(const double timeStep, const Eigen::VectorXcd &diskCoeff){
+void Bar2D::kick(const double timeStep, const Eigen::VectorXcd &diskCoeff, const double freelyRotating){
 	double oldAlpha = m_alpha;
-	m_alpha = torque(diskCoeff)/m_momentOfInertia;
-	m_omega += 0.5 * (oldAlpha + m_alpha) * timeStep;  // Is this formula correct?
-	v_alpha.push_back(m_alpha); v_omega.push_back(m_omega);
+	m_alpha = torque(diskCoeff)/m_momentOfInertia; v_alpha.push_back(m_alpha); 
+	
+	m_omega += freelyRotating * 0.5 * (oldAlpha + m_alpha) * timeStep;  
+	v_omega.push_back(m_omega);
 }
 
 

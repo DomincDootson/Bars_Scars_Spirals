@@ -52,7 +52,10 @@ public:
 	double spacing() const {return m_spacingSize;}
 	
 	int size(int axis) const {return m_sizeArray;}
+	int fourierHarmonic() const {return m_fourierHarmonic;}
 	int maxFourierHarmonic() const {return m_maxFourierHarmonic;}
+	int maxRadialIndex() const {return m_maxRadialIndex;}
+	double step() const {return m_spacingSize;}
 
 	double operator()(int np, int m1, int i, int j) const {return m_basisContainer[(m_maxFourierHarmonic + m1) + (2*m_maxFourierHarmonic+1) * np](i,j);}
 	Eigen::MatrixXd operator()(int np, int m1) const {return m_basisContainer[(m_maxFourierHarmonic + m1) + (2*m_maxFourierHarmonic+1) * np].get();}

@@ -64,7 +64,7 @@ void EvolutionKernels::getVolterraParams(const int maxRadialIndex, const int fou
 
 template <class Tdf>
 void EvolutionKernels::gridSetUp(const Tdf & df, const ActionAngleBasisContainer & basisFunc){
-	m_om1Grid = basisFunc.omega1Grid(df); 
+	m_om1Grid = basisFunc.omega1Grid(df); // THIS REALLY SHOULD BE A MEMEBER FUNCTION OF THE DF, NOT THE BASIS FUNCTIONS
 	m_om2Grid = basisFunc.omega2Grid(df); 
 	m_spacing = basisFunc.spacing();
 	m_maxFourierHarmonic = basisFunc.maxFourierHarmonic();
@@ -95,7 +95,7 @@ void EvolutionKernels::kernelCreation(const std::string fileName, const Tdf & df
 	for (int timeIndex = 0; timeIndex < m_numbTimeSteps; timeIndex += nCores)
 	{
 		multipleKernelAtTime(basisFunc, timeIndex, nCores);
-		if (timeIndex % 100 == 0){
+		if (timeIndex % 10 == 0){
 			std::cout << "Fraction of kernels completed: " << round(100*timeIndex/((double) m_numbTimeSteps))<< '%' <<  '\n';
 		}
 	}	

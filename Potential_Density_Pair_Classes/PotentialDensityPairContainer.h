@@ -7,7 +7,6 @@
 #include <fstream>
 #include <typeinfo> // This allows us to find the type of a object
 // We want to inlude some file management
-
 #include <iostream>
 
 
@@ -45,8 +44,12 @@ public:
 	Eigen::ArrayXXcd   densityArray(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const; 
 	Eigen::ArrayXXcd potentialArray(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
 
+	std::vector<Eigen::ArrayXXcd> individualPotential(const int nGrid, const double rMax) const;
+
 	Eigen::ArrayXXd   densityArrayReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
 	Eigen::ArrayXXd potentialArrayReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
+
+
 
 	std::vector<double> oneDdensity(const std::vector<double> & radii, const Eigen::VectorXcd &coeff) const;
 	std::vector<double> oneDpotential(const std::vector<double> & radii, const Eigen::VectorXcd &coeff) const;
@@ -54,9 +57,6 @@ public:
 
 	Eigen::VectorXcd potentialResolving(const Eigen::ArrayXXcd &potentialArray, const double rMax) const; // Not great at resolving l =0
 	Eigen::VectorXcd densityResolving(const Eigen::ArrayXXcd &densityArray, const double rMax) const;
-
-	
-
 
 	Eigen::MatrixXd getScriptE() const {return m_scriptE;}
 
@@ -114,13 +114,29 @@ Eigen::ArrayXXcd PotentialDensityPairContainer<T>::potentialArray(const Eigen::V
 }
 
 template <class T>
+std::vector<Eigen::ArrayXXcd> PotentialDensityPairContainer<T>::individualPotential(const int nGrid, const double rMax) const {
+	std::vector<Eigen::ArrayXXcd> individualPot;
+	for (int n = 0; n < m_maxRadialIndex; ++n){
+		
+		individualPot.emplace_back(nGrid, nGrid);
+		individualPot[n] = m_potentialDensityContainer[n].potentialGrid(nGrid, rMax);
+	
+		
+	}
+	std::cout << "made each array\n";
+	
+	return individualPot;
+}
+
+
+template <class T>
 Eigen::ArrayXXd   PotentialDensityPairContainer<T>::densityArrayReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const{
-	return (densityArray(coefficents, nGrid, rMax) + densityArray(coefficents, nGrid, rMax).conjugate()).real();
+	return 2*(densityArray(coefficents, nGrid, rMax)).real();
 }
 
 template <class T>
 Eigen::ArrayXXd PotentialDensityPairContainer<T>::potentialArrayReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const{
-	return (potentialArray(coefficents, nGrid, rMax) + potentialArray(coefficents, nGrid, rMax).conjugate()).real(); 
+	return 2*(potentialArray(coefficents, nGrid, rMax)).real(); 
 }
 
 template <class T>

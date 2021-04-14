@@ -16,6 +16,8 @@
 
 #include "../Bar2D/Bar2D.h"
 
+#include "../DF_Function/DFfunction.h"
+
 
 void gaussianScriptE(int m2)
 {
@@ -38,7 +40,7 @@ void generatingKalnajsBF(int m2)
 	PotentialDensityPairContainer<KalnajsBasis> PD(params, 10,m2);
 
 	ActionAngleBasisContainer test(10, m2, 5, 101, 20); 
-	test.scriptW(PD, DF, "Kalnajs"); // Use file function name here
+	test.scriptW(PD, DF, "Kalnajs/Kalnajs_4_20"); // Use file function name here
 }
 
 void generatingSpiralBF(int m2)
@@ -107,9 +109,9 @@ void generatingKalnajsKernels(int m2)
 	std::string kernel1 = "test1000.out";//"Kernels/Kalnajs" +std::to_string(m2) +".out";
 	solver1.generateKernel(kernel1, DF, test);*/
 
-	VolterraSolver solver2(10, m2, 100, 0.5);
+	VolterraSolver solver2(10, m2, 200, 0.1);
 
-	std::string kernel2 = "test100.out";//"Kernels/Kalnajs" +std::to_string(m2) +".out";
+	std::string kernel2 = "test200.out";//"Kernels/Kalnajs" +std::to_string(m2) +".out";
 	solver2.generateKernel(kernel2, DF, test);
 }
 
@@ -188,12 +190,27 @@ void gaussianPerturbation()
 
 void testEvolutionKalanajs(int m2)
 {
-	kalnajsPerturbation(100);
-	std::cout << "Here\n";
-	VolterraSolver solver("test100.out", 10, m2, 100, 0.5);
+	kalnajsPerturbation(200);
+	
+	VolterraSolver solver("test200.out", 10, m2, 200, 0.1);
 	solver.activeFraction(.25);	
-	solver.coefficentEvolution("evolution100.csv", "someperturbation", true);
+	solver.coefficentEvolution("evolution200.csv", "someperturbation", true);
 	solver.resetActiveFraction();
+	
+
+	/*ActionAngleBasisContainer test("Kalnajs/Kalnajs_4_20", 10, m2, 5, 101, 20);
+	Mestel DF;
+	DFfunction dfFunction(test, solver, DF);
+	dfFunction.dfEvolution(test, solver, DF, 2, 0);
+	dfFunction.df2fileApoPeri("dfApoPer.csv", 25);
+	dfFunction.df2fileEL("dfEL.csv");
+
+
+	std::vector<double> params{4, 10};
+	PotentialDensityPairContainer<KalnajsBasis> PD(params, 10, m2);
+	solver.density2dEvolution("densityEvolution",PD , 25);*/ 
+
+
 }
 
 

@@ -2,7 +2,7 @@
 
 CXX = g++
 CXXFLAGS = -O3 -std=c++2a -Wall 
-INCLUDES = -I/Action_Angle_Basis_Functions -I/DF_Class -I/Potential_Density_Pair_Classes -I/Volterra_Solver -I/Physics_Functions
+INCLUDES = -I/Action_Angle_Basis_Functions -I/DF_Class -I/Potential_Density_Pair_Classes -I/Volterra_Solver -I/Physics_Functions -I/DF_Function
 
 # Label all the different files that we want to compile and how they link
 
@@ -37,5 +37,5 @@ $(GENERAL): $(GENERAL_OBJ)
 
 
 # Define the rule for making .o from .cpp files 
-%.o: %.cpp Action_Angle_Basis_Functions/*.h Bar2D/*.h DF_Class/*.h Potential_Density_Pair_Classes/*.h Volterra_Solver/*.h
+%.o: %.cpp Action_Angle_Basis_Functions/*.h Bar2D/*.h DF_Class/*.h DF_Function/*.h Potential_Density_Pair_Classes/*.h Volterra_Solver/*.h
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $< 

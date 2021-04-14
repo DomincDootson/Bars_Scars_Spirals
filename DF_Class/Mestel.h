@@ -9,7 +9,7 @@ class Mestel : public DFClass
 {
 public:
 	Mestel(double vc = 1, double r0 = 1, double litteSigma = .25, double xi = 1, 
-		double rInner = 1, double rOuter = 15, double nuTaper = 4, double muTaper = 5) : 
+		double rInner = 1, double rOuter = 10, double nuTaper = 4, double muTaper = 5) : 
 	m_vc{vc}, m_r0{r0}, m_littleSigma{litteSigma}, m_q{pow(m_vc/m_littleSigma,2) - 1}, m_xi{xi}, 
 	m_rInner{rInner}, m_rOuter{rOuter}, m_nuTaper{nuTaper}, m_muTaper{muTaper}  {}
 	
@@ -54,7 +54,6 @@ double Mestel::distFunc(double E, double J) const // Note that we have set G = 1
 
 
 double Mestel::vRSampling() const {
-	std::cout << "mestel\n";
 	std::random_device generator; std::normal_distribution<double> vrDF(0, m_littleSigma);
 	return vrDF(generator);
 }
@@ -67,7 +66,7 @@ double Mestel::jMax(const double radius) const{
 }
 
 double Mestel::dfMax(const double radius, const double vR) const {
-	return distFunc(sqrt(m_q*m_littleSigma*m_vc), 0.5*vR*vR +0.5*m_q*pow(m_littleSigma,2)+potential(radius));
+	return distFunc(0.5*vR*vR +0.5*m_q*pow(m_littleSigma,2)+potential(radius), sqrt(m_q)*m_littleSigma*radius);
 }
 
 

@@ -24,10 +24,11 @@ public:
 	 
 	~VolterraSolver() {}
 
-	Eigen::VectorXcd     responseCoef(const int timeIndex) {return     m_responseCoef(timeIndex);}
-	Eigen::VectorXcd perturbationCoef(const int timeIndex) {return m_perturbationCoef(timeIndex);}
+	Eigen::VectorXcd     responseCoef(const int timeIndex) const {return     m_responseCoef(timeIndex);}
+	Eigen::VectorXcd perturbationCoef(const int timeIndex) const {return m_perturbationCoef(timeIndex);}
 
-
+	int numbTimeSteps() const {return m_numbTimeSteps;}
+	double timeStep() const {return m_timeStep;}
 
 	template <class Tdf>
 	void generateKernel(const std::string fileName, const Tdf & df, const ActionAngleBasisContainer & basisFunc);// Come up with some standard way of naming kernels
@@ -124,12 +125,12 @@ void VolterraSolver::barRotation(Bar2D & bar, const std::string & outFilename, c
 	for (int timeIndex = 1; timeIndex < m_numbTimeSteps; ++timeIndex){
 		printTimeIndex(timeIndex);
 
-		bar.drift(m_timeStep);
+		bar.drift(m_timeStep); // Could we put in a growth rate here? 
 		m_perturbationCoef(timeIndex) = bar.barCoeff(); // Could overload this function?? 
 		m_responseCoef(timeIndex) = m_responseCoef(0) + ((identity - includeSelfConsistent*0.5*m_kernels(timeIndex)).inverse()) 
 									* timeIntegration(timeIndex, includeSelfConsistent);
 
-		bar.kick(m_timeStep, freelyRotating*m_responseCoef(timeIndex)); // Check that this means the bar rotates at constant speed. 
+		bar.kick(m_timeStep, m_responseCoef(timeIndex), freelyRotating);
 	}
 	m_responseCoef.write2File(outFilename);
 	bar.saveBarEvolution(evolutionFilename);
