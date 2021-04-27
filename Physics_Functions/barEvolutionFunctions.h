@@ -3,6 +3,8 @@
 
 #include <Eigen/Dense>
 
+void kalnajsBarTest();
+
 void kalnajBFVaryingK();
 void kalnajBFVaryingR();
 

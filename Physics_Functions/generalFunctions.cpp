@@ -39,7 +39,7 @@ void generatingKalnajsBF(int m2)
 	std::vector<double> params{4, 20};
 	PotentialDensityPairContainer<KalnajsBasis> PD(params, 10,m2);
 
-	ActionAngleBasisContainer test(10, m2, 5, 101, 20); 
+	ActionAngleBasisContainer test("Kalnajs", 10, m2, 5, 101, 20); 
 	test.scriptW(PD, DF, "Kalnajs/Kalnajs_4_20"); // Use file function name here
 }
 
@@ -50,7 +50,7 @@ void generatingSpiralBF(int m2)
 	std::vector<double> params{24, .5, 15};
  	PotentialDensityPairContainer<GaussianLogBasis> PD(params, 24,m2);
 
-	ActionAngleBasisContainer test(24, m2, 10, 301, 20); 
+	ActionAngleBasisContainer test("GaussianLog", 24, m2, 10, 301, 20); 
 	test.scriptW(PD, DF, "GaussianLog");
 }
 
@@ -65,7 +65,7 @@ void kalnajBFVaryingK()
 		std::vector<double> params{Kka[i], 10};
 		PotentialDensityPairContainer<KalnajsBasis> PD(params, 10, 2);
 
-		ActionAngleBasisContainer test(10, 2, 5, 101, 10);
+		ActionAngleBasisContainer test("Kalnajs", 10, 2, 5, 101, 10);
 		std::string file = "Kalnajs/Kalnajs_" + std::to_string((int) Kka[i]) + "_10"; // Use file function name here
 		test.scriptW(PD, DF, file);
 	}
@@ -82,7 +82,7 @@ void kalnajBFVaryingR()
 		std::vector<double> params{4, Rka[i]};
 		PotentialDensityPairContainer<KalnajsBasis> PD(params, 10, 2);
 
-		ActionAngleBasisContainer test(10, 2, 5, 101, 10);
+		ActionAngleBasisContainer test("Kalnajs", 10, 2, 5, 101, 10);
 		std::string file = "Kalnajs/Kalnajs_4_" + std::to_string((int) Rka[i]); // Use file function name here
 		test.scriptW(PD, DF, file);
 	}
@@ -95,7 +95,7 @@ void kalnajBFVaryingR()
 
 void generatingKalnajsKernels(int m2)
 {
-	ActionAngleBasisContainer test("Kalnajs/Kalnajs_4_20", 10, m2, 5, 101, 20);
+	ActionAngleBasisContainer test("Kalnajs/Kalnajs_4_20", "Kalnajs", 10, m2, 5, 101, 20);
 	Mestel DF;
 
 
@@ -117,16 +117,17 @@ void generatingKalnajsKernels(int m2)
 
 void generatingGaussianKernels(int m2)
 {
-	ActionAngleBasisContainer test("GaussianLog", 24, m2, 10, 301, 20);
+	ActionAngleBasisContainer test("GaussianLog", "GaussianLog", 24, m2, 10, 301, 20);
 	Mestel DF;
 
 
-	VolterraSolver solver(24, m2, 2000, 0.01);
+	VolterraSolver solver(24, m2, 200, 0.1);
 
-	std::string kernel = "Kernels/GaussianLog" +std::to_string(m2) +".out";
+	//std::string kernel = "Kernels/GaussianLog" +std::to_string(m2) +".out";
+	std::string kernel = "test200.out";
 	solver.generateKernel(kernel, DF, test);
 
-	VolterraSolver readingIn(kernel, 24, m2, 2000, 0.01);
+	//VolterraSolver readingIn(kernel, 24, m2, 2000, 0.01);
 }
 
 void kernelFlipped(){
@@ -143,18 +144,35 @@ void kernelFlipped(){
 	solver2.kernelWrite2fileFlipped("KalnajsBlock2.out");
 }
 
+// Testing the evolution //
+// --------------------- // 
+
+std::complex<double> phase(double time){
+	std::complex<double> unitComplex(0,1);
+	return exp(-2 * (0.25*M_PI) *  unitComplex);//exp(-2 * time * 0 *  unitComplex); // could it be this function? 
+}
 
 void kalnajsPerturbation(int nStep)
 {
-	std::ofstream out("someperturbation");
+	std::ofstream out("someperturbation"); //someperturbation
 	out << 10 << '\n';
-	for (int i =0; i<nStep; ++i)
+	for (int i =0; i<100; ++i)
 	{
-		for (int j = 0; j < 3; ++j)
+		double size{0.01*sin(M_PI * (i/(double) 200))}, time{i*0.1};
+		out << size * phase(time).real() << " " << size * phase(time).imag() << " ";
+		for (int j = 1; j<10; ++j)
 		{
-			out << 0.01*sin(M_PI * (i/(double) nStep)) << " " << 0 << " ";
+			out << 0 << " " << 0 << " ";
 		}
-		for (int j = 3; j<10; ++j)
+		out << 0 << " " << 0 << '\n'; 
+	}
+	for (int i =100; i<200; ++i)
+	{
+		
+		double size{0.01}, time{i*0.1};
+		out << size * phase(time).real() << " " << size * phase(time).imag() << " ";
+		
+		for (int j = 1; j<10; ++j)
 		{
 			out << 0 << " " << 0 << " ";
 		}
@@ -194,23 +212,9 @@ void testEvolutionKalanajs(int m2)
 	
 	VolterraSolver solver("test200.out", 10, m2, 200, 0.1);
 	solver.activeFraction(.25);	
-	solver.coefficentEvolution("evolution200.csv", "someperturbation", true);
+	solver.coefficentEvolution("evolution200.csv", 
+		"someperturbation", false);
 	solver.resetActiveFraction();
-	
-
-	/*ActionAngleBasisContainer test("Kalnajs/Kalnajs_4_20", 10, m2, 5, 101, 20);
-	Mestel DF;
-	DFfunction dfFunction(test, solver, DF);
-	dfFunction.dfEvolution(test, solver, DF, 2, 0);
-	dfFunction.df2fileApoPeri("dfApoPer.csv", 25);
-	dfFunction.df2fileEL("dfEL.csv");
-
-
-	std::vector<double> params{4, 10};
-	PotentialDensityPairContainer<KalnajsBasis> PD(params, 10, m2);
-	solver.density2dEvolution("densityEvolution",PD , 25);*/ 
-
-
 }
 
 
@@ -239,48 +243,58 @@ void spiralTestEvolution()
 	solver2.coefficentEvolution("GaussianLogTest2.csv", "someperturbation", false);	
 }
 
-
-std::string outComplex(std::complex<double> number)
-{
-	if (imag(number)>=0){
-		return std::to_string(real(number)) + '+' + std::to_string(imag(number)) + 'j';
+// Testing Bar Testing //
+// ------------------- //
+template <class Tbf>
+Eigen::VectorXcd gaussianBar(const Tbf & pd) {
+	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(pd.maxRadialIndex() + 1);
+	for (int i = 0; i < pd.maxRadialIndex() + 1; ++i){
+		coeff(i) = 0.01*pd.potential(2.06271, i);
 	}
-	else{
-		return std::to_string(real(number)) + std::to_string(imag(number)) + 'j';
-	}
+	return - (pd.scriptE()).inverse() * coeff;
 }
 
-void savingArray(Eigen::ArrayXXcd array, std::string filename)
-{
-	std::ofstream out(filename);
-	for (int i = 0 ; i< array.rows(); ++i)
-	{
-		for (int j = 0; j < array.cols(); ++j)
-		{
-			if (j == array.cols()-1){
-				out << outComplex(array(i,j)) << '\n';
-			}
-			else {
-				out << outComplex(array(i,j)) << ',';
-			}
+
+void barSize(int nStep){
+	std::ofstream out("Bar2D/barSize.out"); out << nStep << '\n';
+	for (int i =0; i < nStep; ++i) {
+		out << i * 0.1 << " " << sin(0.5*M_PI*(i/((double) nStep))) << '\n'; 
+	}
+	out.close();
+}
+
+void barTesting(double omega0){
+	barSize(100);
+	std::vector<double> params{24, .5, 15};
+ 	PotentialDensityPairContainer<GaussianLogBasis> pd(params, 24, 2);
+
+	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(24+1); coeff =  gaussianBar(pd);
+	Bar2D bar(coeff, omega0, "Bar2D/barSize.out");
+ 
+
+	VolterraSolver solver("test200.out", 24, 2, 200, 0.1);
+	solver.activeFraction(.25);
+	solver.barRotation(bar, "barCoeff.csv", "barEvolution.csv", false, false, true);
+}
+
+void gridTesting(double angD){
+	std::complex<double> unitComplex(0,1);
+	double ang = (angD/360.0) * 2*M_PI;
+
+	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(11); 
+	coeff(0) = .01*exp(-2*ang*unitComplex);
+
+	std::vector<double> params{4, 20};
+	PotentialDensityPairContainer<KalnajsBasis> PD(params, 10, 2);
+
+	Eigen::ArrayXXd array = PD.potentialArrayReal(coeff, 401, 20);
+	std::ofstream out("nBody/pertGrid.csv");
+	for (int i =0; i < array.rows(); ++i){
+		for (int j = 0; j < array.cols(); ++j){
+			if (j == array.cols()-1) {out << array(i,j) <<'\n';}
+			else {out << array(i,j) << ',';}
 		}
 	}
+	out.close();
 
-}
-
-void savingPotentialArrays(std::string dir)
-{
-	std::vector<double> params{4, 20};
-	PotentialDensityPairContainer<KalnajsBasis> PD(params, 10,2);
-
-	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(10+1);
-
-	for (int i = 0; i<11; ++i)
-	{
-		coeff[i] = 1;
-		Eigen::ArrayXXcd grid = PD.potentialArray(coeff, 401, 10);
-		std::string filename = dir + "/KalnajsGrid_" + std::to_string(i) + ".csv";
-		savingArray(grid, filename);
-		coeff[i] = 0;
-	}
 }

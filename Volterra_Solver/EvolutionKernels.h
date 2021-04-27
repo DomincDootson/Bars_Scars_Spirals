@@ -98,6 +98,7 @@ void EvolutionKernels::kernelCreation(const std::string fileName, const Tdf & df
 		if (timeIndex % 10 == 0){
 			std::cout << "Fraction of kernels completed: " << round(100*timeIndex/((double) m_numbTimeSteps))<< '%' <<  '\n';
 		}
+
 	}	
 	//PUT INTO NEW LOOP m_kernels[timeIndex] = inverseScriptE * m_kernels[timeIndex];
 	for (int timeIndex = 0; timeIndex < m_numbTimeSteps; ++timeIndex) {m_kernels[timeIndex] = inverseScriptE * m_kernels[timeIndex];}

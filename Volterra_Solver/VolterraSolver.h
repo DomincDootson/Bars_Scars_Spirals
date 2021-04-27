@@ -18,7 +18,7 @@ public:
 
 	
 	VolterraSolver(const std::string & kernelFilename, int maxRadialIndex, int fourierHarmonic, int numbTimeSteps, double timeStep) :
-	m_maxRadialIndex{maxRadialIndex}, m_fourierHarmonic{fourierHarmonic}, m_numbTimeSteps{numbTimeSteps}, m_skip{10}, m_timeStep{timeStep}, m_xi{1},
+	m_maxRadialIndex{maxRadialIndex}, m_fourierHarmonic{fourierHarmonic}, m_numbTimeSteps{numbTimeSteps}, m_skip{1}, m_timeStep{timeStep}, m_xi{1},
 	m_kernels(kernelFilename, m_numbTimeSteps),
 	m_responseCoef(m_numbTimeSteps, m_maxRadialIndex), m_perturbationCoef(m_numbTimeSteps, m_maxRadialIndex) {} 
 	 
@@ -42,7 +42,7 @@ public:
 	template <class Tbf>
 	std::vector<double> energyEvolution(const Tbf & bf, const std::string & perturbationFilename, const bool isSelfConsistent = true);
 
-	void barRotation(Bar2D & bar, const std::string & outFilename, const std::string & evolutionFilename, const bool isSelfConsistent = true, const bool isFreelyRotating = true);
+	void barRotation(Bar2D & bar, const std::string & outFilename, const std::string & evolutionFilename, const bool isSelfConsistent = true, const bool isFreelyRotating = true, const bool isEvolving = false);
 
 	void activeFraction(double xi);
 	void resetActiveFraction() {activeFraction(1/m_xi);}
@@ -117,20 +117,24 @@ std::vector<double> VolterraSolver::energyEvolution(const Tbf & bf, const std::s
 }
 
 
-void VolterraSolver::barRotation(Bar2D & bar, const std::string & outFilename, const std::string & evolutionFilename, const bool isSelfConsistent, const bool isFreelyRotating)
+//This function could definitely be tydied up 
+void VolterraSolver::barRotation(Bar2D & bar, const std::string & outFilename, const std::string & evolutionFilename, const bool isSelfConsistent, const bool isFreelyRotating, const bool isEvolving)
 {
 	Eigen::MatrixXcd identity{Eigen::MatrixXcd::Identity(m_maxRadialIndex+1, m_maxRadialIndex+1)};
 	double includeSelfConsistent{selfConsistentDouble(isSelfConsistent)}; double freelyRotating{freelyRotatingDouble(isFreelyRotating)};
-	m_perturbationCoef(0) = bar.barCoeff();
+	if (isEvolving) {m_perturbationCoef(0) = bar.barCoeff(0);}
+	else {m_perturbationCoef(0) = bar.barCoeff();}
 	for (int timeIndex = 1; timeIndex < m_numbTimeSteps; ++timeIndex){
 		printTimeIndex(timeIndex);
 
-		bar.drift(m_timeStep); // Could we put in a growth rate here? 
-		m_perturbationCoef(timeIndex) = bar.barCoeff(); // Could overload this function?? 
+		bar.drift(m_timeStep, freelyRotating);
+		if (isEvolving) {m_perturbationCoef(timeIndex) = bar.barCoeff(timeIndex * m_timeStep);}
+		else {m_perturbationCoef(timeIndex) = bar.barCoeff();}
 		m_responseCoef(timeIndex) = m_responseCoef(0) + ((identity - includeSelfConsistent*0.5*m_kernels(timeIndex)).inverse()) 
 									* timeIntegration(timeIndex, includeSelfConsistent);
 
-		bar.kick(m_timeStep, m_responseCoef(timeIndex), freelyRotating);
+		bar.kick(m_timeStep, m_responseCoef(timeIndex), freelyRotating, m_timeStep * timeIndex);
+
 	}
 	m_responseCoef.write2File(outFilename);
 	bar.saveBarEvolution(evolutionFilename);

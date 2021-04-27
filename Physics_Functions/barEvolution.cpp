@@ -3,7 +3,7 @@
 int main()
 {
 	
-	gaussianBarEvolution();
+	kalnajsBarTest();
 
 
 

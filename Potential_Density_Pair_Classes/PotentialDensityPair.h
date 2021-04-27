@@ -85,7 +85,7 @@ Eigen::ArrayXXcd PotentialDensityPair::densityGrid(const int nGrid, const double
 			x = spacing * (i - centre); y = spacing * (j - centre);
 			r = sqrt(x*x+y*y); theta = angle(x,y);
 			if (r<rMax && r!= 0){
-				grid(i,j) = exp(unitComplex * (theta * m_fourierHarmonic)) * density(r);}
+				grid(i,j) = exp(-unitComplex * (theta * m_fourierHarmonic)) * density(r);}
 			else {grid(i,j) = 0;}
 		}
 	}
@@ -94,7 +94,6 @@ Eigen::ArrayXXcd PotentialDensityPair::densityGrid(const int nGrid, const double
 
 Eigen::ArrayXXcd PotentialDensityPair::potentialGrid(const int nGrid, const double rMax) const
 {
-	//if (m_potentialGrid.cols() == nGrid && m_rMax == rMax) {return m_potentialGrid;}
 	Eigen::ArrayXXcd grid = Eigen::ArrayXXcd::Zero(nGrid, nGrid);
 	double x{}, y{}, theta{}, r{}, spacing{2*rMax/((double) nGrid-1)}, centre{0.5*(nGrid-1)};
 	std::complex<double> unitComplex(0,1);
@@ -105,7 +104,7 @@ Eigen::ArrayXXcd PotentialDensityPair::potentialGrid(const int nGrid, const doub
 			x = spacing * (i - centre); y = spacing * (j - centre);
 			r = sqrt(x*x+y*y); theta = angle(x,y);
 			if (r<rMax && r!= 0){
-				grid(i,j) = exp(unitComplex * (theta * m_fourierHarmonic)) * potential(r);
+				grid(i,j) = exp(-unitComplex * (theta * m_fourierHarmonic)) * potential(r);
 			}
 		}
 	}

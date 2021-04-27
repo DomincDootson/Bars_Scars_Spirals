@@ -4,7 +4,7 @@ from generalPlottingFunctions import *
 
 
 #new = readingInComplexCSV("kalnajsTest.csv")
-
+'''
 
 n = 0
 old = readingInComplexCSV("evolution200.csv")
@@ -17,36 +17,66 @@ new = readingInComplexCSV("kalnajsTest.csv")
 plt.legend()
 plt.show()
 '''
-n = 0
-new = readingInRealCSV("particlePositionFront.csv")
-plt.plot(new[:,n+0], new[:,n+1])
+
+# 2  + 1.57
+'''
+n = 8
+
+time = np.linspace(0,20,200)
+
+data = readingInComplexCSV("../evolution200.csv")
+#plt.plot(time, np.absolute(data[:,n]), label = 'Linear Perturbation')
+
+data = readingInComplexCSV("../barCoeff.csv")
+plt.plot(time, np.absolute(data[:,n]), label = 'Linear Bar')
+
+data = 1.02*readingInComplexCSV("../nBody/coeffEvolutionN.csv")
+plt.plot(time, np.absolute(-data[:,n]), label = 'N-body bar')
+data = 1.02*readingInComplexCSV("../nBody/coeffEvolutionPerturbationN.csv")
+#plt.plot(time, np.absolute(data[:,n]), label = 'N-body Perturbation')
+'''
+
+'''
+data = readingInRealCSV("../nBody/barCoeffN.csv")
+lst = []
+for i in range(np.shape(data)[0]):
+	lst.append(data[i,0] + 1j*data[i,1])
+data = np.asarray(lst)
+
+plt.plot(np.absolute(lst))
+
+data = readingInComplexCSV("../barPerturbationFile.csv")
+plt.plot(np.absolute(data[:,0]))
+'''
+
+data = readingInRealCSV("../barEvolution.csv")
+time  = np.linspace(0,20, np.shape(data)[0])
+plt.plot(time, data[:,2], color = 'firebrick', label = 'Linear Response')
+
+data = readingInRealCSV("../nBody/barEvolutionN.csv")
+plt.plot(time, -1.02*data[:,2], label = 'N-Body', color = 'cornflowerblue')
+
+
+'''
+data = readingInComplexCSV("../evolution200.csv")
+plt.plot(time, np.absolute(data[1:,n]), label = 'Linear Perturbation')
+
+data = readingInComplexCSV("../barCoeff.csv")
+plt.plot(time, np.absolute(data[1:,n]), label = 'Linear Bar')
+
+#data = 1.025*readingInComplexCSV("../nBody/coeffEvolutionN.csv")
+#plt.plot(time, np.absolute(data[:,n]), label = 'N-body bar')
+data = 1.025*readingInComplexCSV("../nBody/coeffEvolutionPerturbationN.csv")
+plt.plot(time, np.absolute(data[1:,n]), label = 'N-body Perturbation')
+'''
+plt.title(r"Torque on slowly rotating gaussian Bar ($0.1t_{0}^{-1}$)")
+plt.xlabel("Time")
+plt.ylabel("Torque")
+plt.legend()
 
 
 
-new = readingInRealCSV("particlePositionBack.csv")
-plt.plot(new[:,n+0], new[:,n+1])
-
-
-new = readingInRealCSV("particlePositionOld.csv")
-plt.plot(new[:,n+4], new[:,n+5])
-plt.plot(new[:,n+0], new[:,n+1],'--')
 
 plt.show()
 
-n = 4
-data = readingInRealOUT("../nBody/particleSamples.csv")
-radius = np.power(np.power(data[:,1],2)+np.power(data[:,2],2), 0.5)
-angMom = (np.multiply(data[:,1], data[:,4]) + np.multiply(data[:,2], data[:,3]))/radius
-vR = (radius*(data[:,3]+data[:,4]))/(data[:,1]+data[:,2])
 
-plt.hist(data[:,4], bins =1000)
-print(np.shape(data))
-data = readingInRealOUT("../nBody/Bodies/particleSamples.out")
-radius = np.power(np.power(data[:,1],2)+np.power(data[:,2],2), 0.5)
-angMom = (np.multiply(data[:,1], data[:,4]) + np.multiply(data[:,2], data[:,3]))/radius
-vR = (radius*(data[:,3]+data[:,4]))/(data[:,1]+data[:,2])
-
-
-plt.hist(data[:,4], bins =1000, alpha = .5)
-print(np.shape(data))
-plt.show()'''

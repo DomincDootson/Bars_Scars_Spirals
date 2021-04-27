@@ -12,7 +12,9 @@ public:
 		: PotentialDensityPair(m_radialIndex, m_fourierHarmonic), 
 		m_maxIndex{static_cast<int>(params[0])}, m_innerRadius{params[1]}, m_outerRadius{params[2]},
 		m_r0{r0()}, m_sigma{sigma()}
-		{} 
+		{
+			//std::cout << m_radialIndex << " " << m_r0 << " " << m_sigma << '\n';
+		} 
 	
 	virtual ~GaussianLogBasis() {}
 

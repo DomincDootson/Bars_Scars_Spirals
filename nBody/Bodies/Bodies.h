@@ -7,6 +7,7 @@
 #include <complex>
 
 #include <iostream>
+#include <cstdlib>
 
 #include "../../Potential_Density_Pair_Classes/PotentialDensityPairContainer.h"
 #include "../../DF_Class/Mestel.h"
@@ -44,18 +45,7 @@ public:
 
 Bodies::Bodies(std::string fileName, int numbParticles, const double xi) : m(numbParticles), xy(2*numbParticles), vxvy(2*numbParticles), n(numbParticles)
 {
-  /*std::random_device generator;
-  std::uniform_real_distribution<double> uniform(0,1);
-  std::vector<double> cumulativeDensity = df.readInCumulativeDensity(fileName);
-  for (int i = 0; i < 2*numbParticles; i += 2){
-    xy[i]     = df.radiusSampling(uniform(generator), cumulativeDensity);
-    xy[i+1]   = 2 * M_PI * uniform(generator);
-
-    vxvy[i]   = df.vRSampling();
-    std::cout << "Sampling vPhi\n";
-    vxvy[i+1] = df.vPhiSampling(xy[i], vxvy[i]);
-  }
-  convert2Cartesian();*/ 
+  std::system("./particleSampling");
   std::cout << "Reading particles in from: " << fileName << '\n';
   std::ifstream inFile; inFile.open(fileName);
   int nFile; 

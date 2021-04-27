@@ -16,36 +16,36 @@ public:
 	ActionAngleBasisFunction(int np, int m1, int m2, int sizeArray) 
 	: m_basisGrid{Eigen::MatrixXd::Zero(sizeArray, sizeArray)}, m_radialIndex{np}, m_m1{m1}, m_m2{m2} {}
 
-	ActionAngleBasisFunction(std::string dir, int np, int m1, int m2, int sizeArray);
+	ActionAngleBasisFunction(const std::string & dir, const std::string & prefix, int np, int m1, int m2, int sizeArray);
 
 	
 
 	~ActionAngleBasisFunction() {}
 	
 	
-	void save(const std::string directory, double step) const;
+	void save(const std::string & directory, const std::string & prefix, double step) const;
 	double operator()(int i, int j) const {return m_basisGrid(i,j);}
 	double& operator()(int i, int j) {return m_basisGrid(i,j);} // This allows us to assign values.
 	Eigen::MatrixXd get() const {return m_basisGrid;}
 
 	int m1() const {return m_m1;}
 private:
-	Eigen::MatrixXd m_basisGrid;// I'm not sure I want this public... I think the trick is to overload the () operator. 
+	Eigen::MatrixXd m_basisGrid;
 	const int m_radialIndex, m_m1, m_m2; 
-	std::string filename(std::string directory) const;
+	std::string filename(std::string directory, std::string prefix) const;
 	void checkParam(int basisRows, double step, int radialIndex, int m1, int m2) const;
 	
 };
 
-ActionAngleBasisFunction::ActionAngleBasisFunction(std::string dir, int np, int m1, int m2, int sizeArray)
+ActionAngleBasisFunction::ActionAngleBasisFunction(const std::string & dir, const std::string & prefix, int np, int m1, int m2, int sizeArray)
 	: m_basisGrid{Eigen::MatrixXd::Zero(sizeArray, sizeArray)}, m_radialIndex{np}, m_m1{m1}, m_m2{m2} 
 {
 	std::ifstream inFile;
-	inFile.open(filename(dir));
+	inFile.open(filename(dir, prefix));
 	int rbasisRows{}, rradialIndex{}, rm1{}, rm2{}; 
 	double rstep{};
 	inFile >> rbasisRows >> rstep >> rradialIndex >> rm1 >> rm2;
-	std::cout << "Reading in action-angle basis function from: " << filename(dir) << '\n';
+	std::cout << "Reading in action-angle basis function from: " << filename(dir, prefix) << '\n';
 	checkParam(rbasisRows, rstep, rradialIndex, rm1, rm2);
 	// some test function
 	
@@ -67,17 +67,18 @@ void ActionAngleBasisFunction::checkParam(int basisRows, double step, int radial
 
 
 
-std::string ActionAngleBasisFunction::filename(std::string directory) const
+std::string ActionAngleBasisFunction::filename(std::string directory, std::string prefix) const
 {
-	return directory + "/" + "Kalnajs" + "_" +std::to_string(m_radialIndex) + "_" + std::to_string(m_m1) + "_" + std::to_string(m_m2) + ".out";
+	return directory + "/" + prefix + "_" +std::to_string(m_radialIndex) + "_" + std::to_string(m_m1) + "_" + std::to_string(m_m2) + ".out";
 	//GaussianLog
+	//Kalnajs
 }
 
 
 
-void ActionAngleBasisFunction::save(const std::string directory, double step) const
+void ActionAngleBasisFunction::save(const std::string & directory, const std::string & prefix, double step) const
 {
-	std::string file = filename(directory);
+	std::string file = filename(directory, prefix);
 	std::cout << file << '\n';
 	std::ofstream out(file);
 

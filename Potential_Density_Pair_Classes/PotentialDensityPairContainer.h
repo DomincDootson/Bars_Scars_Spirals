@@ -58,7 +58,6 @@ public:
 	Eigen::VectorXcd potentialResolving(const Eigen::ArrayXXcd &potentialArray, const double rMax) const; // Not great at resolving l =0
 	Eigen::VectorXcd densityResolving(const Eigen::ArrayXXcd &densityArray, const double rMax) const;
 
-	Eigen::MatrixXd getScriptE() const {return m_scriptE;}
 
 
 private:	

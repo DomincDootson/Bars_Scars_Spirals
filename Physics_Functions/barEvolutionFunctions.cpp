@@ -29,6 +29,20 @@ std::string kernelName(std::string dir, std::string stem, int Kka, double Rka, i
 	return dir + "/" + stem + "_" + std::to_string(Kka) + "_" + std::to_string((int) round(Rka)) + "_" + std::to_string(m2) + ".out";
 }
 
+void kalnajsBarTest() {
+
+
+	VolterraSolver solver("test200.out", 10, 2, 200, 0.1);
+
+	solver.activeFraction(.25);	
+	
+	Eigen::VectorXcd coef = Eigen::VectorXcd::Zero(11);
+	coef[0] = .01; 
+	
+	Bar2D bar(coef, 0.5);
+	solver.barRotation(bar, "linearCoeff.csv", "linearEvolution.csv", false, false); 
+	
+}
 
 void kalnajBFVaryingK()
 {
@@ -41,7 +55,7 @@ void kalnajBFVaryingK()
 		std::vector<double> params{Kka[i], 10};
 		PotentialDensityPairContainer<KalnajsBasis> PD(params, 10, 2);
 
-		ActionAngleBasisContainer test(10, 2, 5, 101, 10);
+		ActionAngleBasisContainer test("Kalnajs", 10, 2, 5, 101, 10);
 		std::string file = "Kalnajs/Kalnajs_" + std::to_string((int) Kka[i]) + "_10"; // Use file function name here
 		test.scriptW(PD, DF, file);
 	}
@@ -58,7 +72,7 @@ void kalnajBFVaryingR()
 		std::vector<double> params{4, Rka[i]};
 		PotentialDensityPairContainer<KalnajsBasis> PD(params, 10, 2);
 
-		ActionAngleBasisContainer test(10, 2, 5, 101, 10);
+		ActionAngleBasisContainer test("Kalnajs", 10, 2, 5, 101, 10);
 		std::string file = "Kalnajs/Kalnajs_4_" + std::to_string((int) Rka[i]); // Use file function name here
 		test.scriptW(PD, DF, file);
 	}
@@ -210,119 +224,15 @@ Eigen::VectorXcd gaussianResolving(const double radius)
 	return coeff;
 }
 
-// Some function that doe the evolution of the bar for the model givien in gaussianResolving a
-
-double deltaFunctionTorque(const Eigen::VectorXcd & coefficents, const std::vector<double> potentialAtRadius, const double angle)
-{	
-	std::complex<double> unitComplex(0,1), sum{0};
-	for (int i = 0; i < coefficents.size(); ++i){
-		sum += coefficents(i)*potentialAtRadius[i]*exp(angle*2*unitComplex) - conj(coefficents(i)*potentialAtRadius[i]*exp(angle*2*unitComplex));
-	}
-	return 0.5*2*real(unitComplex * sum * -2.0); // Factor of two because we have two delta functions
-}
-
-std::vector<double> potentialAtRadius(double radius){
-	std::vector<double> params{static_cast<double>(24), .5, 15}, potentialAtRadius;
-	PotentialDensityPairContainer<GaussianLogBasis> basisFunctions(params, 24, 2);
-	for (int n = 0; n<=24; ++n){potentialAtRadius.push_back(basisFunctions.potential(2, n));}
-	return potentialAtRadius;
-}
-
-void deltaFunctionTorqueEvolution(const VolterraSolver & solver) 
-{
-	std::vector<double> potentialEvaluations{potentialAtRadius(2.06)}, torque;
-
-	for (int time = 0; time < solver.numbTimeSteps(); ++time){
-		torque.push_back(deltaFunctionTorque(solver.responseCoef(time), potentialEvaluations, time * 0.5 * solver.timeStep()));
-	}
-	std::cout << "saving\n";
-	std::ofstream out("Plotting/TorqueDelta.csv");
-	for (auto it = torque.begin(); it != torque.end(); ++it){
-		out << *it << '\n';
-	}
-	out.close();
-
-}
-
-Eigen::VectorXd smearTorqueIntegrand(Eigen::VectorXcd & coeff, double phi, double phiBar){
-	std::complex<double> unitComplex(0,1);
-	return (cos(2*(phi-phiBar)) * unitComplex * (exp(2*phi*unitComplex)*coeff - (exp(2*phi*unitComplex)*coeff).conjugate())).real();
-}
-
-Eigen::VectorXd smearTorqueIntegrate(Eigen::VectorXcd & coeff, double phiBar){
-	Eigen::VectorXd integral = Eigen::VectorXd::Zero(coeff.size());
-
-	int nStep{100}; double spacing{2*M_PI/((double) nStep)};
-
-	for (int i = 0; i <nStep; ++i){
-		integral += spacing * smearTorqueIntegrand(coeff, i * spacing, phiBar);
-	}
-	return integral;
-}
-
-double smearTorque(Eigen::VectorXcd & coeff, const std::vector<double> & potentialEval, double phiBar){
-	Eigen::VectorXd integral = smearTorqueIntegrate(coeff, phiBar);
-	double torque{0};
-	for (int i = 0; i < potentialEval.size(); ++i){
-		torque += potentialEval[i] * integral(i);
-	}
-	return -torque * 2; // Could put in a max value here?? 
-}
-
-
-
-void smearedTorqueEvolution(const VolterraSolver & solver){
-	std::vector<double> torque, potentialEval{potentialAtRadius(2.06)};
-	for (int time = 0; time < solver.numbTimeSteps(); ++time){
-		Eigen::VectorXcd holding = solver.responseCoef(time);
-		torque.push_back(smearTorque(holding, potentialEval, .5*time*solver.timeStep()));
-	}
-	std::ofstream out("Plotting/SmearedTorque.csv");
-	for (auto it = torque.begin(); it != torque.end(); ++it){
-		out << *it << '\n';
-	}
-	out.close();
-}
-
-
-Eigen::ArrayXXd torqueGrid(const Eigen::VectorXcd & coef, const PotentialDensityPairContainer<GaussianLogBasis> & pd){
-	std::complex<double> unitComplex(0,1);
-	Eigen::ArrayXXcd holding = pd.potentialArray(coef, 200, 3);
-	return -2*(unitComplex*(holding - holding.conjugate())).real();
-}
-
-void fullTorqueEvolution(const VolterraSolver & solver)
-{
-	double spacing{2*3.0/ ((double) 200)};
-	std::vector<double> params{static_cast<double>(24), .5, 15}, torque;
-	PotentialDensityPairContainer<GaussianLogBasis> basisFunctions(params, 24, 2);
-	for (int time =0; time < solver.numbTimeSteps(); time += 10){
-		torque.push_back(spacing * spacing * (basisFunctions.densityArrayReal(solver.perturbationCoef(time), 200, 3) * torqueGrid(solver.responseCoef(time), basisFunctions)).sum());
-		std::cout << time << '\n';
-	}
-
-	std::ofstream out("Plotting/FullTorque.csv");
-	for (auto it = torque.begin(); it != torque.end(); ++it){
-		out << *it << '\n';
-	}
-	out.close();
-}
-
 void gaussianBarEvolution(){
 	double barRadius{2}, timeStep{0.01};
 	int nMax{24}, numbTimeSteps{2000};
 	std::string kernelName{"Kernels/GaussianLog_2.out"};
 
-	std::vector<double> params{static_cast<double>(nMax), .5, 15};
-	PotentialDensityPairContainer<GaussianLogBasis> basisFunctions(params, nMax, 2);
-
-	Bar2D bar(gaussianResolving(barRadius), basisFunctions, 1/barRadius);
+	Bar2D bar(gaussianResolving(barRadius), 1/barRadius);
 	VolterraSolver solver( kernelName, nMax, 2, numbTimeSteps, timeStep);
 
 	solver.barRotation(bar, "Plotting/barCoefficents.csv", "Plotting/barEvolution.csv", false, false);
-	deltaFunctionTorqueEvolution(solver);
-	smearedTorqueEvolution(solver); 
-	//fullTorqueEvolution(solver);
 }
 
 

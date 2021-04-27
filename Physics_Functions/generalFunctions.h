@@ -16,6 +16,8 @@ void testEvolutionKalanajs(int m2);
 void testEvolutionGaussian(int m2); // Does evolution for singular l harmonic
 void spiralTestEvolution(); // Does evolution for the test plot in paper 1
 
-void savingPotentialArrays(std::string dir);
+void barTesting(double omega0); 
+
+void gridTesting(double angD);
 
 #endif

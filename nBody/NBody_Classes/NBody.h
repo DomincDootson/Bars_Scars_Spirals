@@ -25,7 +25,7 @@ public:
 	 m_diskBox(120, 26.0, 0.18,1), m_m0Box(120, 26.0, 0.18,1),
 	 m_basisFunction(bf),
 	 m_numbTimeSteps{numbTimeSteps}, m_fourierHarmonic{bf.fourierHarmonic()}, m_skip{100}, m_timeStep{timesStep}, m_xi{.25},
-	 m_foreground("Bodies/particleSamples.csv", nParticles, .25), 
+	 m_foreground("Bodies/particleSamples.out", nParticles, .25), 
 	 m_background{m_foreground}
 	 {if (m_fourierHarmonic == 0){
 	 	m0Grid();}}
@@ -49,7 +49,9 @@ protected:
 	const int m_numbTimeSteps, m_fourierHarmonic, m_skip;
 	const double m_timeStep, m_xi;
 
+	void outputInfo(int timeIndex, std::ofstream & out);
 	void outputCoefficents(std::ofstream & out);
+
 
 	void backgroundParticleEvolution(const bool isSelfConsistent); 
 
@@ -72,7 +74,15 @@ std::string outComplexNumber(const std::complex<double> number){
 }
 
 template <class Tbf>
-void NBody<Tbf>::outputCoefficents(std::ofstream & out){
+void NBody<Tbf>::outputInfo(int timeIndex, std::ofstream & out) {
+	if (timeIndex % m_skip == 0) { 
+		outputCoefficents(out); 
+		std::cout << "Fraction of Test particle: " << timeIndex/((double) m_numbTimeSteps) << '\n';
+	}
+}
+
+template <class Tbf>
+void NBody<Tbf>::outputCoefficents(std::ofstream & out) {
 	Eigen::VectorXcd coef = m_foreground.responseCoefficents(m_basisFunction) - m_background.responseCoefficents(m_basisFunction);
 	for (int i =0; i < coef.size()-1; ++i){
 		out << outComplexNumber(coef(i)) <<',';

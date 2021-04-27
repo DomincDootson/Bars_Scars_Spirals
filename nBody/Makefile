@@ -9,8 +9,8 @@ INCLUDES =  -I/../DF_Class -I/../Potential_Density_Pair_Classes -I/../Volterra_S
 
 
 NBODY = nBody
-NBODY_SRC = nBody.cpp 
-NBODY_OBJ = nBody.o 
+NBODY_SRC = nBody.cpp nBodyFunctions.cpp
+NBODY_OBJ = nBody.o nBodyFunctions.o 
 
 
 # Define all the rules
@@ -28,7 +28,7 @@ particleSampling.o : Bodies/particleSampling.cpp Bodies/Bodies.h ../DF_Class/*.h
 
 # Define the rule for making .o from .cpp files 
 %.o: %.cpp ../Bar2D/*.h ../DF_Class/*.h ../Potential_Density_Pair_Classes/*.h ../Volterra_Solver/ExpansionCoeff.h \
-Bodies/*.h Box/*.h NBody_Classes/*.h  Perturbation_Grids/*.h 
+Bodies/*.h Box/*.h NBody_Classes/*.h  Perturbation_Grids/*.h nBodyFunctions.h 
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $< 
 
 #nBody.o: nBody.cpp ../Bar2D/*.h ../DF_Class/*.h ../Potential_Density_Pair_Classes/*.h ../Volterra_Solver/ExpansionCoeff.h nBody_Classes/*.h 

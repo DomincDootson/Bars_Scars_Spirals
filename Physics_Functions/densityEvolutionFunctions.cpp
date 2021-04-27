@@ -82,7 +82,7 @@ void kalnajBF()
 	for (int i =0; i<=2; ++i){
 		PotentialDensityPairContainer<KalnajsBasis> PD(params, 10, i);
 
-		ActionAngleBasisContainer test(10, i, 5, 101, 10);
+		ActionAngleBasisContainer test("Kalnajs", 10, i, 5, 101, 10);
 		std::string file = "Kalnajs/Kalnajs_4_" + std::to_string((int) Rka); // Use file function name here
 		test.scriptW(PD, DF, file);
 	} 	
@@ -94,7 +94,7 @@ void kalnajsKernelsVaryingSigma(int l)
 	std::vector<double> littleSigma{littleSigmas()};
 	
 	std::string file = "Kalnajs/Kalnajs_4_20";
-	ActionAngleBasisContainer test(file, 10, l, 5, 101, 20);
+	ActionAngleBasisContainer test(file, "Kalnajs", 10, l, 5, 101, 20);
 
 	VolterraSolver solver(10, l, NUMBTIMESTEPS, DELTAT);
 	for (int i = 0; i < littleSigma.size(); ++i){
@@ -362,7 +362,7 @@ void generatingSpiralBF(const std::string & dir, const double innerTaper, const 
 	for (int m2 = 0; m2 <= 2; ++m2){
 	 	PotentialDensityPairContainer<GaussianLogBasis> PD(params, 24,m2);
 
-		ActionAngleBasisContainer test(24, m2, 10, 301, 20); 
+		ActionAngleBasisContainer test("GaussianLog", 24, m2, 10, 301, 20); 
 		test.scriptW(PD, DF, dir);
 	}
 }
