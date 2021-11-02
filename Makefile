@@ -21,10 +21,14 @@ GENERAL = general
 GENERAL_SRC = $(FILE_DIR)/general.cpp $(FILE_DIR)/generalFunctions.cpp 
 GENERAL_OBJ = $(FILE_DIR)/generalFunctions.o  $(FILE_DIR)/general.o
 
+STABILITY = stability
+STABILITY_SRC = $(FILE_DIR)/parameterStability.cpp
+STABILITY_OBJ = $(FILE_DIR)/parameterStability.o
+
 
 # Define all the rules
 
-all : $(BAR) $(DENSITY) $(GENERAL)
+all : $(BAR) $(DENSITY) $(GENERAL) $(STABILITY)
 
 $(BAR): $(BAR_OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^ 
@@ -33,6 +37,9 @@ $(DENSITY): $(DENSITY_OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^ 
 
 $(GENERAL): $(GENERAL_OBJ)
+	$(CXX) $(CXXFLAGS) -o $@ $^ 
+
+$(STABILITY): $(STABILITY_OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^ 
 
 

@@ -16,7 +16,6 @@ class EvolutionKernels
 {
 public:
 	EvolutionKernels(int numbTimeStep) : m_kernels(numbTimeStep) {}
-	//EvolutionKernels(std::string kernelFilename, int numbTimeStep) {kernelReadIn(kernelFilename);}
 	EvolutionKernels(std::string kernelFilename, int numbTimeStep) : m_kernels(numbTimeStep) {kernelReadIn(kernelFilename);}
 
 	~EvolutionKernels() {}
@@ -25,10 +24,11 @@ public:
 	Eigen::MatrixXcd& operator()(int timeIndex) {return m_kernels[timeIndex];} 
 	
 	template <class Tdf>
-	void kernelCreation(const std::string fileName, const Tdf & df, const ActionAngleBasisContainer & basisFunc); // SHould we pass it a script E here? and also a reference to a DF. --> Put sctio
+	void kernelCreation(const std::string fileName, const Tdf & df, const ActionAngleBasisContainer & basisFunc); 
 	void getVolterraParams(const int maxRadialIndex, const int fourierHarmonic, const int numbTimeStep, const double timeStep);
 
-	void kernelWrite2FileFlipped(const std::string & kernelFilename) const;
+	void saveForPython(const std::string & filename) const; 
+
 private:
 	std::vector<Eigen::MatrixXcd> m_kernels;
 
@@ -44,13 +44,11 @@ private:
 	void kernelReadIn(const std::string & kernelFilename);
 	void evolutionParams(int maxRadialIndex, int fourierHarmonic, int numbTimeSteps, int maxFourierHarmonic, double timeStep, double spacing);
 	void kernelWrite2File(const std::string & kernelFilename) const; 
-	//void kernelWrite2FileFlipped(const std::string & kernelFilename) const; // Allows kernels to be output for old code
+	
 	
 	std::complex<double> kernelElement(const int npRow, const int npCol, const ActionAngleBasisContainer & basisFunc, const double time) const;
 	void kernelAtTime(const ActionAngleBasisContainer & basisFunc, const int timeIndex); 
 	void multipleKernelAtTime(const ActionAngleBasisContainer & basisFunc, const int timeIndex, const int nCores);
-
-	void print() { std::cout << "hello\n";}
 
 	std::complex<double> integration2d(const Eigen::MatrixXcd & grid2Integrate) const;
 };
@@ -64,9 +62,11 @@ void EvolutionKernels::getVolterraParams(const int maxRadialIndex, const int fou
 
 template <class Tdf>
 void EvolutionKernels::gridSetUp(const Tdf & df, const ActionAngleBasisContainer & basisFunc){
-	m_om1Grid = basisFunc.omega1Grid(df); // THIS REALLY SHOULD BE A MEMEBER FUNCTION OF THE DF, NOT THE BASIS FUNCTIONS
-	m_om2Grid = basisFunc.omega2Grid(df); 
+	
 	m_spacing = basisFunc.spacing();
+	m_om1Grid = df.omega1Grid(basisFunc.size(0), m_spacing); 
+	m_om2Grid = df.omega2Grid(basisFunc.size(0), m_spacing);
+	
 	m_maxFourierHarmonic = basisFunc.maxFourierHarmonic();
 
 	m_dfdEGrid = df.dFdEgrid(basisFunc.spacing(), m_om1Grid); 
@@ -77,17 +77,6 @@ void EvolutionKernels::gridSetUp(const Tdf & df, const ActionAngleBasisContainer
 template <class Tdf>
 void EvolutionKernels::kernelCreation(const std::string fileName, const Tdf & df, const ActionAngleBasisContainer & basisFunc)
 {
-	/*Eigen::MatrixXd inverseScriptE{basisFunc.inverseScriptE()};
-	gridSetUp(df, basisFunc);
-	for (int timeIndex = 0; timeIndex < m_numbTimeSteps; ++timeIndex)
-	{
-		kernelAtTime(basisFunc, timeIndex); // MUTLITHREAD THIS? 
-		m_kernels[timeIndex] = inverseScriptE * m_kernels[timeIndex];
-		if (timeIndex % 100 == 0){
-			std::cout << "Fraction of kernels completed: " << round(100*timeIndex/((double) m_numbTimeSteps))<< '%' <<  '\n';
-		}
-	}	
-	kernelWrite2File(fileName);*/ 
 	Eigen::MatrixXd inverseScriptE{basisFunc.inverseScriptE()};
 	gridSetUp(df, basisFunc);
 	int nCores{2};
@@ -98,12 +87,9 @@ void EvolutionKernels::kernelCreation(const std::string fileName, const Tdf & df
 		if (timeIndex % 10 == 0){
 			std::cout << "Fraction of kernels completed: " << round(100*timeIndex/((double) m_numbTimeSteps))<< '%' <<  '\n';
 		}
-
 	}	
-	//PUT INTO NEW LOOP m_kernels[timeIndex] = inverseScriptE * m_kernels[timeIndex];
-	for (int timeIndex = 0; timeIndex < m_numbTimeSteps; ++timeIndex) {m_kernels[timeIndex] = inverseScriptE * m_kernels[timeIndex];}
+	//for (int timeIndex = 0; timeIndex < m_numbTimeSteps; ++timeIndex) {m_kernels[timeIndex] = inverseScriptE * m_kernels[timeIndex];} PUT THIS BACK IN
 	kernelWrite2File(fileName);
-
 }
 
 
@@ -144,8 +130,8 @@ std::complex<double> EvolutionKernels::kernelElement(const int npRow, const int 
 			for (int m1 = -m_maxFourierHarmonic; m1 <= m_maxFourierHarmonic; ++m1) 
 			{
 				integrand(i,j) += basisFunc(npRow, m1, i, j) * basisFunc(npCol, m1, i, j)
-				* (m_fourierHarmonic*m_dfdJGrid(i,j) +m1*m_dfdEGrid(i,j)) // It seems like this is the line that is breaking it				
-				* 	exp(-unitComplex*time * ((m1 * m_om1Grid(i,j) + m_fourierHarmonic * m_om2Grid(i,j))));	
+				* (m_fourierHarmonic*m_dfdJGrid(i,j) +m1*m_dfdEGrid(i,j)) 
+				* exp(-unitComplex*time * ((m1 * m_om1Grid(i,j) + m_fourierHarmonic * m_om2Grid(i,j))));	
 			}
 		}
 	}
@@ -175,25 +161,6 @@ void EvolutionKernels::kernelWrite2File(const std::string & kernelFilename) cons
 	
 	for (int time = 0; time < m_kernels.size(); ++ time){
 		for (int i = 0; i<=m_maxRadialIndex; ++i){
-			for (int j = 0; j <= m_maxRadialIndex; ++j){
-				if (j == m_maxRadialIndex && i ==m_maxRadialIndex) {out << real(m_kernels[time](i,j)) << " " << imag(m_kernels[time](i,j)) <<'\n';}
-				else {out << real(m_kernels[time](i,j)) << " " << imag(m_kernels[time](i,j)) << " ";}
-			}
-		}
-	}
-	out.close();
-	std::cout << "Kernel saved to: " << kernelFilename << '\n';
-}
-
-
-void EvolutionKernels::kernelWrite2FileFlipped(const std::string & kernelFilename) const
-{
-	std::ofstream out(kernelFilename);
-
-	out << m_maxRadialIndex << " " << m_fourierHarmonic << " " << m_numbTimeSteps << " " << m_maxFourierHarmonic << " " << m_timeStep << " " << m_spacing << '\n';
-	std::cout << m_numbTimeSteps << '\n';
-	for (int time = m_numbTimeSteps-1; time > 0; --time){
-		for (int i = 0; i<=m_maxRadialIndex; ++i){			
 			for (int j = 0; j <= m_maxRadialIndex; ++j){
 				if (j == m_maxRadialIndex && i ==m_maxRadialIndex) {out << real(m_kernels[time](i,j)) << " " << imag(m_kernels[time](i,j)) <<'\n';}
 				else {out << real(m_kernels[time](i,j)) << " " << imag(m_kernels[time](i,j)) << " ";}
@@ -237,6 +204,19 @@ void EvolutionKernels::kernelReadIn(const std::string & kernelFilename) // Needs
 	} 
 	kernelIn.close();
 }
+
+
+void EvolutionKernels::saveForPython(const std::string & filename) const {
+	std::ofstream out(filename);
+	for (int i = 0; i < m_kernels[0].rows(); ++i) { 
+		for (int j = 0; j < m_kernels[0].cols(); ++j)  {
+			if (j == (m_kernels[0].cols()-1)) {out << m_kernels[0](i,j).imag() << '\n';}
+			else {out << m_kernels[0](i,j).imag() << ',';}
+		}
+
+	}
+}
+
 #endif
 
 

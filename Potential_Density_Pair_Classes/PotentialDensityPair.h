@@ -84,9 +84,10 @@ Eigen::ArrayXXcd PotentialDensityPair::densityGrid(const int nGrid, const double
 		{
 			x = spacing * (i - centre); y = spacing * (j - centre);
 			r = sqrt(x*x+y*y); theta = angle(x,y);
-			if (r<rMax && r!= 0){
+			/*if (r<rMax && r!= 0){
 				grid(i,j) = exp(-unitComplex * (theta * m_fourierHarmonic)) * density(r);}
-			else {grid(i,j) = 0;}
+			else {grid(i,j) = 0;}*/
+			grid(i,j) = exp(-unitComplex * (theta * m_fourierHarmonic)) * density(r);
 		}
 	}
 	return grid;
@@ -103,7 +104,7 @@ Eigen::ArrayXXcd PotentialDensityPair::potentialGrid(const int nGrid, const doub
 		{
 			x = spacing * (i - centre); y = spacing * (j - centre);
 			r = sqrt(x*x+y*y); theta = angle(x,y);
-			if (r<rMax && r!= 0){
+			if (r!= 0){
 				grid(i,j) = exp(-unitComplex * (theta * m_fourierHarmonic)) * potential(r);
 			}
 		}

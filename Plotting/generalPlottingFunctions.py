@@ -190,6 +190,9 @@ class twoDdensity(object):
 	def densityAtTime(self, timeIndex):
 		return self.density2D[timeIndex]
 
+	def densityCutThrough(self, timeIndex):
+		return self.density2D[timeIndex][round(self.nRows*0.5),round(self.nRows*0.5):]
+
 	def densityEvolution(self, rMax):
 
 		spacing = 20/(self.nCols-1)

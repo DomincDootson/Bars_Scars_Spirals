@@ -1,6 +1,10 @@
 #ifndef NBODYFUNCTIONS
 #define NBODYFUNCTIONS
 
-void barEvolution(); 
- 
+void barEvolutionGaussian(); 
+void barEvolutionKalnajs();
+
+void orbitSection();  
+
+void kalanajTest();
 #endif

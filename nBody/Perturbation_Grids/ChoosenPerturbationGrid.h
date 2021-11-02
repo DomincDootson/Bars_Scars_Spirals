@@ -40,7 +40,6 @@ void ChoosenPerturbationGrid::updateGrid() {
 	}
 	if (m_fourierHarmonic == 0){m_potentialArray = potential.real();}
 	else {m_potentialArray = 2 * potential.real();}
-	
 	takeTimeStep();
 }
 

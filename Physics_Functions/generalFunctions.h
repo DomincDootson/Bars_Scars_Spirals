@@ -2,22 +2,18 @@
 #define GENERALFUNCTIONS
 
 #include <string>
-
-void gaussianScriptE(int m2); 
+void freqCheck();
 
 void generatingKalnajsBF(int m2);
 void generatingSpiralBF(int m2);
+void getSpiralParam();
 
 void generatingKalnajsKernels(int m2);
 void generatingGaussianKernels(int m2);
-void kernelFlipped(); // Saves a flipped kernel so that it can be used in the old code
 
-void testEvolutionKalanajs(int m2);
-void testEvolutionGaussian(int m2); // Does evolution for singular l harmonic
-void spiralTestEvolution(); // Does evolution for the test plot in paper 1
+void generatingSpiralBFDiffTemp(int m2);
 
-void barTesting(double omega0); 
 
-void gridTesting(double angD);
-
+void testingBarTorque();
+void testingFitting();
 #endif

@@ -18,9 +18,9 @@
 
 const int NUMBTIMESTEPS{200}; // some global paramters for the Volterra Solver
 const double DELTAT{0.25};
-double XI{.15};
+double XI{.10};
 
-bool SELF{false}; 
+bool SELF{true}; 
 
 void makeSelfConsistent() {SELF = true;}
 void makeTestParticle()   {SELF = false;}
@@ -137,7 +137,7 @@ void outPutPerturbation(const T & pd, double littleSigma, double radius, int num
 	for (int i = 0; i <= pd.maxRadialIndex(); ++i){
 		t0Coeff[i] = pd.potential(radius, i);
 	}
-	// TODO - Include scipt E multplication
+	t0Coeff = - (pd.scriptE()).inverse() * t0Coeff; 
 	ExpansionCoeff holding(t0Coeff, numbTimeSteps, pd.maxRadialIndex());
 	holding.writePerturbation2File(perturbationFilename(littleSigma, radius, pd.fourierHarmonic()));
 }
@@ -174,43 +174,6 @@ void diskKickingPerturbations()
 }
 // SPIRAL EQU //
 
-void vectorLine2File(std::ofstream & out, const std::vector<double> & vector)
-{
-	for (auto it = vector.begin(); it != vector.end()-1; ++it){
-		out << *it << ',';
-	}
-	out << vector.back() << '\n';
-}
-
-std::vector<double> radii4Line(int rMax = 10, int nStep = 100){
-	double step{rMax/((double) nStep-1)};
-	std::vector<double> radii;
-
-	for (int i = 0; i < nStep; ++i){
-		radii.push_back(i*step);
-	}
-	return radii;
-}
-
-void plottingPerturbations()
-{
-	Eigen::VectorXcd coeff(11);
-	std::vector<double> params{4, 20}, radii{perturbationRadii()}, radii4Output{radii4Line()};
-	PotentialDensityPairContainer<KalnajsBasis> pd1{params, 10, 1};
-
-	std::ofstream out("Disk_Kicking/PlottingPerturbation.csv");
-
-	for (auto r = radii.begin(); r != radii.end(); r += 1){
-		for (int n = 0; n < coeff.size(); ++n){
-			coeff[n] = pd1.potential(*r, n);
-		}
-		out << *r << ','; 
-		vectorLine2File(out, pd1.oneDpotential(radii4Output, coeff));
-		std::cout << *r << '\n';
-	}
-	out.close();
-}
-
 
 // Coefficent Evolution //
 // -------------------- //
@@ -243,47 +206,10 @@ void coefficentEvolution()
 }
 
 
-// 1D Density Evolution //
-// -------------------- //
-
-
-template <typename T>
-void individualDiskKicking(const T & pd, double littleSigma, double radius)
-{
-	int angHarmonic{pd.fourierHarmonic()};
-	std::string perturbationFile{perturbationFilename(littleSigma, radius, angHarmonic)};
-	std::string densityFile{kickingDensityFilename(littleSigma, radius, angHarmonic)};
-	std::string kernel{kernelFilename(littleSigma, angHarmonic)};
-	std::cout << "Solving: " << littleSigma << " " << radius << " " << angHarmonic <<'\n';
-	
-
-	VolterraSolver solver(kernel, pd.maxRadialIndex(), angHarmonic, NUMBTIMESTEPS, DELTAT);
-	solver.activeFraction(XI);
-	solver.densityEvolution(pd, densityFile, perturbationFile, SELF);
-}
- 
-void diskKicking()
-{
-	diskKickingPerturbations();
-	std::vector<double> params{4, 20};
-	PotentialDensityPairContainer<KalnajsBasis> pd0(params, 10,0), pd1(params, 10, 1), pd2(params, 10, 2);
-
-	std::vector<double> littleSigma{littleSigmas()}, radii{perturbationRadii()};
-
-	for (auto s = littleSigma.begin(); s != littleSigma.end(); ++s){
-		for (auto radius = radii.begin(); radius != radii.end(); ++radius){
-			individualDiskKicking(pd0, *s, *radius);
-			individualDiskKicking(pd1, *s, *radius);
-			individualDiskKicking(pd2, *s, *radius);
-		}
-	}
-	cleaningPerturbations(radii);
-}
-
 // 2D Density Evolution //
 // -------------------- //
 
-void density2D(double littleSigma, double radius, int angHarmonic){
+void density2DKalnajs(double littleSigma, double radius, int angHarmonic){
 	std::vector<double> params{4, 20};
 	PotentialDensityPairContainer<KalnajsBasis> pd{params, 10, angHarmonic};	
 
@@ -293,6 +219,23 @@ void density2D(double littleSigma, double radius, int angHarmonic){
 	std::string kernel{kernelFilename(littleSigma, angHarmonic)};
 	VolterraSolver solver(kernel, pd.maxRadialIndex(), angHarmonic, NUMBTIMESTEPS, DELTAT);
 	solver.activeFraction(XI);
+
+	solver.solveVolterraEquation(perturbationFile, SELF);
+
+	std::string outFilename{density2dFilename(littleSigma, radius, angHarmonic)};
+	solver.density2dEvolution(outFilename, pd);
+}
+
+void density2DGaussian(double littleSigma, double radius, int angHarmonic) {
+	std::vector<double> params{48, .5, 15};
+	PotentialDensityPairContainer<GaussianLogBasis> pd{params, 48, angHarmonic};	
+
+	std::string perturbationFile{perturbationFilename(littleSigma, radius, angHarmonic)};
+	outPutPerturbation(pd, littleSigma, radius);
+
+	std::string kernel{"Kernels/gaussianComparison.out"};
+	VolterraSolver solver(kernel, pd.maxRadialIndex(), angHarmonic, NUMBTIMESTEPS, DELTAT);
+	solver.activeFraction(.40);
 
 	solver.solveVolterraEquation(perturbationFile, SELF);
 
@@ -350,107 +293,163 @@ void energyEvolution(const std::string & energyFilename)
 }
 
 
-// Gaussian Function // 
-// ----------------- //
+// Basis Function Comparison // 
+// ------------------------- //
 
-void generatingSpiralBF(const std::string & dir, const double innerTaper, const double outerTaper)
-{
-	Mestel DF(1, 1, .25, 1, innerTaper, outerTaper);
-	
-	std::vector<double> params{24, .5, 15};
- 	
-	for (int m2 = 0; m2 <= 2; ++m2){
-	 	PotentialDensityPairContainer<GaussianLogBasis> PD(params, 24,m2);
+double timeProfile(double time, double timescale = 50) {return sin(M_PI * (time/timescale));} 
 
-		ActionAngleBasisContainer test("GaussianLog", 24, m2, 10, 301, 20); 
-		test.scriptW(PD, DF, dir);
-	}
+void savePerturbation(const std::string & filename, const Eigen::VectorXcd & coeff, int nStep = NUMBTIMESTEPS, double timeStep = DELTAT) {
+	ExpansionCoeff holding(nStep, coeff.size()+1);
+
+	for (int time = 0; time < holding.nTimeStep(); ++time) {holding(time) = (timeProfile(time*timeStep)) * coeff;}
+	holding.writePerturbation2File(filename); 
 }
-
-std::vector<int> guassianLogIndicies(const int lower = 5, const int upper = 15){
-	std::vector<int> indicies;
-	for (int i = lower; i <= upper; ++i){indicies.push_back(i);}
-		return indicies;
-}
-
-template <class T>
-std::vector<double> r0list(const T & pd)
-{
-	std::vector<double> r0;
-	std::vector<int> indicies{guassianLogIndicies()};
-	for (auto n = indicies.begin(); n != indicies.end(); ++n){
-		r0.push_back(pd(*n).r0());
-		std::cout << pd(*n).r0() << '\n';
-	}
-	return r0;
-}
-
-void GaussianLogKernelsVaryingSigma(int l, double rInner, double rOuter, const std::string & dir = "GaussianLog")
-{
-	std::vector<double> littleSigma{littleSigmas()};
 	
-	ActionAngleBasisContainer test(dir, 24, l, 7, 301, 20);
-
-	VolterraSolver solver(24, l, NUMBTIMESTEPS, DELTAT);
-	for (int i = 0; i < littleSigma.size(); ++i){
-		
-		std::cout << "Calculating kernel for littleSigma: " << littleSigma[i] << '\n';
-		Mestel DF(1, 1, littleSigma[i], 1, rInner, rOuter);
-		
-		std::string kernel{kernelFilename(littleSigma[i], l, "GaussianLog")};
-		
-		solver.generateKernel(kernel, DF, test);
-	}
-} 
-
-void outPutPerturbationLG(const PotentialDensityPairContainer<GaussianLogBasis>  & pd, int index, double littleSigma, double radius, int numbTimeSteps = NUMBTIMESTEPS) //Gaussian version
-{
-	Eigen::VectorXcd t0Coeff = Eigen::VectorXcd::Zero(pd.maxRadialIndex()+1);
-	
-	t0Coeff[index] = .1/pd.potential(radius, index); // normalise them so the all the pushes are the same size. 
-	
-
-	ExpansionCoeff holding(t0Coeff, numbTimeSteps, pd.maxRadialIndex());
-	holding.writePerturbation2File(perturbationFilename(littleSigma, radius, pd.fourierHarmonic()));
-}
-
-
-void diskKickingLGPerturbations()
-{
-	std::vector<double> params{24, .5, 15};
-	PotentialDensityPairContainer<GaussianLogBasis> pd0(params, 24,0), pd1(params, 24, 1), pd2(params, 24, 2);
-	
-	std::vector<double> littleSigma{littleSigmas()}, radii{r0list(pd0)}; 
-	std::vector<int> indicies{guassianLogIndicies()};
-
-	for (auto s = littleSigma.begin(); s != littleSigma.end(); ++s){
-		for (int n = 0; n < radii.size(); ++n){
-			outPutPerturbationLG(pd0, indicies[n], *s, radii[n]);	
-			outPutPerturbationLG(pd1, indicies[n], *s, radii[n]);	
-			outPutPerturbationLG(pd2, indicies[n], *s, radii[n]);	
-		}
-	}	
-}
-
-void diskKickingLGEnergy(const std::string & energyFilename)
-{
-	diskKickingLGPerturbations();
-	
-	std::vector<double> params{24, .5, 15};
-	PotentialDensityPairContainer<GaussianLogBasis> pd0(params, 24,0), pd1(params, 24, 1), pd2(params, 24, 2);
-	std::vector<PotentialDensityPairContainer<GaussianLogBasis>> potentialDensityPairs{pd0, pd1, pd2};
-	
-	std::vector<double> littleSigma{littleSigmas()}, radii{r0list(pd0)};
-	std::ofstream out(energyFilename);
-
-	for (auto s = littleSigma.begin(); s != littleSigma.end(); ++s){
-		for (auto pd = potentialDensityPairs.begin(); pd != potentialDensityPairs.end(); ++pd){
-			for (auto r = radii.begin(); r != radii.end(); ++r){
-				std::vector<double> energies = individualEnergyEvolution(*pd, *s, *r, "GaussianLog");
-				outPutEnergy(out, energies, *s, pd -> fourierHarmonic(), *r);
-			}
-		}
-	} 	
+void saveVector(const std::string & filename, const std::vector<double> & vec) {
+	std::ofstream out(filename);
+	for (auto i : vec) {out << i << '\n';}
 	out.close();
-	cleaningPerturbations(radii);
 }
+std::vector<double> radiiVector() {
+	std::vector<double> radii;
+ 	for (int i =1; i < 2000; ++i) {radii.push_back(i*0.01);}
+ 	return radii;
+ }
+
+
+// Some function that call the above function and then the two d density evolution functiuns for both BF. 
+
+void gaussianRepresentation (int nMax = 24, int index = 15) {
+	std::vector<double> params{4, 20};
+	PotentialDensityPairContainer<KalnajsBasis> kalnajs(params, 10, 2);
+
+	
+	
+	std::vector<double> params1{static_cast<double>(nMax), .15, 15};
+ 	PotentialDensityPairContainer<GaussianLogBasis> PD(params1, nMax, 2);
+
+ 	Eigen::VectorXcd coefG = Eigen::VectorXcd::Zero(nMax+1);
+ 	coefG(index-2) = -0.2;
+ 	coefG(index-1) = -0.15;
+ 	coefG(index) = -0.1;
+ 	coefG(index+1) = -0.07;
+ 	coefG(index+1) = -0.03;
+ 
+ 	savePerturbation("Physics_Functions/gaussianPertGaussianRep.csv", coefG);
+ 	saveVector("Plotting/BF_Comparison/gaussianPerturbationG.csv", PD.oneDpotential(radiiVector(), coefG));
+ 	
+
+ 	Eigen::ArrayXXcd potentialG = PD.potentialArray(coefG, 1500, 20);
+ 	Eigen::VectorXcd coefK = kalnajs.potentialFitting(potentialG, 20);
+ 	savePerturbation("Physics_Functions/gaussianPertKalnajsRep.csv", coefK);
+ 	saveVector("Plotting/BF_Comparison/gaussianPerturbationK.csv", kalnajs.oneDpotential(radiiVector(), coefK));
+
+
+ 	potentialG = kalnajs.potentialArray(coefK, 1500, 20);
+ 	coefG = PD.potentialFitting(potentialG, 20);
+ 	savePerturbation("Physics_Functions/gaussianPertGaussianRep.csv", coefG);
+ 	saveVector("Plotting/BF_Comparison/gaussianPerturbationG.csv", PD.oneDpotential(radiiVector(), coefG));
+	
+}
+
+void kalnajsRepresentation (int nMax = 24) {
+	std::vector<double> params{4, 20};
+	PotentialDensityPairContainer<KalnajsBasis> kalnajs(params, 10, 2);
+
+	
+	
+	std::vector<double> params1{static_cast<double>(nMax), .15, 15};
+ 	PotentialDensityPairContainer<GaussianLogBasis> PD(params1, nMax, 2);
+
+ 	Eigen::VectorXcd coefK = Eigen::VectorXcd::Zero(10+1);
+ 	coefK(0) = 0.01;
+ 	savePerturbation("Physics_Functions/kalnajsPertKalnajsRep.csv", coefK);
+ 	saveVector("Plotting/BF_Comparison/kalnajsPerturbationG.csv", kalnajs.oneDpotential(radiiVector(), coefK));
+
+ 	Eigen::ArrayXXcd potentialK = kalnajs.potentialArray(coefK, 1500, 30);
+ 	Eigen::VectorXcd coefG(nMax+1);
+ 	coefG = PD.potentialFitting(potentialK, 30);	
+ 	std::cout << "Size of coefG: " << coefG.size() << '\n';
+ 	//coefG(nMax) = 1;
+ 	savePerturbation("Physics_Functions/kalnajsPertGaussianRep.csv", coefG);
+ 	saveVector("Plotting/BF_Comparison/kalnajsPerturbationG.csv", PD.oneDpotential(radiiVector(), coefG));	
+
+ 	std::ofstream out("Plotting/BF_Comparison/individualGaussian.csv");
+
+ 	for (auto r : radiiVector()) {
+ 		out << r << ",";
+ 		for (int n = 0; n < nMax; ++n) {
+ 			out << PD.potential(r, n) << ',';
+ 		}
+ 		out << PD.potential(r, nMax) << '\n';
+ 	}
+ 	out.close();
+ 	std::cout << coefG << '\n';
+ 	std::ofstream out1("Plotting/BF_Comparison/initialGuess.csv");
+ 	for (int i = 0; i < coefG.size()-1; ++i) {out1 << (coefG(i)).real() << '\n';}
+ 	out1 << coefG(coefG.size()-1).real() << '\n';
+ 	out1.close();
+}
+
+// Shall we have a function that does the 2D evolution for a given perturbation? 
+
+void kalnajs2D(const std::string & perturbationFile, const std::string & outFile) {
+	std::vector<double> params{4, 20};
+	PotentialDensityPairContainer<KalnajsBasis> pd{params, 10, 2};
+
+	VolterraSolver solver("Kernels/kalnajsComparison.out", pd.maxRadialIndex(), pd.fourierHarmonic(), NUMBTIMESTEPS, DELTAT);
+	solver.activeFraction(.50);
+	solver.solveVolterraEquation(perturbationFile, false);
+
+	solver.density2dEvolution(outFile, pd); 
+}
+
+void guassian2D(const std::string & perturbationFile, const std::string & outFile, int nMax = 24) {
+	std::vector<double> params1{static_cast<double>(nMax), .15, 15};
+ 	PotentialDensityPairContainer<GaussianLogBasis> pd(params1, nMax, 2);
+
+ 	VolterraSolver solver("Kernels/gaussianComparison.out", pd.maxRadialIndex(), pd.fourierHarmonic(), NUMBTIMESTEPS, DELTAT);
+	solver.activeFraction(.50);
+	solver.solveVolterraEquation(perturbationFile, false);
+
+	solver.density2dEvolution(outFile, pd); 
+}
+
+
+void generateComparisonKernels(int nMax = 24) {
+	Mestel DF;
+	std::cout << "Nmax is " << nMax << '\n';
+	std::string file = "Kalnajs/Kalnajs_4_20";
+	ActionAngleBasisContainer test(file, "Kalnajs", 10, 2, 5, 101, 20);
+
+	VolterraSolver solver(10, 2, NUMBTIMESTEPS, DELTAT);
+	//solver.generateKernel("Kernels/kalnajsComparison.out", DF, test);
+
+	ActionAngleBasisContainer test1("GaussianLog", "GaussianLog", nMax, 2, 7, 251, 20);
+	
+	/*ActionAngleBasisContainer test1("GaussianLog", nMax, 2, 7, 251, 20);
+	
+	std::vector<double> params1{static_cast<double>(nMax), .15, 15};
+ 	PotentialDensityPairContainer<GaussianLogBasis> pd(params1, nMax, 2);
+
+	test1.scriptW(pd, DF, "GaussianLog");*/
+	VolterraSolver solver1(nMax, 2, NUMBTIMESTEPS, DELTAT);
+	solver1.generateKernel("Kernels/gaussianComparison.out", DF, test1);
+
+}
+
+void comparisonDensityEvolution() {
+	//generateComparisonKernels(48); 
+	
+	//gaussianRepresentation(48, 38); 
+	//kalnajsRepresentation(48); 
+
+
+	kalnajs2D("Physics_Functions/kalnajsPertKalnajsRep.csv", "Plotting/BF_Comparison/kalnajsPertKalnajsRepDensity.csv");
+	guassian2D("Physics_Functions/kalnajsPertGaussianRep.csv", "Plotting/BF_Comparison/kalnajsPertGaussianRepDensity.csv", 48); 
+
+	kalnajs2D("Physics_Functions/gaussianPertKalnajsRep.csv", "Plotting/BF_Comparison/gaussianPertKalnajsRepDensity.csv");
+	guassian2D("Physics_Functions/gaussianPertGaussianRep.csv", "Plotting/BF_Comparison/gaussianPertGaussianRepDensity.csv", 48);
+}
+
+

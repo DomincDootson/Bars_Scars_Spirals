@@ -47,6 +47,9 @@ public:
 	void writeDensity2File(const std::string & outFilename, const Tbf & bf, const int skip) const; 
 	template <class Tbf>
 	void write2dDensity2File(const std::string & outFilename, const Tbf & bf, const int skip) const; 
+	template <class Tbf>
+	void write2dPotential2File(const std::string & outFilename, const Tbf & bf, const int skip) const;
+
 
 	int nTimeStep() const {return m_coeff.size();}
 
@@ -76,7 +79,7 @@ void ExpansionCoeff::coefficentReadIn(const std::string &filename)
 	int maxRadialIndex; inFile >> maxRadialIndex;
 	std::cout << "Reading perturbation in from: " << filename << '\n';
 	std::cout << maxRadialIndex+1 << " " << m_coeff[0].size() << '\n';
-	assert(maxRadialIndex +1 == m_coeff[0].size() && "The perturbation does't have the same size as perturbation vector.");
+	assert(maxRadialIndex +1 == m_coeff[0].size() && "The perturbation does't have the same size as perturbation vector."); // Note that the first row of the perturbation file must be nMax
 
 	double real, imag;
 	std::complex<double> unitComplex(0,1);
@@ -196,6 +199,19 @@ void ExpansionCoeff::write2dDensity2File(const std::string & outFilename, const 
 	for (int time = skip; time < m_coeff.size(); time += skip){ // We don't need time = 0
 		if (time % (skip*10) == 0) {std::cout << "Outputting density for: " << time << '\n';}
 		Eigen::ArrayXXd density = bf.densityArrayReal(m_coeff[time], 201, 10); // I suppose this could always be make quicker by saving the individual arrays for each bf
+		outputArray(out, density);
+	}
+	std::cout << "Density evolution saved to: " << outFilename << '\n';
+	out.close();
+}
+
+template <class Tbf>
+void ExpansionCoeff::write2dPotential2File(const std::string & outFilename, const Tbf & bf, const int skip) const
+{
+	std::ofstream out(outFilename);
+	for (int time = skip; time < m_coeff.size(); time += skip){ // We don't need time = 0
+		if (time % (skip*10) == 0) {std::cout << "Outputting potential for: " << time << '\n';}
+		Eigen::ArrayXXd density = bf.potentialArrayReal(m_coeff[time], 201, 10); // I suppose this could always be make quicker by saving the individual arrays for each bf
 		outputArray(out, density);
 	}
 	out.close();

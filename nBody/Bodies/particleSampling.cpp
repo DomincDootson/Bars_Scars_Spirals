@@ -74,7 +74,7 @@ void writeSamples2file(Bodies & ptle){
 }
 
 int main() {
-	Mestel DF;
+	Mestel DF(1, 1, .35);
 	Bodies ptle(100000);
 	sampleParticles(ptle, DF);
 	writeSamples2file(ptle);

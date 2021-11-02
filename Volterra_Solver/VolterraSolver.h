@@ -43,13 +43,22 @@ public:
 	std::vector<double> energyEvolution(const Tbf & bf, const std::string & perturbationFilename, const bool isSelfConsistent = true);
 
 	void barRotation(Bar2D & bar, const std::string & outFilename, const std::string & evolutionFilename, const bool isSelfConsistent = true, const bool isFreelyRotating = true, const bool isEvolving = false);
+	template <class Tbf> 
+	void writeDensity2File(const std::string & outFilename, Tbf & bf) const {m_responseCoef.write2dDensity2File(outFilename, bf, m_skip); std::cout << "Density evolution written to: " << outFilename <<'\n';}
 
 	void activeFraction(double xi);
 	void resetActiveFraction() {activeFraction(1/m_xi);}
-	void kernelWrite2fileFlipped(const std::string & kernelFilename) const { m_kernels.kernelWrite2FileFlipped(kernelFilename);}
 
 	template <class Tbf>
-	void density2dEvolution(const std::string & outFilename, const Tbf & bf, const int skip = 20) const {m_responseCoef.write2dDensity2File(outFilename, bf, skip);}
+	void density2dEvolution(const std::string & outFilename, const Tbf & bf, const int skip = 1) const {m_responseCoef.write2dDensity2File(outFilename, bf, skip);}
+
+	template <class Tbf>
+	void potential2dEvolution(const std::string & outFilename, const Tbf & bf, const int skip = 1) const {m_responseCoef.write2dPotential2File(outFilename, bf, skip);}
+
+	Eigen::VectorXcd longTimeCoeff(const Eigen::VectorXcd & perturbationCoeff, bool isSelfConsistent = true) const;
+
+	void saveResponseCoeff(const std::string & filename) const {m_responseCoef.write2File(filename, 1);}
+	void saveKernelForPython(const std::string & filename) const {m_kernels.saveForPython(filename);} 
 
 private:
 	const int m_maxRadialIndex, m_fourierHarmonic, m_numbTimeSteps, m_skip;
@@ -126,8 +135,8 @@ void VolterraSolver::barRotation(Bar2D & bar, const std::string & outFilename, c
 	else {m_perturbationCoef(0) = bar.barCoeff();}
 	for (int timeIndex = 1; timeIndex < m_numbTimeSteps; ++timeIndex){
 		printTimeIndex(timeIndex);
-
 		bar.drift(m_timeStep, freelyRotating);
+
 		if (isEvolving) {m_perturbationCoef(timeIndex) = bar.barCoeff(timeIndex * m_timeStep);}
 		else {m_perturbationCoef(timeIndex) = bar.barCoeff();}
 		m_responseCoef(timeIndex) = m_responseCoef(0) + ((identity - includeSelfConsistent*0.5*m_kernels(timeIndex)).inverse()) 
@@ -150,5 +159,10 @@ void VolterraSolver::activeFraction(const double xi)
 	}
 }
 
+Eigen::VectorXcd VolterraSolver::longTimeCoeff(const Eigen::VectorXcd & perturbationCoeff, bool isSelfConsistent) const {
+	Eigen::MatrixXd id = Eigen::MatrixXd::Identity(m_maxRadialIndex+1, m_maxRadialIndex+1);
+	if (isSelfConsistent){ return 2*M_PI*(id - 2*M_PI*m_kernels(0)).inverse() * (m_kernels(0) * perturbationCoeff);}
+	return 2*M_PI * (m_kernels(0) * perturbationCoeff);
+}
 
 #endif

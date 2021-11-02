@@ -7,6 +7,8 @@
 #include <random>
 #include <fstream>
 
+#include <Eigen/Dense>
+
 
 class DFClass
 {
@@ -22,6 +24,11 @@ public:
 
 	double omega1(double rApo, double rPer) const;
 	double omega2(double rApo, double rPer) const;
+
+	Eigen::MatrixXd omega1Grid(int dim, double spacing) const;
+	Eigen::MatrixXd omega2Grid(int dim, double spacing) const;
+
+
 	double theta1(double radius, double rApo, double rPer, double omega1) const;
 	double theta2(double radius, double rApo, double rPer, double omega2) const; // Note this is really theta2 - phi 
 	double theta1Deriv(double radius, double rApo, double rPer, double omega1) const;
@@ -110,6 +117,21 @@ double DFClass::omega2(double rApo, double rPer) const // what to do for circula
 	return DFClass::omega1(rApo, rPer) * J * ((rApo - rPer) * integral)/M_PI;
 }
   
+Eigen::MatrixXd DFClass::omega1Grid(int dim, double spacing) const {
+	Eigen::MatrixXd grid = Eigen::MatrixXd::Zero(dim, dim);
+	for (int i = 0; i < dim; ++i){
+			for (int j = 1; j < i; ++j){double rApo{i*spacing}, rPer{j*spacing}; grid(i,j) = omega1(rApo, rPer);}}
+	return grid;
+}
+
+Eigen::MatrixXd DFClass::omega2Grid(int dim, double spacing) const {
+	Eigen::MatrixXd grid = Eigen::MatrixXd::Zero(dim, dim);
+	for (int i = 0; i < dim; ++i){
+			for (int j = 1; j < i; ++j){double rApo{i*spacing}, rPer{j*spacing}; grid(i,j) = omega2(rApo, rPer);}}
+	return grid;
+}
+
+
 double DFClass::theta1(double radius, double rApo, double rPer, double omega1) const
 {
 	int nstep{1000};

@@ -3,7 +3,7 @@
 CXX = g++
 CXXFLAGS = -O3 -std=c++2a -Wall 
 INCLUDES =  -I/../DF_Class -I/../Potential_Density_Pair_Classes -I/../Volterra_Solver -I/../Physics_Functions \
- -I/Bodies -I/Box -I/NBody_Classes -I/Perturbation_Grids
+ -I/Bodies -I/Box -I/NBody_Classes -I/Perturbation_Grids -I/Orbit_Sections
 
 # Label all the different files that we want to compile and how they link
 
@@ -28,7 +28,7 @@ particleSampling.o : Bodies/particleSampling.cpp Bodies/Bodies.h ../DF_Class/*.h
 
 # Define the rule for making .o from .cpp files 
 %.o: %.cpp ../Bar2D/*.h ../DF_Class/*.h ../Potential_Density_Pair_Classes/*.h ../Volterra_Solver/ExpansionCoeff.h \
-Bodies/*.h Box/*.h NBody_Classes/*.h  Perturbation_Grids/*.h nBodyFunctions.h 
+Bodies/*.h Box/*.h NBody_Classes/*.h  Perturbation_Grids/*.h Orbit_Sections/*.h nBodyFunctions.h 
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $< 
 
 #nBody.o: nBody.cpp ../Bar2D/*.h ../DF_Class/*.h ../Potential_Density_Pair_Classes/*.h ../Volterra_Solver/ExpansionCoeff.h nBody_Classes/*.h 

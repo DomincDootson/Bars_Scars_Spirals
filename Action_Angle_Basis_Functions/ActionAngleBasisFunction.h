@@ -51,7 +51,9 @@ ActionAngleBasisFunction::ActionAngleBasisFunction(const std::string & dir, cons
 	
 	for (int i = 1; i<m_basisGrid.rows(); ++i){
 		for (int j = 1; j < i; ++j){
-			inFile >> m_basisGrid(i,j);	
+			double holding; inFile >> holding;
+			if (holding != holding) {std::cout << "We have read in Nan\n";}
+			m_basisGrid(i,j) = holding;	
 		}
 	}
 	inFile.close();

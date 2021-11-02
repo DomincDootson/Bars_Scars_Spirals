@@ -3,6 +3,9 @@
 
 #include <Eigen/Dense>
 
+
+void kalnajsTorque(int nMax);
+
 void kalnajsBarTest();
 
 void kalnajBFVaryingK();
@@ -16,6 +19,17 @@ void barVaryingAngularSpeed();
 void barVaryingKka();
 void barVaryingRka();
 
-void gaussianBarEvolution();
+void barVaryingTurnOn();
+void barVaryingActiveFraction();
 
+void kalnajsKernelsDiffTemp(); 
+
+void longTermEvolution();
+
+void gaussianBarEvolution();
+void guassianDifferentTemps(); 
+void gaussianBarDiffGrowthRate();
+
+void gaussianBarModel();
+void kalnajsBarModel();
 #endif

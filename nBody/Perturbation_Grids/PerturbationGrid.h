@@ -14,7 +14,7 @@ public:
 	m_spacing{2*rMaxGrid/ ((double) nGrid-1)}, m_rMaxGrid{rMaxGrid}, m_centre{0.5 * (nGrid-1)},
 	v_individualPotentials{bf.individualPotential(nGrid, m_rMaxGrid)},
 	m_perturbationIndex{0}, m_fourierHarmonic{bf.fourierHarmonic()}
-	{} // I want this to take the BF and creat the indidual grids
+	{} 
 
 	~PerturbationGrid() {}
 
@@ -24,13 +24,17 @@ public:
 	std::valarray<double> perturbationAccels(const Bodies & ptle) const;
 
 	void saveArray(const std::string & filename) const {
-		ofstream out(filename);
+		std::ofstream out(filename);
 		for (int i =0; i < m_potentialArray.rows(); ++i)
 			for (int j = 0; j < m_potentialArray.cols(); ++j){
 				if (j == m_potentialArray.cols()-1) {out << m_potentialArray(i,j) <<'\n';}
 				else {out << m_potentialArray(i,j) << ',';}
 			}
 	}
+
+	double potential(const double xPosition, const double yPosition) const;
+	std::valarray<double> potential(const Bodies & ptle) const;
+	
 
 protected:
 		
@@ -75,7 +79,6 @@ double PerturbationGrid::xAccel(const double xPosition, const double yPosition) 
 	double j{pos2Index(xPosition)}, i{pos2Index(yPosition)};
 	int i0{floorInt(i)}, j0{floorInt(j)}, i1{ceilInt(i)}, j1{ceilInt(j)};
 	double accel_i0_j0{xAccel(i0, j0)}, accel_i1_j0{xAccel(i1, j0)}, accel_i0_j1{xAccel(i0, j1)}, accel_i1_j1{xAccel(i1, j1)};
-
 	return accel_i0_j0*(i1-i)*(j1-j) + accel_i1_j0*(i-i0)*(j1-j) + accel_i0_j1*(i1-i)*(j-j0) + accel_i1_j1*(i-i0)*(j-j0); //linear interpolation 
 }
 
@@ -100,4 +103,23 @@ std::valarray<double> PerturbationGrid::perturbationAccels(const Bodies & ptle) 
 	return accels;
 }
  
+double PerturbationGrid::potential(const double xPosition, const double yPosition) const 
+{
+	if (!checkOnGrid(xPosition, yPosition)) {return 0;}
+	double j{pos2Index(xPosition)}, i{pos2Index(yPosition)};
+	int i0{floorInt(i)}, j0{floorInt(j)}, i1{ceilInt(i)}, j1{ceilInt(j)};
+	return m_potentialArray(i0,j0) * (i1-i) * (j1-j) + m_potentialArray(i1, j0) * (i-i0) * (j1-j) 
+	+ m_potentialArray(i0, j1) * (i1-i) * (j-j0) + m_potentialArray(i1, j1) * (i-i0) * (j-j0); 
+}
+
+std::valarray<double> PerturbationGrid::potential(const Bodies & ptle) const {
+	std::valarray<double> pot(ptle.n);
+
+	for (int i = 0; i < ptle.n; ++i) {
+		pot[i] = potential(ptle.xy[2*i], ptle.xy[2*i+1]);
+	}
+	return pot; 
+}
+
+
 #endif

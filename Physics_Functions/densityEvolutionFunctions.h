@@ -18,7 +18,8 @@ void plottingPerturbations();
 void coefficentEvolution();
 
 void diskKicking();
-void density2D(double littleSigma, double radius, int angHarmonic);
+void density2DKalnajs(double littleSigma, double radius, int angHarmonic);
+void density2DGaussian(double littleSigma, double radius, int angHarmonic);
 
 void energyEvolution(const std::string & energyFilename);
 
@@ -27,5 +28,9 @@ void energyEvolution(const std::string & energyFilename);
 
 void generatingSpiralBF(const std::string & dir, const double innerTaper, const double outerTaper);
 void diskKickingLGEnergy(const std::string & energyFilename);
+
+// BF Comparison Functions //
+
+void comparisonDensityEvolution();
 
 #endif

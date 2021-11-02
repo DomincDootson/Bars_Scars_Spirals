@@ -29,6 +29,15 @@ std::string kernelName(std::string dir, std::string stem, int Kka, double Rka, i
 	return dir + "/" + stem + "_" + std::to_string(Kka) + "_" + std::to_string((int) round(Rka)) + "_" + std::to_string(m2) + ".out";
 }
 
+
+void barGrowthRate(const std::string & filename, double timeScale) {
+	std::ofstream out(filename);
+	out << 100 << '\n';
+	double step{timeScale/100};
+	for (double time = 0; time < timeScale; time += step) {out << time << " " << pow(sin((time /timeScale)*0.5*M_PI),2) << '\n';}
+	out.close();
+}
+
 void kalnajsBarTest() {
 
 
@@ -104,14 +113,64 @@ void kalnajBasisFunctionsVaryingK()
 	out.close();
 }
 
-std::string evolutionFileName(std::string dir, double omega0)
+std::string evolutionFileName(std::string dir, double omega0, bool isSelfConsistent = true)
 {
-	return dir + "/evolution" +std::to_string((int) round(100*omega0)) + ".csv";
+	std::string filename = dir + "/evolution"; 
+
+	if (!isSelfConsistent){filename += "Test";}
+
+	filename += std::to_string((int) round(100*omega0)) + ".csv";
+
+	return filename;
 }
 
-std::string coeffFileName(std::string dir, double omega0)
+std::string coeffFileName(std::string dir, double omega0, bool isSelfConsistent = true)
 {
-	return dir + "/coeff" +std::to_string((int) round(100*omega0)) + ".csv";		
+	std::string filename = dir + "/coeff";
+	if (!isSelfConsistent) {filename += "Test";}
+
+	filename += std::to_string((int) round(100*omega0)) + ".csv";		
+	return filename;
+}
+Eigen::VectorXcd kalnajsResolving(double radius = 0, int nMax = 10) 
+{
+	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(nMax+1); coeff(0) = 0.01; 
+	return coeff;
+}
+
+void kalnajsTorque(int nMax) {
+	double barRadius{2}, timeStep{0.25};
+	int numbTimeSteps{800}; 
+
+	std::string kernel1 = "Kernels/Kalnajs100.out";
+	 
+	ActionAngleBasisContainer test("Kalnajs/Kalnajs_4_20", "Kalnajs", nMax, 2, 5, 101, 20);
+	Mestel DF(1,1, .35);
+
+	VolterraSolver solver1(nMax, 2, numbTimeSteps, timeStep);
+	solver1.generateKernel(kernel1, DF, test);
+	solver1.saveKernelForPython("Plotting/kernel.csv");
+	
+	// Produce kernel
+	std::vector<double> growthRate = {10};
+
+	std::vector<double> params{4, 20};
+	PotentialDensityPairContainer<KalnajsBasis> pd(params, nMax, 2);
+	
+	bool selfConsistent{true};
+	for (auto rate : growthRate) {
+		barGrowthRate("Bar2D/barSizeDiff.out", rate);
+
+		Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(nMax+1); coeff =  kalnajsResolving(barRadius, nMax);
+		Bar2D bar(coeff, .1, "Bar2D/barSizeDiff.out");
+
+		VolterraSolver solver(kernel1, nMax, 2, numbTimeSteps, timeStep);
+		solver.activeFraction(.45);
+		solver.barRotation(bar, "Plotting/KalnajsTorque/VaryingN/Coeff_" + std::to_string(nMax)+ ".csv", "Plotting/KalnajsTorque/VaryingN/Evolution_"+ std::to_string(nMax)+".csv", selfConsistent, false, true);
+		//solver.writeDensity2File("Plotting/GaussianTorque/densityEvolution.csv", pd);
+		//exit(0);
+	}
+
 }
 
 void barVaryingAngularSpeed()
@@ -123,9 +182,6 @@ void barVaryingAngularSpeed()
 
 	solver.activeFraction(.25);	
 	
-
-
-
 	Eigen::VectorXcd coef = Eigen::VectorXcd::Zero(11);
 	coef[0] = .1; 
 	
@@ -180,60 +236,237 @@ void barVaryingRka()
 	}
 }
 
+void barVaryingTurnOn() 
+{
+	double barRadius{2}, timeStep{0.25};
+	int nMax{10}, numbTimeSteps{800}; 
+
+	std::string kernel1 = "Kernels/Kalnajs100.out";
+	 
+	ActionAngleBasisContainer test("Kalnajs/Kalnajs_4_20", "Kalnajs", nMax, 2, 5, 101, 20);
+	Mestel DF(1,1, .35);
+
+	VolterraSolver solver1(nMax, 2, numbTimeSteps, timeStep);
+	//solver1.generateKernel(kernel1, DF, test);
+	
+	
+	// Produce kernel
+	std::vector<double> growthRate = {5, 10, 15, 20, 30};
+
+	std::vector<double> params{4, 20};
+	PotentialDensityPairContainer<KalnajsBasis> pd(params, nMax, 2);
+	
+	bool selfConsistent{false};
+	for (auto rate : growthRate) {
+		barGrowthRate("Bar2D/barSizeDiff.out", rate);
+
+		Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(nMax+1); coeff =  kalnajsResolving(barRadius, nMax);
+		Bar2D bar(coeff, .1, "Bar2D/barSizeDiff.out");
+
+		VolterraSolver solver(kernel1, nMax, 2, numbTimeSteps, timeStep);
+		solver.activeFraction(.4);
+		solver.barRotation(bar, coeffFileName("Plotting/KalnajsTorque", rate, selfConsistent), evolutionFileName("Plotting/KalnajsTorque", rate, selfConsistent), selfConsistent, false, true);
+		//solver.writeDensity2File("Plotting/GaussianTorque/densityEvolution.csv", pd);
+		//exit(0);
+	}
+} 
+
+void barVaryingActiveFraction() {
+	double barRadius{2}, timeStep{0.25};
+	int nMax{10}, numbTimeSteps{2*800}; 
+
+	std::string kernel1 = "Kernels/Kalnajs100.out";
+	 
+	ActionAngleBasisContainer test("Kalnajs/Kalnajs_4_20", "Kalnajs", nMax, 2, 5, 101, 20);
+	Mestel DF(1,1, .35);
+
+	VolterraSolver solver1(nMax, 2, numbTimeSteps, timeStep);
+	//solver1.generateKernel(kernel1, DF, test);
+	
+	
+	// Produce kernel
+	std::vector<double> activeFractions = {.40, .42, .44, .46, .48, .5};
+
+	std::vector<double> params{static_cast<double>(nMax), 4, 20};
+	PotentialDensityPairContainer<KalnajsBasis> pd(params, nMax, 2);
+	
+	bool selfConsistent{true};
+	for (auto xi : activeFractions) {
+		barGrowthRate("Bar2D/barSizeDiff.out", 5);
+
+		Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(nMax+1); coeff =  kalnajsResolving(barRadius, nMax);
+		Bar2D bar(coeff, .1, "Bar2D/barSizeDiff.out");
+
+		VolterraSolver solver(kernel1, nMax, 2, numbTimeSteps, timeStep);
+		solver.activeFraction(xi);
+		solver.barRotation(bar, coeffFileName("Plotting/KalnajsTorque", xi, selfConsistent), evolutionFileName("Plotting/KalnajsTorque", xi, selfConsistent), selfConsistent, false, true);
+		//solver.writeDensity2File("Plotting/GaussianTorque/densityEvolution.csv", pd);
+		//exit(0);
+	}
+}
+
+void longTermEvolution() {
+	double barRadius{2}, timeStep{0.25};
+	int nMax{10}, numbTimeSteps{2*800}; 
+
+	std::string kernel1 = "Kernels/Kalnajs100.out";
+
+	VolterraSolver solver(kernel1, nMax, 2, numbTimeSteps, timeStep);
+	solver.activeFraction(.4);
+
+	Bar2D bar(kalnajsResolving(2), .1, "Bar2D/barSizeDiff.out");
+	std::cout << bar.torque(solver.longTimeCoeff(bar.barCoeff(), false)) << '\n'; 
+	std::cout << bar.torque(solver.longTimeCoeff(bar.barCoeff(), true)) << '\n'; 
+}
+
+void kalnajsKernelsDiffTemp()
+{
+	double timeStep{0.25};
+	int nMax{10}, numbTimeSteps{800};
+
+	std::vector sigmas = {.35, .45};
+	ActionAngleBasisContainer test("Kalnajs/Kalnajs_4_20", "Kalnajs", nMax, 2, 5, 101, 20);
+
+	for (auto it = sigmas.begin(); it != sigmas.end(); ++it) { 
+		Mestel DF(1, 1, *it);
+		
+		VolterraSolver solver(nMax, 2, numbTimeSteps, timeStep);
+
+		std::string kernel = "Kernels/Kalnajs_2_" + std::to_string((int) round(100*(*it))) + ".out";
+		//solver.generateKernel(kernel, DF, test); 
+	}
+
+	bool selfConsistent{true};
+	for (auto it: sigmas) {
+		std::string kernel = "Kernels/Kalnajs_2_" + std::to_string((int) round(100*(it))) + ".out";
+		VolterraSolver solver(kernel, nMax, 2, numbTimeSteps, timeStep);
+		solver.activeFraction(.4);
+
+		Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(nMax+1); coeff =  kalnajsResolving();
+		Bar2D bar(coeff, .1, "Bar2D/barSize.out");
+ 
+		solver.barRotation(bar, coeffFileName("Plotting/KalnajsTorque/DiffTemp", it, selfConsistent), evolutionFileName("Plotting/KalnajsTorque/DiffTemp", it, selfConsistent), selfConsistent, false, true);
+	}
+}
+
 
 // Gaussian Bar //
 
-Eigen::VectorXcd gaussianResolving(const double radius)
+Eigen::VectorXcd gaussianResolving(double radius = 2, int nMax = 80)
 {
-	int nMax{24};
-	std::vector<double> params{static_cast<double>(nMax), .5, 15};
-	PotentialDensityPairContainer<GaussianLogBasis> basisFunctions(params, nMax, 2);
+	std::vector<double> params{static_cast<double>(nMax), .15, 15};
+	PotentialDensityPairContainer<GaussianLogBasis> pd(params, nMax, 2);
 
-	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(nMax+1);
-
-	for (int i = 0; i <= nMax; ++i){
-		coeff(i) = basisFunctions.potential(radius, i);
+	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(pd.maxRadialIndex() + 1);
+	for (int i = 0; i < pd.maxRadialIndex() + 1; ++i){
+		coeff(i) = 0.01*pd.potential(radius, i);
 	}
-	coeff = -(basisFunctions.scriptE()).inverse()*coeff;
-
-	// The following code save the reconstruciton of the density and the potential 
-	/*std::vector<double> radii;
-	for (double r = .1; r<5; r += .01){radii.push_back(r);}
-
-	std::vector<double> density =  basisFunctions.oneDdensity(radii, coeff);
-	std::vector<double> potential =  basisFunctions.oneDpotential(radii, coeff);
-
-	std::ofstream out("Plotting/density.csv");
-	for (int i = 1; i < density.size(); ++i){
-		out << radii[i] << ',' <<  density[i] <<','<< potential[i] << '\n';
-	}
-
-	Eigen::ArrayXXd density = basisFunctions.densityArrayReal(coeff, 500, 5);
-	std::ofstream out("Plotting/density2d.csv");
-	for (int i = 0; i < density.rows(); ++i)
-	{
-		for (int j = 0; j < density.cols(); ++j)
-		{
-			if (j != density.cols()-1){
-				out << density(i,j) << ',';
-			}
-			else {out << density(i,j) << '\n';}
-		}
-	}*/ 
-
-	return coeff;
+	return - (pd.scriptE()).inverse() * coeff;
 }
+
+Eigen::VectorXcd kalnajsResolving()
+{
+	int nMax{10};
+	std::vector<double> params{4, 20};
+	PotentialDensityPairContainer<KalnajsBasis> pd(params, nMax, 2);
+
+	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(pd.maxRadialIndex() + 1);
+	for (int i = 0; i < pd.maxRadialIndex() + 1; ++i){
+		coeff(i) = 0.01*pd.potential(2.06271, i);
+	}
+	return - (pd.scriptE()).inverse() * coeff;
+}
+
 
 void gaussianBarEvolution(){
-	double barRadius{2}, timeStep{0.01};
-	int nMax{24}, numbTimeSteps{2000};
-	std::string kernelName{"Kernels/GaussianLog_2.out"};
+	double barRadius{1.977}, timeStep{0.25}, angSpeed{.1};
+	int nMax{50}, numbTimeSteps{200};
+	bool selfConsistent{false};
+	
+	Bar2D barCold(gaussianResolving(barRadius), angSpeed, "Bar2D/barSize.out");
+	VolterraSolver solverCold( "GaussianLog_Cold.out", nMax, 2, numbTimeSteps, timeStep);
+	solverCold.activeFraction(.25);
+	solverCold.barRotation(barCold, "Plotting/barCoefficents.csv", "Plotting/barEvolutionCold_Test.csv", selfConsistent, false);
 
-	Bar2D bar(gaussianResolving(barRadius), 1/barRadius);
-	VolterraSolver solver( kernelName, nMax, 2, numbTimeSteps, timeStep);
+	Bar2D barMed(gaussianResolving(barRadius), angSpeed, "Bar2D/barSize.out");
+	VolterraSolver solverMed( "GaussianLog_Med.out", nMax, 2, numbTimeSteps, timeStep);
+	solverMed.activeFraction(.25);
+	solverMed.barRotation(barMed, "Plotting/barCoefficents.csv", "Plotting/barEvolutionMed_Test.csv", selfConsistent, false);
 
-	solver.barRotation(bar, "Plotting/barCoefficents.csv", "Plotting/barEvolution.csv", false, false);
+	Bar2D barWarm(gaussianResolving(barRadius), angSpeed, "Bar2D/barSize.out");
+	VolterraSolver solverWarm( "GaussianLog_Warm.out", nMax, 2, numbTimeSteps, timeStep);
+	solverWarm.activeFraction(.25);
+	solverWarm.barRotation(barWarm, "Plotting/barCoefficents.csv", "Plotting/barEvolutionWarm_Test.csv", selfConsistent, false);
+}
+
+void gaussianKernelsDiffTemp()
+{
+	double barRadius{2}, timeStep{0.1};
+	int nMax{24}, numbTimeSteps{500};
+
+	std::vector sigmas = {.35, .45};
+	ActionAngleBasisContainer test("GaussianLog", "GaussianLog", 24, 2, 10, 301, 20);
+
+	for (auto it = sigmas.begin(); it != sigmas.end(); ++it) { 
+		Mestel DF(1, 1, *it);
+		
+		VolterraSolver solver(24, 2, numbTimeSteps, timeStep);
+
+		std::string kernel = "Kernels/GaussianLog_2_" + std::to_string((int) round(100*(*it))) + ".out";
+		solver.generateKernel(kernel, DF, test); 
+	}
+}
+
+void gaussianEvolutionDiffTemp() {
+	double barRadius{2}, timeStep{0.1};
+	int nMax{24}, numbTimeSteps{500};
+
+	std::vector sigmas = {.35, .45};
+
+	for (auto it = sigmas.begin(); it != sigmas.end(); ++it) { 
+		std::string kernel = "Kernels/GaussianLog_2_" + std::to_string((int) round(100*(*it))) + ".out";
+
+		Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(24+1); coeff =  gaussianResolving();
+		Bar2D bar(coeff, .1, "Bar2D/barSize.out");
+ 
+
+		VolterraSolver solver(kernel, 24, 2, 500, 0.1);
+		solver.activeFraction(.25);
+		solver.barRotation(bar, coeffFileName("Plotting/GaussianTorque", *it), evolutionFileName("Plotting/GaussianTorque", *it), false, false, true);
+	}
+}
+
+void gaussianBarDiffGrowthRate() {
+	double barRadius{2}, timeStep{0.25};
+	int nMax{80}, numbTimeSteps{400};
+
+	//ActionAngleBasisContainer test("GaussianLog", "GaussianLog", nMax, 2, 7, 251, 20);
+	//Mestel DF(1,1, .35);
+
+	//VolterraSolver solver1(nMax, 2, numbTimeSteps, timeStep);
+	std::string kernel1 = "Kernels/Gaussian100.out";
+	//solver1.generateKernel(kernel1, DF, test);
+
+
+	// Produce kernel
+	std::vector<double> growthRate = {5, 10, 15, 20, 30};
+
+	std::vector<double> params{static_cast<double>(nMax), .15, 15};
+	PotentialDensityPairContainer<GaussianLogBasis> pd(params, nMax, 2);
+	
+	for (auto rate : growthRate) {
+		barGrowthRate("Bar2D/barSizeDiff.out", rate);
+
+		Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(nMax+1); coeff =  gaussianResolving(barRadius, nMax);
+		Bar2D bar(coeff, .1, "Bar2D/barSizeDiff.out");
+
+		VolterraSolver solver(kernel1, nMax, 2, numbTimeSteps, timeStep);
+		solver.activeFraction(.25);
+		solver.barRotation(bar, coeffFileName("Plotting/GaussianTorque", rate), evolutionFileName("Plotting/GaussianTorque", rate), false, false, true);
+		//solver.writeDensity2File("Plotting/GaussianTorque/densityEvolution.csv", pd);
+		//exit(0);
+	}
 }
 
 
-
+ 

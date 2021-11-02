@@ -160,24 +160,19 @@ def densityAnimation(littleSigma, radius, timestep = 0.25):
 	ani = animation.ArtistAnimation(fig, ims, interval=30, blit=True)
 	plt.show()
 
-
-'''test = EnergyEvolutionData("KalnajsEnergyEvolutionTest.csv")
-selfConsistent = EnergyEvolutionData("KalnajsEnergyEvolution.csv")
-densityAtMaxEnergy(selfConsistent, test, [1.8,2,2.7])
-'''
-
-
 def densityAnimation2D(littleSigma, radius, angHarmonic):
-	flatternedDensity = list(readingInRealCSV(twoDdensityName(littleSigma, radius, angHarmonic)))
+	flatternedDensity = list(readingInRealCSV(twoDdensityName(littleSigma, radius, angHarmonic, False)))
 	nRows, nCols = int(sqrt(np.size(flatternedDensity[0]))), int(sqrt(np.size(flatternedDensity[0]))) # Assume square
 
 
 	density2D = [np.reshape(array[:nRows*nCols], (nRows, nCols,)) for array in flatternedDensity] 	
 	maxValues, minValues = [np.amax(each) for each in density2D],  [np.amin(each) for each in density2D]
-		
+	
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
 	
 	Writer = animation.writers['ffmpeg']
-	writer = Writer(fps=300, metadata=dict(artist='Me'))
+	writer = Writer(fps=20, metadata=dict(artist='Me'))
 
 	fig, axs = plt.subplots(1,1)
 	ims = []
@@ -187,25 +182,27 @@ def densityAnimation2D(littleSigma, radius, angHarmonic):
 	spacing = 20/(nCols-1)
 	centre = (nCols-1)*0.5
 
-	x = np.arange(-10,10+spacing, spacing)
-	y = np.arange(-10,10+spacing, spacing)
+	x = np.arange(-5,5+spacing, spacing)
+	y = np.arange(-5,5+spacing, spacing)
 	XX, YY = np.meshgrid(x, y)
 	
 	#axs.xaxis.set_animated(True)
-
+	xCir, yCir = [radius*cos(theta) for theta in np.linspace(0,2*pi)], [radius*sin(theta) for theta in np.linspace(0,2*pi)]
+	#plt.plot(xCir, yCir, color = 'firebrick')
 	for time in range(len(density2D)):
 		#axis,  = axs.contour(XX, YY, density2D[time], 6, colors = 'k')
-		contourFilled = axs.imshow(density2D[time], vmin = min(minValues) , vmax = max(maxValues), extent = (-10,10,-10,10,))
-		title = fig.text(.4,.9,(r"Time: " +str(round(50*time/len(density2D),2))))
+		contourFilled = axs.imshow(density2D[time], vmin = min(minValues) , vmax = max(maxValues), extent = (-5,5,-5,5,))
+		title = fig.text(.4,.9,(r"Time: " +str(round(8*time/len(density2D), 1))) + r"$T_{dyn}$")
 		ims.append([contourFilled, title])
 
 
-	fig.subplots_adjust(right=0.8)
-	cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
-	cbar = plt.colorbar(contourFilled, cax=cbar_ax)
+	#fig.subplots_adjust(right=0.8)
+	#cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+	#cbar = plt.colorbar(contourFilled, cax=cbar_ax)
 
 	ani = animation.ArtistAnimation(fig, ims, interval=30)
-	plt.show()
+	#plt.show()
+	ani.save("GreensFunctionUnstable.mp4", writer = writer)
 
 
 

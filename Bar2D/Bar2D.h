@@ -18,7 +18,8 @@ public:
 	m_momentOfInertia{1},
 	m_fourierHarmonic{2},
 	m_scriptE{Eigen::MatrixXd::Identity(m_expansionCoeff.size(), m_expansionCoeff.size())}
-	{v_theta.push_back(0); v_omega.push_back(omega0); v_alpha.push_back(0);}
+	{v_theta.push_back(0); v_omega.push_back(omega0); v_alpha.push_back(0);
+		std::cout << "Please note the bar is not evolving (Might cause seg fault).\n\n";}
 
 	Bar2D(const Eigen::VectorXcd expansionCoeff, const double omega0, const std::string growthFilename) :
 	m_expansionCoeff{expansionCoeff},
@@ -32,8 +33,10 @@ public:
 	~Bar2D() {} 
 
 	Eigen::VectorXcd barCoeff(const double time = -1) const {return barSize(time) * m_expansionCoeff;}
-
+	double patternSpeed() const {return v_omega.back();}
+	double angle() const {return v_theta.back();}
 	
+	double torque(const Eigen::VectorXcd &diskCoeff, const double time = -1) const;
 
 	void drift(const double timeStep, const double freelyRotating);
 	void kick(const double timeStep, const Eigen::VectorXcd &diskCoeff, const double freelyRotating, const double time = -1);
@@ -52,7 +55,7 @@ private:
 	const int m_fourierHarmonic;  
 	const Eigen::MatrixXd m_scriptE; 
 
-	double torque(const Eigen::VectorXcd &diskCoeff, const double time = -1) const;
+	
 
 	int findTimeIndex(const double time) const;
 	double barSize(const double time) const;
@@ -74,8 +77,7 @@ double Bar2D::torque(const Eigen::VectorXcd &diskCoeff, const double time) const
 	std::complex<double> secondTerm{ diskCoeff.dot(m_scriptE *  m_expansionCoeff) };   // has the conjugation built in
 	std::complex<double> unitComplex(0,1);
 	double l{ (double) m_fourierHarmonic};
-	
-	return barSize(time) * std::real(unitComplex * ((firstTerm - secondTerm) * l)); 
+	return -barSize(time) * std::real(unitComplex * ((firstTerm - secondTerm) * l)); // The negative sign comes from force  = - grad(phi)
 
 }
 
@@ -90,8 +92,9 @@ void Bar2D::drift(const double timeStep, const double freelyRotating){
 
 void Bar2D::kick(const double timeStep, const Eigen::VectorXcd &diskCoeff, const double freelyRotating, const double time){
 	double oldAlpha{v_alpha.back()}, omega{v_omega.back()};
-	double alpha = torque(diskCoeff, time)/m_momentOfInertia; v_alpha.push_back(alpha); 
-	
+
+	double alpha = torque(diskCoeff, time)/m_momentOfInertia; 
+	v_alpha.push_back(alpha); 
 	omega += freelyRotating * 0.5 * (oldAlpha + v_alpha.back()) * timeStep;  
 	v_omega.push_back(omega);
 }

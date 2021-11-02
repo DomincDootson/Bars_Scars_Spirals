@@ -63,11 +63,6 @@ public:
 	double operator()(int np, int m1, int i, int j) const {return m_basisContainer[(m_maxFourierHarmonic + m1) + (2*m_maxFourierHarmonic+1) * np](i,j);}
 	Eigen::MatrixXd operator()(int np, int m1) const {return m_basisContainer[(m_maxFourierHarmonic + m1) + (2*m_maxFourierHarmonic+1) * np].get();}
 
-	template <class T>
-	Eigen::MatrixXd omega1Grid(const T & distFunction) const;
-	template <class T>
-	Eigen::MatrixXd omega2Grid(const T & distFunction) const;
-
 	Eigen::MatrixXd inverseScriptE() const {return m_scriptE.inverse();};
 
 
@@ -116,37 +111,6 @@ void ActionAngleBasisContainer::nonLinearRadii(double rApo, double rPer)
 }
 
 template <class T>
-Eigen::MatrixXd ActionAngleBasisContainer::omega1Grid(const T & distFunction) const // Calculates a grid of omega1 to read off
-{
-	Eigen::MatrixXd grid = Eigen::MatrixXd::Zero(size(0), size(1));
-	for (int i = 0; i < size(0); ++i)
-		{
-			for (int j = 1; j < i; ++j)
-			{
-				double rApo{i*m_spacingSize}, rPer{j*m_spacingSize};
-				grid(i,j) = distFunction.omega1(rApo, rPer);
-			}
-		}
-	return grid;
-}
-
-template <class T>
-Eigen::MatrixXd ActionAngleBasisContainer::omega2Grid(const T & distFunction) const // Calculates a grid of omega2 to read off
-{
-	Eigen::MatrixXd grid = Eigen::MatrixXd::Zero(size(0), size(1));
-	for (int i = 0; i < size(0); ++i)
-		{
-			for (int j = 1; j < i; ++j)
-			{
-				double rApo{i*m_spacingSize}, rPer{j*m_spacingSize};
-				grid(i,j) = distFunction.omega2(rApo, rPer);
-			}
-		}
-	return grid;
-}
-
-
-template <class T>
 void ActionAngleBasisContainer::theta1Vector(T & df, std::vector<double> & radii, double om1) // Can figure out own spacing form rApo rPer and theta1.size()
 {
 	double rPer{radii.front()}, rApo{radii.back()};
@@ -186,8 +150,8 @@ void ActionAngleBasisContainer::checkParams(int maxRadialIndex, int fourierHarmo
 
 template <class Tdf>
 void ActionAngleBasisContainer::omegaGridSetUp(const Tdf & df) {
-	m_om1Grid = omega1Grid(df); 
-	m_om2Grid = omega2Grid(df);	
+	m_om1Grid = df.omega1Grid(m_sizeArray, m_spacingSize);//omega1Grid(df); 
+	m_om2Grid = df.omega2Grid(m_sizeArray, m_spacingSize);//omega2Grid(df);	
 }
 
 template <class Tdf>

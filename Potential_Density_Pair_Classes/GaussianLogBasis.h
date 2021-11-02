@@ -13,7 +13,7 @@ public:
 		m_maxIndex{static_cast<int>(params[0])}, m_innerRadius{params[1]}, m_outerRadius{params[2]},
 		m_r0{r0()}, m_sigma{sigma()}
 		{
-			//std::cout << m_radialIndex << " " << m_r0 << " " << m_sigma << '\n';
+			std::cout << m_radialIndex << " " << m_r0 << " " << m_sigma << '\n';
 		} 
 	
 	virtual ~GaussianLogBasis() {}
@@ -45,11 +45,13 @@ double GaussianLogBasis::sigma() const
 
 double GaussianLogBasis::potential(double radius) const
 {
+	if ((abs(radius-m_r0)/m_sigma > 5) || radius ==0) {return 0;}
 	return m_sigma*m_sigma*exp(-pow(((radius-m_r0)/m_sigma),2)); 
 }
 
 double GaussianLogBasis::density(double radius) const
 {
+	if ((abs(radius-m_r0)/m_sigma > 5) || radius ==0) {return 0;}
 	return potential(radius) *
 	(4*pow(radius,4) - 4*pow(radius*m_sigma,2) - pow(m_fourierHarmonic*m_sigma*m_sigma,2) +2*radius*m_r0*(-4*radius*radius +m_sigma*m_sigma+2*radius*m_r0))
 	/(4*3.14159 * pow(radius*m_sigma*m_sigma,2));
