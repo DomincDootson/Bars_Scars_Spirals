@@ -349,7 +349,6 @@ void gaussianRepresentation (int nMax = 24, int index = 15) {
  	coefG = PD.potentialFitting(potentialG, 20);
  	savePerturbation("Physics_Functions/gaussianPertGaussianRep.csv", coefG);
  	saveVector("Plotting/BF_Comparison/gaussianPerturbationG.csv", PD.oneDpotential(radiiVector(), coefG));
-	
 }
 
 void kalnajsRepresentation (int nMax = 24) {

@@ -14,7 +14,8 @@ int main()
 	//generatingKalnajsKernels(2);
 	//generatingKalnajsBF(2);
 	//testingBarTorque();
-	testingFitting();
+	//testingFitting();
+	saveKalnajs();
 	return 0;
   // Can we put in some tests to make sure that the read in kernel that has the correct params
 }

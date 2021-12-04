@@ -36,5 +36,37 @@ def greensFunctionEvolution():
 
 	plt.show()
 
+def kalnajsPlots():
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
 
-greensFunctionEvolution()
+	den, pot = readingInRealCSV("KalnajsTesting/kalnajsDensity.csv"), readingInRealCSV("KalnajsTesting/kalnajsPotential.csv")
+	r = np.linspace(0,1, np.shape(den)[0])
+
+	labelP, labelD = [r"$\mathcal{U}^{2}_{0}(r)$", r"$\mathcal{U}^{2}_{1}(r)$", r"$\mathcal{U}^{2}_{2}(r)$"], [r"$\mathcal{D}^{2}_{0}(r)$", r"$\mathcal{D}^{2}_{1}(r)$", r"$\mathcal{D}^{2}_{2}(r)$"]
+	colorP, colorD = ["cornflowerblue", "#1f77b4", "midnightblue"], ["firebrick", "indianred","lightcoral"]
+
+	fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = True)
+
+	for i in range(3):
+		axs[0].plot(r, pot[:,i], label = labelP[i], color = colorP[i])
+		axs[1].plot(r, den[:,i], label = labelD[i], color = colorD[i])
+	
+
+
+	axs[0].legend(loc = "upper left", fontsize = 14)
+	axs[1].legend(loc = "lower left", fontsize = 14)
+
+	axs[0].set_ylabel("Potential", fontsize = 14)
+	axs[1].set_ylabel("Density", fontsize = 14)
+
+	axs[1].set_xlabel("Radius", fontsize = 14)
+	
+	axs[1].set_xticks([0, 0.25, 0.5, 0.75, 1])
+	axs[1].set_xticklabels(["0", r"$r_{ka}/4$", r"$r_{ka}/2$", r"$3r_{ka}/4$", r"$r_{ka}$"]) 
+
+	plt.show()
+
+
+kalnajsPlots()
+#greensFunctionEvolution()

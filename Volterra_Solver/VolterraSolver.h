@@ -34,6 +34,7 @@ public:
 	void generateKernel(const std::string fileName, const Tdf & df, const ActionAngleBasisContainer & basisFunc);// Come up with some standard way of naming kernels
 	
 	void solveVolterraEquation(const std::string & perturbationFilename, const bool isSelfConsistent);
+	void solveVolterraEquationDecoupled(const std::string & perturbationFilename, const bool isSelfConsistent, const int index);
 	void coefficentEvolution(const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent = true);
 	
 	template <class Tbf>
@@ -41,6 +42,9 @@ public:
 
 	template <class Tbf>
 	std::vector<double> energyEvolution(const Tbf & bf, const std::string & perturbationFilename, const bool isSelfConsistent = true);
+
+	template <class Tbf>
+	std::vector<double> energyEvolutionDecoupled(const Tbf & bf, const std::string & perturbationFilename, const int index, const bool isSelfConsistent = true);
 
 	void barRotation(Bar2D & bar, const std::string & outFilename, const std::string & evolutionFilename, const bool isSelfConsistent = true, const bool isFreelyRotating = true, const bool isEvolving = false);
 	template <class Tbf> 
@@ -60,6 +64,8 @@ public:
 	void saveResponseCoeff(const std::string & filename) const {m_responseCoef.write2File(filename, 1);}
 	void saveKernelForPython(const std::string & filename) const {m_kernels.saveForPython(filename);} 
 
+	void kernelDecouple(const int index, const bool isZero, const bool isDiag) {m_kernels.kernelDecouple(index, isZero, isDiag);}
+
 private:
 	const int m_maxRadialIndex, m_fourierHarmonic, m_numbTimeSteps, m_skip;
 	const double m_timeStep;
@@ -69,6 +75,7 @@ private:
 	ExpansionCoeff m_responseCoef, m_perturbationCoef;
 
 	Eigen::VectorXcd timeIntegration(const int timeIndex, const double includeSelfConsistent) const;	
+	Eigen::VectorXcd timeIntegrationDecoupled(const int timeIndex, const double includeSelfConsistent,const int index) const;
 	
 	void printTimeIndex(const int timeIndex) {if (timeIndex % (m_skip*10) == 0) {std::cout << "Time step: " << timeIndex << '\n';}}
 	double selfConsistentDouble(bool isSelfConsistent) {if (isSelfConsistent) {return 1;} else {return 0;}}
@@ -94,6 +101,19 @@ void VolterraSolver::solveVolterraEquation(const std::string & perturbationFilen
 	}
 }
 
+void VolterraSolver::solveVolterraEquationDecoupled(const std::string & perturbationFilename, const bool isSelfConsistent, const int index)
+{
+	std::cout << "We are doing this\n";
+	m_perturbationCoef.coefficentReadIn(perturbationFilename);
+	Eigen::MatrixXcd identity{Eigen::MatrixXcd::Identity(m_maxRadialIndex+1, m_maxRadialIndex+1)};
+	double includeSelfConsistent{selfConsistentDouble(isSelfConsistent)};
+	for (int timeIndex = 1; timeIndex < m_numbTimeSteps; ++timeIndex){
+		printTimeIndex(timeIndex);
+		m_responseCoef(timeIndex) = m_responseCoef(0) + ((identity - includeSelfConsistent*0.5*m_kernels(timeIndex)).inverse()) 
+									* timeIntegrationDecoupled(timeIndex, includeSelfConsistent, index);
+	}
+}
+
 Eigen::VectorXcd VolterraSolver::timeIntegration(const int timeIndex, const double includeSelfConsistent) const // Should we make this a memeber function? 
 {
 	Eigen::VectorXcd integral = 0.5 * m_timeStep * m_kernels(timeIndex) * (m_perturbationCoef(0) + includeSelfConsistent*m_responseCoef(0));
@@ -103,6 +123,17 @@ Eigen::VectorXcd VolterraSolver::timeIntegration(const int timeIndex, const doub
 	integral += 0.5 * m_timeStep * m_kernels(0) * m_perturbationCoef(timeIndex);	
 	return integral; 
 }
+
+Eigen::VectorXcd VolterraSolver::timeIntegrationDecoupled(const int timeIndex, const double includeSelfConsistent,const int index) const // Should we make this a memeber function? 
+{
+	Eigen::VectorXcd integral = 0.5 * m_timeStep * (m_kernels(timeIndex) * m_perturbationCoef(0) + includeSelfConsistent*m_kernels.kernelDecouple(timeIndex,index) *m_responseCoef(0));
+	for (int i = 1; i < (timeIndex); ++i){
+		integral += m_timeStep * (m_kernels(timeIndex - i) * m_perturbationCoef(i) + includeSelfConsistent*m_kernels.kernelDecouple(timeIndex - i,index)*m_responseCoef(i)); 
+	}
+	integral += 0.5 * m_timeStep * m_kernels(0) * m_perturbationCoef(timeIndex);	
+	return integral; 
+}
+
 
 void VolterraSolver::coefficentEvolution(const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent) 
 {
@@ -125,6 +156,11 @@ std::vector<double> VolterraSolver::energyEvolution(const Tbf & bf, const std::s
 	return m_responseCoef.energyEvolution(bf.scriptE());
 }
 
+template <class Tbf>
+std::vector<double> VolterraSolver::energyEvolutionDecoupled(const Tbf & bf, const std::string & perturbationFilename, const int index, const bool isSelfConsistent) {
+	solveVolterraEquationDecoupled(perturbationFilename, isSelfConsistent, index);
+	return m_responseCoef.energyEvolution(bf.scriptE());		
+}
 
 //This function could definitely be tydied up 
 void VolterraSolver::barRotation(Bar2D & bar, const std::string & outFilename, const std::string & evolutionFilename, const bool isSelfConsistent, const bool isFreelyRotating, const bool isEvolving)

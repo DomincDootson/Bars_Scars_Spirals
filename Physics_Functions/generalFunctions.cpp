@@ -133,37 +133,17 @@ void saveVector(const std::string & filename, const std::vector<double> & vec) {
 	out.close();
 }
 
-void testingFitting() {
-	std::vector<double> params{4, 20};
-	PotentialDensityPairContainer<KalnajsBasis> kalnajs(params, 10, 2);
-	std::complex<double> i(0,1);
+void saveKalnajs() {
+	std::ofstream outD("Plotting/KalnajsTesting/kalnajsDensity.csv");
+	std::ofstream outP("Plotting/KalnajsTesting/kalnajsPotential.csv");
 
- 	Eigen::VectorXcd coefG = Eigen::VectorXcd::Zero(10+1);
- 
- 	coefG(0) = 1;
+	std::vector<double> params{4, 1};
+	PotentialDensityPairContainer<KalnajsBasis> PD(params, 10, 2);	
 
-
- 	Eigen::ArrayXXcd pot = kalnajs.potentialArray(coefG, 1500, 20);
- 	
-	
- 	int nMax{24};
-	std::vector<double> params1{static_cast<double>(nMax), .15, 15};
- 	PotentialDensityPairContainer<GaussianLogBasis> pd(params1, nMax, 2);
-
- 	/*Eigen::VectorXcd coefG = Eigen::VectorXcd::Zero(nMax+1);
- 	coefG(10) = 1;
- 	coefG(15) = 2; */ 
-
- 	//Eigen::ArrayXXcd pot = pd.potentialArray(coefG, 1000, 20);
- 	Eigen::VectorXcd fitcoef = pd.potentialFitting(pot, 20);
-
- 	std::vector<double> radiiVector;
- 	for (int i = 1; i < 2000; ++i) {radiiVector.push_back(i*0.01);}
- 	saveVector("Plotting/fitGaussian.csv", pd.oneDpotential(radiiVector, fitcoef));
- 	saveVector("Plotting/trueKalnajs.csv", kalnajs.oneDpotential(radiiVector, coefG));
-	
- 	std::cout << fitcoef << '\n';
- 	
-
-
+	for (double r = 0; r <=1; r+=0.01) {
+		outP << PD.potential(r, 0) << ',' << PD.potential(r, 1) << ',' << PD.potential(r, 2) << '\n';
+		outD << PD.density(r, 0) << ',' << PD.density(r, 1) << ','  << PD.density(r, 2) << '\n';
+	}
+	outP.close();
+	outD.close(); 
 }

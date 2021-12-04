@@ -16,4 +16,6 @@ void generatingSpiralBFDiffTemp(int m2);
 
 void testingBarTorque();
 void testingFitting();
+
+void saveKalnajs(); 
 #endif

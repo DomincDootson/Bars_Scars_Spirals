@@ -35,10 +35,18 @@ data = -readingInComplexCSV("evolution.csv")
 plt.plot(np.absolute(data)[:,n])
 plt.show()
 '''
+fig, axs = plt.subplots(nrows=1, ncols=1)
 
-data = readingInRealCSV("fitGaussian.csv")
-#data = np.log(np.absolute(data))
-plt.plot(data)
-data = readingInRealCSV("trueKalnajs.csv")
-plt.plot(data)
+data = readingInRealOUT("Kalnaj_0.out")
+
+
+time = np.linspace(0,-80, np.shape(data)[0])
+
+axs.plot(time, data[:,0])
+axs.plot(time, data[:,1])
+
+axs.set_xlabel(r"$t-t'$")
+
+
+
 plt.show()

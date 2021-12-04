@@ -33,8 +33,8 @@ public:
 	double theta2(double radius, double rApo, double rPer, double omega2) const; // Note this is really theta2 - phi 
 	double theta1Deriv(double radius, double rApo, double rPer, double omega1) const;
 
-	Eigen::MatrixXd dFdEgrid(const double spacing, const Eigen::MatrixXd & om1) const;
-	Eigen::MatrixXd dFdJgrid(const double spacing, const Eigen::MatrixXd & om2) const; 
+	Eigen::MatrixXd dFdEgrid(const double spacing, const Eigen::MatrixXd & om1) const; // Note that this includes om1 
+	Eigen::MatrixXd dFdJgrid(const double spacing, const Eigen::MatrixXd & om2) const; // Note that this includes om2
 
 	Eigen::MatrixXd energyAngMomJacobain(const int size, const double spacing) const;
 

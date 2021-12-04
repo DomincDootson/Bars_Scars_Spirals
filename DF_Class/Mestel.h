@@ -8,8 +8,8 @@
 class Mestel : public DFClass
 {
 public:
-	Mestel(double vc = 1, double r0 = 1, double litteSigma = 0.3781, double xi = 1, 
-		double rInner = 1, double rOuter = 10, double nuTaper = 4, double muTaper = 5) : 
+	Mestel(double vc = 1, double r0 = 1, double litteSigma = 0.35, double xi = 1, 
+		double rInner = 1, double rOuter = 11.5, double nuTaper = 4, double muTaper = 5) : 
 	m_vc{vc}, m_r0{r0}, m_littleSigma{litteSigma}, m_q{pow(m_vc/m_littleSigma,2) - 1}, m_xi{xi}, 
 	m_rInner{rInner}, m_rOuter{rOuter}, m_nuTaper{nuTaper}, m_muTaper{muTaper}  {}
 	
