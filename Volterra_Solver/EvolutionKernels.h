@@ -10,7 +10,6 @@
 #include <Eigen/Dense>
 
 #include "../Action_Angle_Basis_Functions/ActionAngleBasisContainer.h"
-#include "VolterraSolver.h"
 
 class EvolutionKernels
 {
@@ -28,10 +27,15 @@ public:
 	void getVolterraParams(const int maxRadialIndex, const int fourierHarmonic, const int numbTimeStep, const double timeStep);
 
 	void saveForPython(const std::string & filename) const; 
+	void kernelWrite2File(const std::string & kernelFilename) const; 
 
 	void kernelDecouple(const int index, const bool isZero, const bool isDiag);
 	void kernelDecouple(const int time, const int index, const bool isZero, const bool isDiag);
 	Eigen::MatrixXcd kernelDecouple(const int time, const int index) const; 
+
+	int numbTimeSteps() const {return m_kernels.size();}
+	int numbBF() const {return m_maxRadialIndex;}
+	double timeStep() const {return m_timeStep;}
 
 private:
 	std::vector<Eigen::MatrixXcd> m_kernels;
@@ -46,8 +50,10 @@ private:
 
 	
 	void kernelReadIn(const std::string & kernelFilename);
+	void kernelSquareReadIn(const std::string & kernelFilename); 
+	void kernelDiagReadIn(const std::string & kernelFilename);
 	void evolutionParams(int maxRadialIndex, int fourierHarmonic, int numbTimeSteps, int maxFourierHarmonic, double timeStep, double spacing);
-	void kernelWrite2File(const std::string & kernelFilename) const; 
+	
 	
 	
 	std::complex<double> kernelElement(const int npRow, const int npCol, const ActionAngleBasisContainer & basisFunc, const double time) const;
@@ -75,6 +81,9 @@ void EvolutionKernels::gridSetUp(const Tdf & df, const ActionAngleBasisContainer
 
 	m_dfdEGrid = df.dFdEgrid(basisFunc.spacing(), m_om1Grid); 
 	m_dfdJGrid = df.dFdJgrid(basisFunc.spacing(), m_om2Grid); 	
+
+	//std::cout << m_dfdJGrid << '\n' << '\n';
+
 	m_elJacobian = df.energyAngMomJacobain(basisFunc.size(0), basisFunc.spacing());	
 }
 
@@ -194,7 +203,37 @@ void EvolutionKernels::kernelReadIn(const std::string & kernelFilename) // Needs
 	double timeStep, spacing; 
 	kernelIn >> maxRadialIndex >> fourierHarmonic >> numbTimeSteps >> maxFourierHarmonic >> timeStep >> spacing;
 	evolutionParams(maxRadialIndex, fourierHarmonic, numbTimeSteps, maxFourierHarmonic, timeStep, spacing);
-	double re{}, im{};
+	kernelIn.close();
+
+	if (maxFourierHarmonic ==0 && spacing == 0) {kernelDiagReadIn(kernelFilename);} // Diag kernel won't come from AA rep of BF 
+	else {kernelSquareReadIn(kernelFilename);}
+}
+
+
+void EvolutionKernels::kernelDiagReadIn(const std::string & kernelFilename) {
+	std::cout << "Reading in Diagonal Kernel\n";
+	std::ifstream kernelIn(kernelFilename);
+	int maxRadialIndex, fourierHarmonic, numbTimeSteps, maxFourierHarmonic;
+	double timeStep, spacing, re, im; 
+	kernelIn >> maxRadialIndex >> fourierHarmonic >> numbTimeSteps >> maxFourierHarmonic >> timeStep >> spacing;
+	std::complex<double> unitComplex(0,1);
+
+	for (int time = 0; time < numbTimeSteps; ++time){
+		m_kernels[time].resize(maxRadialIndex+1, maxRadialIndex+1);
+		m_kernels[time].setZero(); 
+		for (int i = 0; i <= maxRadialIndex; ++ i){
+			kernelIn >> re >> im;
+			m_kernels[time](i,i) = re + unitComplex*im;
+		}
+	} 
+	kernelIn.close();
+}
+
+void EvolutionKernels::kernelSquareReadIn(const std::string & kernelFilename) {
+	std::ifstream kernelIn(kernelFilename);
+	int maxRadialIndex, fourierHarmonic, numbTimeSteps, maxFourierHarmonic;
+	double timeStep, spacing, re, im; 
+	kernelIn >> maxRadialIndex >> fourierHarmonic >> numbTimeSteps >> maxFourierHarmonic >> timeStep >> spacing;
 	std::complex<double> unitComplex(0,1);
 
 	for (int time = 0; time < numbTimeSteps; ++time){
@@ -210,6 +249,7 @@ void EvolutionKernels::kernelReadIn(const std::string & kernelFilename) // Needs
 }
 
 
+
 void EvolutionKernels::saveForPython(const std::string & filename) const {
 	std::ofstream out(filename);
 	for (int i = 0; i < m_kernels[0].rows(); ++i) { 
@@ -217,7 +257,6 @@ void EvolutionKernels::saveForPython(const std::string & filename) const {
 			if (j == (m_kernels[0].cols()-1)) {out << m_kernels[0](i,j).imag() << '\n';}
 			else {out << m_kernels[0](i,j).imag() << ',';}
 		}
-
 	}
 }
 

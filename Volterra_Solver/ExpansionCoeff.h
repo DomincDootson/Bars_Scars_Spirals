@@ -46,12 +46,15 @@ public:
 	template <class Tbf>
 	void writeDensity2File(const std::string & outFilename, const Tbf & bf, const int skip) const; 
 	template <class Tbf>
-	void write2dDensity2File(const std::string & outFilename, const Tbf & bf, const int skip) const; 
+	void write2dDensity2File(const std::string & outFilename, const Tbf & bf, const int skip, const double rMax=10, const int nStep=201) const; 
+	template <class Tbf>
+	void write2dDensity2File(int timeIndex, const std::string & outFilename, const Tbf & bf, const double rMax=10, const int nStep=201) const; 
 	template <class Tbf>
 	void write2dPotential2File(const std::string & outFilename, const Tbf & bf, const int skip) const;
 
 
 	int nTimeStep() const {return m_coeff.size();}
+	void resizeVector(const int nTimeStep); // Please note that this leaves the vecotor at index = 0 unchaged. 
 
 private:
 	
@@ -193,12 +196,12 @@ void ExpansionCoeff::writeDensity2File(const std::string & outFilename, const Tb
 }
 
 template <class Tbf>
-void ExpansionCoeff::write2dDensity2File(const std::string & outFilename, const Tbf & bf, const int skip) const
+void ExpansionCoeff::write2dDensity2File(const std::string & outFilename, const Tbf & bf, const int skip, const double rMax, const int nStep) const
 {
 	std::ofstream out(outFilename);
-	for (int time = skip; time < m_coeff.size(); time += skip){ // We don't need time = 0
+	for (int time = 0; time < m_coeff.size(); time += skip){ 
 		if (time % (skip*10) == 0) {std::cout << "Outputting density for: " << time << '\n';}
-		Eigen::ArrayXXd density = bf.densityArrayReal(m_coeff[time], 201, 10); // I suppose this could always be make quicker by saving the individual arrays for each bf
+		Eigen::ArrayXXd density = bf.densityArrayReal(m_coeff[time], nStep, rMax); // I suppose this could always be make quicker by saving the individual arrays for each bf
 		outputArray(out, density);
 	}
 	std::cout << "Density evolution saved to: " << outFilename << '\n';
@@ -206,10 +209,22 @@ void ExpansionCoeff::write2dDensity2File(const std::string & outFilename, const 
 }
 
 template <class Tbf>
+void ExpansionCoeff::write2dDensity2File(int timeIndex, const std::string & outFilename, const Tbf & bf, const double rMax, const int nStep) const {
+	std::ofstream out(outFilename);
+	Eigen::ArrayXXd density = bf.densityArrayReal(m_coeff[timeIndex], nStep, rMax);;
+	outputArray(out, density);
+	out.close(); 
+
+	std::cout << "Density saved to: " << outFilename << '\n'; 
+}
+
+
+
+template <class Tbf>
 void ExpansionCoeff::write2dPotential2File(const std::string & outFilename, const Tbf & bf, const int skip) const
 {
 	std::ofstream out(outFilename);
-	for (int time = skip; time < m_coeff.size(); time += skip){ // We don't need time = 0
+	for (int time = 0; time < m_coeff.size(); time += skip){ 
 		if (time % (skip*10) == 0) {std::cout << "Outputting potential for: " << time << '\n';}
 		Eigen::ArrayXXd density = bf.potentialArrayReal(m_coeff[time], 201, 10); // I suppose this could always be make quicker by saving the individual arrays for each bf
 		outputArray(out, density);
@@ -217,5 +232,11 @@ void ExpansionCoeff::write2dPotential2File(const std::string & outFilename, cons
 	out.close();
 }
 
+
+void ExpansionCoeff::resizeVector(const int nTimeStep) {
+	auto maxRadialIndex{m_coeff[0].size()};
+	m_coeff.resize(nTimeStep); 
+	for (int i = 1; i < m_coeff.size(); ++i) {m_coeff[i] = Eigen::VectorXcd::Zero(maxRadialIndex);}
+}
 
 #endif

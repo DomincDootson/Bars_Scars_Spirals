@@ -32,6 +32,9 @@ public:
 	double angle() const {return m_bar.angle();}
 	double patternSpeed() const {return m_bar.patternSpeed();}
 
+	double corotatingX(const double x, const double y) const {return x * cos(angle()) + y * sin(angle());}
+	double corotatingY(const double x, const double y) const {return y * cos(angle()) - x * sin(angle());}
+
 	double corotatingPx(const double xdot, const double y) const {return xdot + m_bar.patternSpeed() * y;}
 	double corotatingPy(const double ydot, const double x) const {return ydot - m_bar.patternSpeed() * x;}
 

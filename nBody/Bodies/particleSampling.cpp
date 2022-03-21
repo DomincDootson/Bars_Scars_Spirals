@@ -9,11 +9,12 @@
 
 
 void cumulativeDensity(const Mestel & df){
-	std::ifstream inFile; inFile.open("Bodies/cumulativeDensity.out");
+	/*std::ifstream inFile; inFile.open("Bodies/cumulativeDensity.out"); // WE WANT TO PUT IN A WAY TO CHECK IF THE INFOMRATION OF ALREADY SAVED DF IS THE SAME AS THE ONE READ IN 
 	if (!inFile.good()){
 		inFile.close();
-		df.cumulativeDensity("Bodies/cumulativeDensity.out");}
-	else {inFile.close();}
+		df.cumulativeDensity("Bodies/cumulativeDensity.out");} 
+	else {inFile.close();}*/ 
+	df.cumulativeDensity("Bodies/cumulativeDensity.out");
 }
 
 
@@ -73,9 +74,11 @@ void writeSamples2file(Bodies & ptle){
 	out.close();
 }
 
-int main() {
-	Mestel DF(1, 1, .35);
-	Bodies ptle(100000);
+int main(int argc, char *argv[]) {
+	double nPtle{atof(argv[1])}, sigma{atof(argv[2])};
+	std::cout << "Temp of disk: " << sigma << '\n';
+	Mestel DF(1, 1, sigma);
+	Bodies ptle(nPtle);
 	sampleParticles(ptle, DF);
 	writeSamples2file(ptle);
 

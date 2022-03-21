@@ -41,6 +41,10 @@ public:
 	double density(const double radius) const;
 	double maxDensityRadius() const; 
 	void cumulativeDensity(const std::string fileName) const;
+	double diskMass() const; 
+
+	void savingDensity(const std::string fileName, const double spacing = 0.03, const int nSteps = 1000);
+	void densityVector(const int nSteps, const double spacing);
 	
 	double radiusSampling(const double uniformDistNumb, const std::vector<double> & cumulativeDensity) const; 
 	std::vector<double> readInCumulativeDensity(const std::string & fileName) const;
@@ -52,9 +56,14 @@ public:
 	double yAccel(const double xPos, const double yPos) const;
 
 
-
+	double densityFromVector(const double radius) const; 
+	double maxDensityFromVector() const { 
+    auto isGreater = [](auto x, auto y) {return x < y ? true : isnan(x);}; return *std::max_element(v_densityVector.begin(),v_densityVector.end(), isGreater);}
+	void readInDensityVector(const std::string & filename);  
+	Eigen::ArrayXXcd densityArray(const double rMax, const int nGrid) const;
 protected: 	
-	
+	std::vector<double> v_densityVector;
+	double m_densitySpacing; 
 	
 	virtual double vRScale() const = 0; // Give the upper limit for marganlising over
 	virtual double vPhiScale() const = 0;
@@ -237,23 +246,27 @@ Eigen::MatrixXd DFClass::energyAngMomJacobain(const int size, const double spaci
 
 double DFClass::density(const double radius) const // Maybe include some integration constants
 {
-	int nSteps{1000}, nStepsRadial{1500}; 
+	int nSteps{300}, nStepsRadial{300}; 
 	double density{0}, stepVPHI{vPhiScale()/nSteps}, stepVR{vRScale()/nSteps}, energy{0}, vPhi{0}, vrIntegral{}; // FIGURE OUT THE STEP SIZE
-	
+	//0.26112 // 5.49443e+14
 	for (int i = 1; i<nSteps; ++i) // Outer integral is over J (don't start at J = 0, as f(J) = 0)
 	{
 		vPhi = (i * stepVPHI);
 		vrIntegral = 0;
 		for (int k = 0; k < nStepsRadial; ++k) // Remember df is even in vr. 
 		{
+			double df = distFunc(energy, vPhi*radius);
 			energy = 0.5* (vPhi*vPhi) + 0.5*(k*stepVR)*(k*stepVR) + potential(radius);
-			vrIntegral += 2*stepVR*distFunc(energy, vPhi*radius);
+			vrIntegral += 2*stepVR*df;
+
 		}
 
+		
 		density += stepVPHI*vrIntegral;
 	}
 	return density;
 }
+
 
 
 void DFClass::cumulativeDensity(const std::string fileName) const 
@@ -276,6 +289,12 @@ void DFClass::cumulativeDensity(const std::string fileName) const
 	out << n << " " << spacing << " " << cumulative.back() <<'\n';
 	for (int i = 0; i < n; ++i)	{out << i * spacing << " " << cumulative[i]/cumulative.back() << '\n';}
 	out.close();
+}
+
+double DFClass::diskMass() const {
+	double mass{0}, spacing{0.1}; std::cout << "Calculating Disk Mass\n";
+	for (double r = spacing; r < 25; r += spacing) {mass += 2*M_PI * (r) * density(r) * spacing;}
+	return mass; 
 }
 
 std::vector<double> DFClass::readInCumulativeDensity(const std::string & fileName) const{ // I am not sure why this must be a memeber function.... 
@@ -356,7 +375,55 @@ double DFClass::yAccel(const double xPos, const double yPos) const{
 	return -(1/(2*spacing)) * (potential(rOuter) - potential(rInner));
 }
 
+/* Density Grid Function */
+/* --------------------- */
 
+void DFClass::readInDensityVector(const std::string & filename) {
+	std::ifstream inFile(filename); if (!inFile.good()) {std::cout<< "Couldn't find file: " << filename <<'\n'; exit(0);}
+	int n{};
+	inFile >>n >> m_densitySpacing; v_densityVector.resize(n);
+	for (int i =0; i<n; ++i) {inFile >> v_densityVector[i];}
 
+	inFile.close();
+}
+
+void DFClass::densityVector(const int nSteps, const double spacing) {
+	v_densityVector.resize(nSteps); m_densitySpacing = spacing;
+	for (int i =0; i < nSteps; ++i) {v_densityVector[i] = density(i *spacing);}
+}
+
+void DFClass::savingDensity(const std::string fileName, const double spacing, const int nSteps) {
+ 	std::ofstream out(fileName); std::cout << "Saving density to: " << fileName << '\n';
+	densityVector(nSteps, spacing);
+
+	out << v_densityVector.size() << " " << m_densitySpacing << '\n';
+	out << 0 << '\n';
+
+	for (int i = 1; i < nSteps; i++) {out << v_densityVector[i] << '\n'; if(i%1==0) {std::cout << "Density for: " << i*spacing << '\n';}}
+	out.close();
+}
+
+double DFClass::densityFromVector(const double radius) const {
+	double index{radius/m_densitySpacing}; int lowerIndex{(int) floor(index)}; 
+	if (lowerIndex+1 >= v_densityVector.size()) {return 0;}
+	return v_densityVector[lowerIndex] + (index-lowerIndex) *(v_densityVector[lowerIndex+1] - v_densityVector[lowerIndex]); 
+}
+
+Eigen::ArrayXXcd DFClass::densityArray(const double rMax, const int nGrid) const {
+	Eigen::ArrayXXcd densityArray = Eigen::ArrayXXcd::Zero(nGrid, nGrid);
+	double x{}, y{}, r{}, spacing{2*rMax/((double) nGrid-1)}, centre{0.5*(nGrid-1)};
+	for (int i = 0; i < densityArray.rows(); ++i)
+	{
+		for (int j = 0; j < densityArray.cols(); ++j)
+		{
+			x = spacing * (i - centre); y = spacing * (j - centre);
+			r = sqrt(x*x+y*y); 
+			if (r!= 0){
+				densityArray(i,j) = densityFromVector(r);
+			}
+		}
+	}
+	return densityArray;
+}
 
 #endif

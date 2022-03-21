@@ -1,10 +1,14 @@
 #ifndef NBODYFUNCTIONS
 #define NBODYFUNCTIONS
+#include <string>
 
 void barEvolutionGaussian(); 
-void barEvolutionKalnajs();
+void barEvolutionKalnajs(const std::string & stem, const bool isSelfConsistent, const double littleSigma);
 
+void checkingConservedJacobi();
 void orbitSection();  
 
 void kalanajTest();
+
+void spiralTesting();
 #endif

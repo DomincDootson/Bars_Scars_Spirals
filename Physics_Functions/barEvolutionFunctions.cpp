@@ -149,7 +149,7 @@ void kalnajsTorque(int nMax) {
 
 	VolterraSolver solver1(nMax, 2, numbTimeSteps, timeStep);
 	solver1.generateKernel(kernel1, DF, test);
-	solver1.saveKernelForPython("Plotting/kernel.csv");
+
 	
 	// Produce kernel
 	std::vector<double> growthRate = {10};
@@ -157,7 +157,7 @@ void kalnajsTorque(int nMax) {
 	std::vector<double> params{4, 20};
 	PotentialDensityPairContainer<KalnajsBasis> pd(params, nMax, 2);
 	
-	bool selfConsistent{true};
+	bool selfConsistent{false};
 	for (auto rate : growthRate) {
 		barGrowthRate("Bar2D/barSizeDiff.out", rate);
 
@@ -305,27 +305,15 @@ void barVaryingActiveFraction() {
 	}
 }
 
-void longTermEvolution() {
-	double barRadius{2}, timeStep{0.25};
-	int nMax{10}, numbTimeSteps{2*800}; 
 
-	std::string kernel1 = "Kernels/Kalnajs100.out";
-
-	VolterraSolver solver(kernel1, nMax, 2, numbTimeSteps, timeStep);
-	solver.activeFraction(.4);
-
-	Bar2D bar(kalnajsResolving(2), .1, "Bar2D/barSizeDiff.out");
-	std::cout << bar.torque(solver.longTimeCoeff(bar.barCoeff(), false)) << '\n'; 
-	std::cout << bar.torque(solver.longTimeCoeff(bar.barCoeff(), true)) << '\n'; 
-}
 
 void kalnajsKernelsDiffTemp()
 {
 	double timeStep{0.25};
 	int nMax{10}, numbTimeSteps{800};
 
-	std::vector sigmas = {.35, .45};
-	ActionAngleBasisContainer test("Kalnajs/Kalnajs_4_20", "Kalnajs", nMax, 2, 5, 101, 20);
+	std::vector sigmas = {.35,.45};
+	ActionAngleBasisContainer test("Kalnajs/Kalnajs_4_20", "Kalnajs", nMax, 2, 7, 101, 20);
 
 	for (auto it = sigmas.begin(); it != sigmas.end(); ++it) { 
 		Mestel DF(1, 1, *it);
@@ -336,14 +324,14 @@ void kalnajsKernelsDiffTemp()
 		//solver.generateKernel(kernel, DF, test); 
 	}
 
-	bool selfConsistent{true};
+	bool selfConsistent{false};
 	for (auto it: sigmas) {
 		std::string kernel = "Kernels/Kalnajs_2_" + std::to_string((int) round(100*(it))) + ".out";
 		VolterraSolver solver(kernel, nMax, 2, numbTimeSteps, timeStep);
-		solver.activeFraction(.4);
+		solver.activeFraction(.40);
 
-		Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(nMax+1); coeff =  kalnajsResolving();
-		Bar2D bar(coeff, .1, "Bar2D/barSize.out");
+		Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(nMax+1); coeff(0) = 0.01; 
+		Bar2D bar(coeff, .05, "Bar2D/barSize.out");
  
 		solver.barRotation(bar, coeffFileName("Plotting/KalnajsTorque/DiffTemp", it, selfConsistent), evolutionFileName("Plotting/KalnajsTorque/DiffTemp", it, selfConsistent), selfConsistent, false, true);
 	}

@@ -18,4 +18,14 @@ void testingBarTorque();
 void testingFitting();
 
 void saveKalnajs(); 
+
+void kalnajTest();
+void spiralAA();
+
+void spiralBasisComparions();
+void spiralTestAnalytic(); 
+void spiralTestQuasi();
+void spiralTestTrue();
+void spiralEvolution();
+
 #endif

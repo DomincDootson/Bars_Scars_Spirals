@@ -30,8 +30,9 @@ def barDensity():
 def EvolutionFilename(nFile, stem ="GaussianTorque/Bar10/Evolution_"):
 	return stem + str(nFile) + ".csv"
 
-def torqueAveraging(nFiles):
-	dataList = [readingInRealCSV(EvolutionFilename(i)) for i in range(nFiles)]
+def torqueAveraging(files):
+	dataList = [readingInRealCSV(i) for i in files]
+	nFiles = len(dataList)
 	rows, cols = np.shape(dataList[0])[0], np.shape(dataList[0])[1]
 	data = np.zeros((rows, cols, nFiles))
 
@@ -61,17 +62,13 @@ def torquePlots(upperTime):
 	plt.legend()
 	plt.show()
 
-def torqueDifferentTemps(upperTime):
+def torqueDifferentTemps():
 	plt.rc('text', usetex=True)
 	plt.rc('font', family='serif')
 
-	'''cold, coldT   = readingInRealCSV("GaussianTorque/DiffTemp/barEvolutionCold.csv"), readingInRealCSV("GaussianTorque/DiffTemp/barEvolutionCold_Test.csv")
-	medium, mediumT = readingInRealCSV("GaussianTorque/DiffTemp/barEvolutionMed.csv"), readingInRealCSV("GaussianTorque/DiffTemp/barEvolutionMed_Test.csv")
-	hot, hotT    = readingInRealCSV("GaussianTorque/DiffTemp/barEvolutionWarm.csv"), readingInRealCSV("GaussianTorque/DiffTemp/barEvolutionWarm_Test.csv")'''
-	#cold, coldT   = readingInRealCSV("KalnajsTorque/DiffTemp/evolution35.csv"), readingInRealCSV("KalnajsTorque/DiffTemp/evolutionTest35.csv")
 	medium, mediumT = readingInRealCSV("KalnajsTorque/DiffTemp/evolution35.csv"), readingInRealCSV("KalnajsTorque/DiffTemp/evolutionTest35.csv")
 	hot, hotT    = readingInRealCSV("KalnajsTorque/DiffTemp/evolution45.csv"), readingInRealCSV("KalnajsTorque/DiffTemp/evolutionTest45.csv")
-	timeL = np.linspace(0, upperTime, np.shape(hot)[0])
+	timeL = np.linspace(0, 20, np.shape(hot)[0])
 
 	fig, axs = plt.subplots(1,2, sharex = True, sharey = False)
 
@@ -292,27 +289,38 @@ def kalnajsBarVaryingN(nValue = 0):
 
 	axs[0].legend()
 	plt.show()
-'''
-	
-	axs[0].plot(data[:,2])
 
-	data = readingInComplexCSV("Coeff.csv")
-
-	for i in range(np.shape(data)[1]):
-		axs[1].plot(np.absolute(data[:,i]), label = str(i))
-
-	axs[1].legend()
-'''
-	
-
-kalnajsBarVaryingN(0)
-
-
-
-
-
-
-#kalnajsNbodyTorque()
-#varyingActiveFraction()
-#torqueDifferentGrowth()
 #torqueDifferentTemps(20)
+
+
+'''files = ["KalnajsTorque/Evolution_Self_Cold_Low"+str(i)+".csv" for i in [0]]
+plt.plot(time, -1.2*mean[:,2])''' 
+#plt.fill_between(time, -mean[:,2]-std[:,2], -mean[:,2]+std[:,2])
+'''
+
+mediumT = readingInRealCSV("KalnajsTorque/DiffTemp/evolution35.csv")
+time = np.linspace(0,20, np.shape(mediumT)[0])
+plt.plot(time, mediumT[:,2])
+
+mediumT = readingInRealCSV("KalnajsTorque/DiffTemp/evolution45.csv")
+time = np.linspace(0,20, np.shape(mediumT)[0])
+plt.plot(time, mediumT[:,2])
+
+plt.show()
+'''
+#torqueDifferentTemps()
+
+
+data = readingInRealCSV("KalnajsTorque/Evolution_Test_Cold_0.csv")
+time = np.linspace(0,20, np.shape(data)[0])
+plt.plot(time, data[:,2])
+
+data = readingInRealCSV("KalnajsTorque/Evolution_Test_Cold_Large_0.csv")
+time = np.linspace(0,5, np.shape(data)[0])
+#plt.plot(time, data[:,2])
+
+data = readingInRealCSV("KalnajsTorque/DiffTemp/evolutionTest45.csv")
+time = np.linspace(0,20, np.shape(data)[0])
+plt.plot(time, -data[:,2])
+
+plt.show()

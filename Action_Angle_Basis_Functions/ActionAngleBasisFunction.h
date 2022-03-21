@@ -47,7 +47,6 @@ ActionAngleBasisFunction::ActionAngleBasisFunction(const std::string & dir, cons
 	inFile >> rbasisRows >> rstep >> rradialIndex >> rm1 >> rm2;
 	std::cout << "Reading in action-angle basis function from: " << filename(dir, prefix) << '\n';
 	checkParam(rbasisRows, rstep, rradialIndex, rm1, rm2);
-	// some test function
 	
 	for (int i = 1; i<m_basisGrid.rows(); ++i){
 		for (int j = 1; j < i; ++j){
@@ -72,8 +71,6 @@ void ActionAngleBasisFunction::checkParam(int basisRows, double step, int radial
 std::string ActionAngleBasisFunction::filename(std::string directory, std::string prefix) const
 {
 	return directory + "/" + prefix + "_" +std::to_string(m_radialIndex) + "_" + std::to_string(m_m1) + "_" + std::to_string(m_m2) + ".out";
-	//GaussianLog
-	//Kalnajs
 }
 
 

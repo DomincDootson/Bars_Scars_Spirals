@@ -35,9 +35,7 @@ bool ChoosenPerturbationGrid::updateGridNow(const int nBodyIndex, const int tota
 
 void ChoosenPerturbationGrid::updateGrid() {
 	Eigen::ArrayXXcd potential = Eigen::ArrayXXcd::Zero(m_potentialArray.rows(), m_potentialArray.cols());
-	for (int i = 0; i < v_individualPotentials.size(); ++i){
-		potential += m_perturbationCoeff(m_perturbationIndex)[i] * v_individualPotentials[i];
-	}
+	for (int i = 0; i < v_individualPotentials.size(); ++i){ potential += m_perturbationCoeff(m_perturbationIndex)[i] * v_individualPotentials[i];}
 	if (m_fourierHarmonic == 0){m_potentialArray = potential.real();}
 	else {m_potentialArray = 2 * potential.real();}
 	takeTimeStep();

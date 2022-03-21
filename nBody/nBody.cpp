@@ -3,18 +3,21 @@
 #include <iostream>
 #include <cmath>
 
-double rem(double x, double y) {return x - y*floor(x/y);}
-
 int main(){
-	//barEvolution();
+	//barEvolutionKalnajs("Evolution_Test_Cold", false, 0.35); 
+	//barEvolutionKalnajs("Evolution_Test_Warm", false, 0.45);
+
+	orbitSection(); 
+	/* 
+	barEvolutionKalnajs("Evolution_Self_Cold", true, 0.35); 
+	barEvolutionKalnajs("Evolution_Self_Warm", true, 0.45); */
 	
-	//kalanajTest();
-	//barEvolutionKalnajs();
-
-	barEvolutionKalnajs(); 
-	//individualOrbits();
+	//spiralTesting();
 
 
-	//std::cout << rem(102, 2*M_PI) << '\n';
 	return 0;
 } 
+
+// Things that need to be put right
+// 1) Make the code run the sampling script
+// 2) Outputting coef and not calculating jacobi

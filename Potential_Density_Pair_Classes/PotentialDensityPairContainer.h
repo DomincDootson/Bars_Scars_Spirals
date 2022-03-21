@@ -24,6 +24,9 @@ public:
 		m_scriptE = calculateScriptE();
 	}
 
+	PotentialDensityPairContainer(const std::string & filename);
+
+
 	~PotentialDensityPairContainer() {}
 
 
@@ -32,6 +35,11 @@ public:
 
 	double potential(const double radius, const int n) const;
 	double   density(const double radius, const int n) const;
+
+	double potential(const double radius, const Eigen::VectorXcd coef) const;
+	double   density(const double radius, const Eigen::VectorXcd coef) const;
+
+
 
 	void scriptE(const std::string &filename) const;
 	Eigen::MatrixXd calculateScriptE() const;
@@ -45,6 +53,7 @@ public:
 	Eigen::ArrayXXcd potentialArray(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
 
 	std::vector<Eigen::ArrayXXcd> individualPotential(const int nGrid, const double rMax) const;
+	std::vector<Eigen::ArrayXXd>   individualDensity(const int nGrid, const double rMax) const;
 
 	Eigen::ArrayXXd   densityArrayReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
 	Eigen::ArrayXXd potentialArrayReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const;
@@ -62,12 +71,11 @@ public:
 
 
 
-private:	
-	
+protected:
 	std::vector<T> m_potentialDensityContainer;
 	int m_maxRadialIndex,  m_fourierHarmonic;
 	Eigen::MatrixXd m_scriptE;
-	
+private:		
 	// Function that calculates the matrix elements for fitting
 	std::complex<double> potentialFittingElement(const double rMax, const int nGrid, const int i, const int j) const;
 	Eigen::MatrixXcd     potentialFittingMatrix(const double rMax, const int nGrid) const; 
@@ -77,6 +85,18 @@ private:
 	double scriptEelement(int k, int j) const;
 
 };
+template <class T>
+PotentialDensityPairContainer<T>::PotentialDensityPairContainer(const std::string & filename) {
+	std::ifstream inFile(filename); if (!inFile.good()) {std::cout << "PD file doesn't exist.\n"; exit(0);}
+	inFile >> m_maxRadialIndex; inFile >> m_fourierHarmonic;
+	double step, rMax; inFile >> step; inFile >> rMax; 
+	for (int i = 0; i <= m_maxRadialIndex; ++i) {
+		m_potentialDensityContainer.emplace_back(inFile, step, rMax, i, m_fourierHarmonic); 
+	}
+	inFile.close();
+	m_scriptE = calculateScriptE();
+}
+
 
 
 // Our potential and density function
@@ -94,6 +114,18 @@ double   PotentialDensityPairContainer<T>::density(const double radius, const in
 	assert(n<=m_maxRadialIndex);
 	return m_potentialDensityContainer[n].density(radius);
 }
+
+template <class T>
+double PotentialDensityPairContainer<T>::potential(const double radius, const Eigen::VectorXcd coef) const {
+	std::complex<double> pot(0,0); for (int n = 0; n < coef.size(); ++n) {pot += potential(radius, n) * coef(n);}
+	return (pot + conj(pot)).real();
+}
+template <class T>
+double   PotentialDensityPairContainer<T>::density(const double radius, const Eigen::VectorXcd coef) const {
+	std::complex<double> den(0,0); for (int n = 0; n < coef.size(); ++n) {den += density(radius, n) * coef(n);}
+	return (den + conj(den)).real();
+}
+
 
 // Grid generation Function
 
@@ -128,6 +160,16 @@ std::vector<Eigen::ArrayXXcd> PotentialDensityPairContainer<T>::individualPotent
 	return individualPot;
 }
 
+template <class T>
+std::vector<Eigen::ArrayXXd> PotentialDensityPairContainer<T>::individualDensity(const int nGrid, const double rMax) const {
+	std::vector<Eigen::ArrayXXd> individualPot;
+	for (int n = 0; n <= m_maxRadialIndex; ++n){
+		individualPot.emplace_back(nGrid, nGrid);
+		Eigen::VectorXcd coef = Eigen::VectorXcd::Zero(m_maxRadialIndex+1); coef(n) = 1;
+		individualPot[n] = densityArrayReal(coef, nGrid, rMax);
+	}
+	return individualPot;
+}
 
 template <class T>
 Eigen::ArrayXXd   PotentialDensityPairContainer<T>::densityArrayReal(const Eigen::VectorXcd &coefficents, const int nGrid, const double rMax) const{

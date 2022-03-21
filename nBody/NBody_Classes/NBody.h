@@ -18,12 +18,12 @@ template <class Tbf>
 class NBody
 {
 public:
-	NBody(const int nParticles, const int numbTimeSteps, const double timesStep, const Tbf & bf, const double xi = 0.4) : 
+	NBody(const int nParticles, const int numbTimeSteps, const double timesStep, const Tbf & bf, const double xi = 0.4, const double sigma = 0.35) : 
 	 m_DF(),
 	 m_diskBox(120, 26.0, 0.18,1), m_m0Box(120, 26.0, 0.18,1),
 	 m_basisFunction(bf),
 	 m_numbTimeSteps{numbTimeSteps}, m_fourierHarmonic{bf.fourierHarmonic()}, m_skip{100}, m_timeStep{timesStep}, m_xi{xi},
-	 m_foreground("Bodies/particleSamples.out", nParticles, xi), 
+	 m_foreground("Bodies/particleSamples.out", nParticles, xi, sigma), 
 	 m_background{m_foreground}
 	 {if (m_fourierHarmonic == 0){
 	 	m0Grid();}
@@ -35,14 +35,13 @@ public:
 
 	
 	void barEvolution(const std::string & filename, Bar2D & bar); // derived class
-	void orbitSections(const std::string & filename, const bool isSelfConsistent); 
 
 	void particleSampling() {m_foreground.samplingDF();}
 protected:
 	
 	Box m_diskBox, m_m0Box;
 
-	const Mestel m_DF;
+	Mestel m_DF;
 
 	Tbf m_basisFunction; 
 
@@ -59,14 +58,11 @@ protected:
 
 	template <class Tgrid>
 	void foregroundParticleEvolution(const bool isSelfConsistent, const Tgrid & perturbationGrid);
+	void foregroundParticleEvolution(const bool isSelfConsistent);
 
 	valarray<double>  accelsFromBackground(const Bodies & ptle) const;
 	valarray<double>  accelsFromDisk(const Bodies & ptle);
-
-	template <class Tgrid>
-	void orbitSections(const std::string & filename, const bool isSelfConsistent, const Tgrid & perturbationGrid); 
 	
-
 	void m0Grid();
 };
 
@@ -83,7 +79,7 @@ template <class Tbf>
 void NBody<Tbf>::outputInfo(int timeIndex, std::ofstream & out) {
 	if (timeIndex % m_skip == 0) { 
 		outputCoefficents(out); 
-		std::cout << "Fraction of Test particle: " << timeIndex/((double) m_numbTimeSteps) << '\n';
+		std::cout << "Fraction of Run: " << timeIndex/((double) m_numbTimeSteps) << '\n';
 	}
 }
 
@@ -140,53 +136,20 @@ void NBody<Tbf>::foregroundParticleEvolution(const bool isSelfConsistent, const 
 }
 
 template <class Tbf>
+void NBody<Tbf>::foregroundParticleEvolution(const bool isSelfConsistent) {
+	m_foreground.xy   += m_foreground.vxvy * m_timeStep * 0.5;
+	
+	m_foreground.vxvy += (accelsFromBackground(m_foreground)) * m_timeStep;
+	if (isSelfConsistent) {m_foreground.vxvy += accelsFromDisk(m_foreground) * m_timeStep;}
+	m_foreground.xy   += m_foreground.vxvy * m_timeStep * 0.5;
+}
+
+
+template <class Tbf>
 void NBody<Tbf>::m0Grid() {
 	m_m0Box.zero();
 	m_m0Box.bodies2density_m2(m_background, 0, 2400, 720);
 	m_m0Box.density2pot();
 }
-
-// Orbit Sections //
-// -------------- // 
-
-
-template <class Tbf>
-template <class Tgrid>
-void NBody<Tbf>::orbitSections(const std::string & filename, const bool isSelfConsistent, const Tgrid & perturbationGrid) {
-	OrbitSections sectionsClass; int minIndex{0};
-	do 
-	{
-		sectionsClass.driftStep(m_timeStep*10);
-              
-		std::valarray<double> accels = accelsFromBackground(sectionsClass.m_ptle)+perturbationGrid.perturbationAccels(sectionsClass.m_ptle);
-		if (isSelfConsistent) {accels += accelsFromDisk(sectionsClass.m_ptle);}
-		
-		sectionsClass.kickStep(accels, m_timeStep*10); 
-		if (minIndex != sectionsClass.minIndex()) {minIndex = sectionsClass.minIndex(); std::cout << "Min Index: " << minIndex << '\n';}
-
-
-	} while (sectionsClass.continueSections());
-	sectionsClass.outputSections(filename); 
-}
-
-template <class Tbf>
-void NBody<Tbf>::orbitSections(const std::string & filename, const bool isSelfConsistent) {
-	OrbitSections sectionsClass; int minIndex{0};
-	do 
-	{		
-		sectionsClass.driftStep(m_timeStep*10);
-		std::valarray<double> accels = accelsFromBackground(sectionsClass.m_ptle);
-		if (isSelfConsistent) {accels += accelsFromDisk(sectionsClass.m_ptle);}
-
-		sectionsClass.kickStep(accels, m_timeStep*10); 
-		//counter +=1;
-		//if (counter %1000000) {std::cout << "Min section value: " << sectionsClass.minIndex() << '\n';}
-		if (minIndex != sectionsClass.minIndex()) {minIndex = sectionsClass.minIndex(); std::cout << "Min Index: " << minIndex << '\n';}
-
-	} while (sectionsClass.continueSections());
-	sectionsClass.outputSections(filename); 
-}
-
-
 
 #endif

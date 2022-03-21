@@ -3,15 +3,21 @@
 
 #include "NBody_Classes/NBodyPerturbation.h"
 #include "NBody_Classes/NBodyBar.h"
+#include "NBody_Classes/NBodySpiral.h"
+
+
 #include "../DF_Class/Mestel.h"
 #include "../Potential_Density_Pair_Classes/KalnajsBasis.h"
 #include "../Potential_Density_Pair_Classes/GaussianLogBasis.h"
+
 #include "../Bar2D/Bar2D.h"
+#include "../Spiral2D/Spiral2D.h"
 
 #include <cmath>
 
-const int NUMBPARTICLES{100000};
-const int NSTEPS{200000}; // 
+
+const int NUMBPARTICLES{20000};
+const int NSTEPS{100000};  
 const double TIMESTEP{0.001};
 
 
@@ -40,6 +46,10 @@ std::string coefficentFilenameKalnajs(int runNumber) {
 	return "../Plotting/KalnajsTorque/Coefficent_" + std::to_string(runNumber) + ".csv";
 } 
 
+std::string stemFilename(const std::string & stem, const int runNumber) {
+	return "../Plotting/KalnajsTorque/" + stem + "_" + std::to_string(runNumber) + ".csv";
+}
+
 
 void barEvolutionGaussian() 
 {
@@ -54,7 +64,7 @@ void barEvolutionGaussian()
 		std::cout << '\n' << '\n' << "Realisation: " << i << '\n';
 
 		coeff = gaussianBar(pd);	
-		Bar2D bar(coeff, 0.1, "../Bar2D/barSize.out");
+		Bar2D bar(coeff, 0.01, "../Bar2D/barSize.out");
 
 		NBodyBar nbodyBar(NUMBPARTICLES, NSTEPS, TIMESTEP, pd, bar);  
 		//nbodyBar.testParticleEvolution(coefficentFilenameGaussian(i), evolutionFilenameGaussian(i), 0);
@@ -62,43 +72,44 @@ void barEvolutionGaussian()
 	}
 }
 
-void barEvolutionKalnajs()
+void barEvolutionKalnajs(const std::string & stem, const bool isSelfConsistent, const double littleSigma)
 {
 	std::vector<double> params{4, 20};
  	PotentialDensityPairContainer<KalnajsBasis> pd(params, 10, 2);
 
 	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(10+1);
 	coeff(0) = 0.01;
-	std::complex<double> unitComplex(0,1);
 	
 
 	for (int i =0; i < 5; ++i){
 		std::cout << '\n' << '\n' << "Realisation: " << i << '\n';
 
-		Bar2D bar(coeff, 0.1, "../Bar2D/barSize.out");
+		Bar2D bar(coeff, 0.05, "../Bar2D/barSize.out");
 
-		NBodyBar nbodyBar(NUMBPARTICLES, NSTEPS, TIMESTEP, pd, bar);  
-		//nbodyBar.nBodyEvolution(coefficentFilenameKalnajs(i), evolutionFilenameKalnajs(i), 0);
-		nbodyBar.testParticleEvolution(coefficentFilenameKalnajs(i), evolutionFilenameKalnajs(i), 0);
+		NBodyBar nbodyBar(NUMBPARTICLES, NSTEPS, TIMESTEP, pd, bar, littleSigma);  
+		if (isSelfConsistent) {nbodyBar.nBodyEvolution(coefficentFilenameKalnajs(i), stemFilename(stem, i), 0);}
+		else {nbodyBar.testParticleEvolution(coefficentFilenameKalnajs(i), stemFilename(stem, i), 0);} 
 
 	}
 }
 
-
 void orbitSection() 
 {
-	std::vector<double> params{50, .15, 15};
- 	PotentialDensityPairContainer<GaussianLogBasis> pd(params, 50, 2);	
+	std::vector<double> params{24, .15, 15};
+ 	PotentialDensityPairContainer<GaussianLogBasis> pd(params, 24, 2);	
 
 	std::vector<double> omega{0.5, .1, .5}, strength{1, 1, 0};
 	std::vector<std::string> filenames{"../Plotting/Orbit_Sections/ResonantSections.csv", "../Plotting/Orbit_Sections/NonResonantSections.csv", "../Plotting/Orbit_Sections/NoPerturbationSections.csv"};
 
-	for (int i = 0; i < 3; ++i) {
+	for (int i = 0; i < 1; ++i) {
 		Eigen::VectorXcd coeff = strength[i]*gaussianBar(pd);	
 		Bar2D bar(coeff, omega[i]);
-		NBodyBar nbodyBar(1, 200, TIMESTEP, pd, bar);  
+		NBodyBar nbodyBar(1, 200, 0.0005, pd, bar);  
 		//nbodyBar.barOrbitSections(filenames[i], false);
-		nbodyBar.angularMomentumSections(filenames[i], false);
+
+
+		//nbodyBar.angularMomentumSections(filenames[i], false);
+		nbodyBar.countTrappedOrbits(); 
 		exit(0);
 		std::cout << "Finished the funciton: " << i << '\n';
 	}
@@ -114,4 +125,16 @@ void kalanajTest()
  	 NBodyPerturbation nbody(NUMBPARTICLES, NSTEPS, TIMESTEP, pd);
  	 nbody.nBodyEvolution("../Plotting/Evolution.csv");
 
+}
+
+
+void spiralTesting() {
+	std::vector<double> params{4, 20};
+ 	PotentialDensityPairContainer<KalnajsNBasis> pd("../Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat");
+
+ 	Spiral2D spiral(pd, 1, 5, 0.01);
+ 	
+
+ 	NBodySpiral nbody(500000, 100000*0.5, TIMESTEP, pd, spiral);
+ 	nbody.nBodyEvolution("../Plotting/Spiral_Data/nBodyEvolution.csv");
 }

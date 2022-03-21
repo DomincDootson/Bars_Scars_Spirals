@@ -1,4 +1,4 @@
-import matplotlib.pyplot as plt
+fimport matplotlib.pyplot as plt
 
 # we assume that vc =1 for this code
 
@@ -74,25 +74,20 @@ def lstEnergies(rCirc, patternSpeed):
 	print("The jacobi Integral is: ", jacobi)
 
 	print(jCirc, eCirc, jacobi)
-	step, nOrbits = 0.02, 25
-	j = [jCirc-(i+1)*step for i in range(nOrbits)]
+	step, nOrbits = 0.02, 24
+	j = [jCirc-(i)*step for i in range(nOrbits)]
 
 	f = open("particleSamplesSections.out", "w+")
 	f.write(str(nOrbits))
 	x, y = [], []
 	for i in range(nOrbits):
-		#print(rMin(eCirc, j[i]), rMax(eCirc, j[i]))
-		#print(rCirc, 0, vR(rCirc, eCirc, j[i]), j[i]/rCirc, rMin(eCirc, j[i]), rMax(eCirc, j[i])
 		f.flush()
-		#f.write('\n' +"9.82208e-05" + " " + str(rCirc) + " " + str(0) + " " +  str(vR(rCirc, eCirc, j[i])) + " " + str(j[i]/rCirc))
-		
-		#jacobi = eCirc - j[i]*patternSpeed
 		vRadial = vR(rCirc, jacobi + j[i]*patternSpeed, j[i])
 
 		f.write('\n' +"9.82208e-05" + " " + str(rCirc) + " " + str(0) + " " +  str(vRadial) + " " + str(j[i]/rCirc))
+		#f.write('\n' +"9.82208e-05" + " " + str(-rCirc) + " " + str(0) + " " +  str(vRadial) + " " + str(-j[i]/rCirc))
 
 		e = energy(vRadial, j[i], rCirc)
-		#e = energy(vR(rCirc, eCirc, j[i]), j[i], rCirc)
 		y.append(jacobiIntegral(e, j[i], patternSpeed))
 		x.append(j[i])
 		print(rMin(jacobi + j[i]*patternSpeed, j[i]), rMax(jacobi + j[i]*patternSpeed, j[i]))
@@ -104,24 +99,6 @@ def lstEnergies(rCirc, patternSpeed):
 	plt.ylabel("Jacobi Integral")
 
 	plt.show()
-'''
-nOrbits, step = 5, .1
-rCirc, patternSpeed = 2.1, 0.5
-jCirc, energy = circularOrbitParams(rCirc)
-
-j = [jCirc-(i+1)*step for i in range(nOrbits)]
-
-for angMom in j:
-	#energy = circularOrbitParams(rCirc)
-	jacobi = energy - patternSpeed * angMom
-
-
-
-	vrE, vrJ = vR(rCirc, energy, angMom), vR(rCirc, jacobi + patternSpeed * angMom, angMom)
-
-	print(vrE, vrJ)
-'''
-
 
 
 lstEnergies(2.1, 0.5)

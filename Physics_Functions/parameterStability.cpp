@@ -19,7 +19,7 @@
 #include "../DF_Function/DFfunction.h"
 
 const int K_M1_STANDARD{7}, K_DELTAXSTEP_STANDARD{101}, K_NMAX_STANDARD{10};
-const double K_TIME_STANDARD{0.2}, K_ACTIVE_FRACTION{.10}, K_TIME_END{400};
+const double K_TIME_STANDARD{0.2}, K_ACTIVE_FRACTION{.50}, K_TIME_END{400};
 const std::string K_KERNEL{"Kalnajs/Testing/StabilityKernel.out"}, K_PERTURBATION_FILE{"Kalnajs/Testing/perturbation.out"}, G_PERTURBATION_FILE{"GaussianLog/Testing/perturbation.out"};
 const std::vector<double> K_PARAMS{4, 20};
 const bool K_SELF_CONSISTENT{true};
@@ -164,9 +164,9 @@ void generatingKalnajsBF(int m1, int deltaXstep, int nMax, int m2 = 2) {
 	test.scriptW(PD, DF ,"Kalnajs/Testing");
 }
 
-void generatingKalnajsKernels(int m1, int deltaXstep, int nMax, double timeStep, int m2 = 2, const std::string & kernelFile = K_KERNEL)
+void generatingKalnajsKernels(int m1, int deltaXstep, int nMax, double timeStep, int m2 = 2, const std::string & kernelFile = K_KERNEL, const double maxRadius = 20)
 {
-	ActionAngleBasisContainer test("Kalnajs/Testing", "Kalnajs", nMax, m2, m1, deltaXstep, 20);
+	ActionAngleBasisContainer test("Kalnajs/Testing", "Kalnajs", nMax, m2, m1, deltaXstep, maxRadius);
 	Mestel DF;
 
 	VolterraSolver solver2(nMax, m2, nStep(timeStep), timeStep);
@@ -288,9 +288,9 @@ void stabilityDeltaXGridKalnajs(const std::string & filename) {
 
 void stabilityNBasisFunctions(const std::string & filename){
 	std::cout << "Checking stability w.r.t. number of basis functions.\n\n";
-	std::vector<int> nMaxValues = {0,1,2,3,4,5,6,7, 8, 9, 10}; // Please put in ascending order
-	//std::vector<int> nMaxValues = {10}; 
-	//generatingKalnajsBF(K_M1_STANDARD, K_DELTAXSTEP_STANDARD, nMaxValues.back());
+	std::vector<int> nMaxValues = {10}; // Please put in ascending order
+	
+	generatingKalnajsBF(K_M1_STANDARD, K_DELTAXSTEP_STANDARD, nMaxValues.back());
 
 	std::ofstream out(filename);
 
@@ -299,7 +299,7 @@ void stabilityNBasisFunctions(const std::string & filename){
 		//saveScriptE(PD.scriptE()); 
 		auto kernelFile = [nMax] () {return "Kalnajs/Testing/Kernel_" + std::to_string(nMax) + ".out"; };
 		generatingKalnajsKernels(K_M1_STANDARD, K_DELTAXSTEP_STANDARD, nMax, K_TIME_STANDARD,2, kernelFile());
-		exit(0);
+	
 		VolterraSolver solver(kernelFile(), nMax, 2, nStep(K_TIME_STANDARD), K_TIME_STANDARD);
 		solver.activeFraction(K_ACTIVE_FRACTION);
 
@@ -388,6 +388,59 @@ void stabilityVaryingCoupling(const std::string & filename) {
 	out.close(); 
 }
 
+void varyingActiveFraction(const std::string & filename) {
+	std::vector<double> xi{0.3, 0.35, 0.4, 0.45, .5};
+
+	std::ofstream out(filename);
+	PotentialDensityPairContainer<KalnajsBasis> PD(K_PARAMS, 10, 2);
+
+	kalnajsDelta(10, K_TIME_STANDARD);
+
+		for (auto af : xi) {
+		std::cout << "Active Fraction: " << af << '\n'; 
+		VolterraSolver solver("Kalnajs/Testing/Kernel_10.out", 10, 2, nStep(K_TIME_STANDARD), K_TIME_STANDARD);
+		solver.activeFraction(af);
+
+		std::vector<double> energy = solver.energyEvolutionDecoupled(PD, K_PERTURBATION_FILE, K_NMAX_STANDARD, K_SELF_CONSISTENT);
+		energy2File(af, energy, out);
+	}
+	out.close(); 
+}
+
+
+void varyingRka(const std::string & filename) { 
+	std::vector<double> rKa{5,10, 15, 19, 20};
+
+	std::ofstream out(filename);
+	kalnajsDelta(10, K_TIME_STANDARD);
+
+	for (auto r : rKa) {
+		std::vector<double> params{4, r}; Mestel DF;
+		PotentialDensityPairContainer<KalnajsBasis> PD(params, 10, 2);
+	
+		//ActionAngleBasisContainer test("Kalnajs", 10, 2, K_M1_STANDARD, K_DELTAXSTEP_STANDARD, r);
+		//test.scriptW(PD, DF ,"Kalnajs/Testing");
+		
+		//std::cout << r/((double) K_DELTAXSTEP_STANDARD-1) << '\n' << '\n';
+		//ActionAngleBasisContainer readInTest("Kalnajs/Testing", "Kalnajs", 10, 2, K_M1_STANDARD, K_DELTAXSTEP_STANDARD, r); 
+
+		auto kernelFile = [r] () {return "Kalnajs/Testing/Kernel_" + std::to_string(r) + ".out"; };
+
+		//VolterraSolver solver2(10, 2, nStep(K_TIME_STANDARD), K_TIME_STANDARD);
+		//VolterraSolver solver2(10, K_M1_STANDARD, 6, K_TIME_STANDARD);
+
+		//solver2.generateKernel(kernelFile(), DF, readInTest);
+
+
+		VolterraSolver solver(kernelFile(), 10, 2, nStep(K_TIME_STANDARD), K_TIME_STANDARD);
+		solver.activeFraction(K_ACTIVE_FRACTION);
+
+		std::vector<double> energy = solver.energyEvolutionDecoupled(PD, K_PERTURBATION_FILE, 10, K_SELF_CONSISTENT);
+
+		energy2File(r, energy, out);
+	}
+	out.close(); 
+}
 
 int main() {
 	//stabilityM1Kalanajs("Plotting/KalnajsTesting/kalnajsVaryingm1.csv");
@@ -397,8 +450,11 @@ int main() {
 	//stabilityVaryingCoupling("Plotting/KalnajsTesting/kalnajsVaryingCoupling.csv");
 	//stabilityTimeStep("Plotting/KalnajsTesting/VaryingTimestep.csv");
 	//stabilityNBasisFunctionsGaussian("Plotting/GaussianTesting/gaussianVaryingNbasis.csv");
-	generatingKalnajsKernels(7, K_DELTAXSTEP_STANDARD, 0, K_TIME_STANDARD, 2, "Plotting/Kalnaj_0.out"); 
-	//stabilityNBasisFunctions("Plotting/BF_Comparison/kalnajsVaryingNbasis.csv");
+	//generatingKalnajsKernels(7, K_DELTAXSTEP_STANDARD, 0, K_TIME_STANDARD, 2, "Plotting/Kalnaj_0.out"); 
+	//stabilityNBasisFunctions("Plotting/BF_Comparison/kalnajsVaryingNbasisSmallStep.csv");
+	//varyingActiveFraction("Plotting/KalnajsTesting/VaryingXI.csv");
+
+	varyingRka("Plotting/KalnajsTesting/varyingRka.csv");
 	//varyingModePoke("Plotting/BF_Comparison/kalnajsVaryingNpoke.csv");
 	//stabilityNBasisFunctionsGaussian("Plotting/BF_Comparison/gaussianVaryingNbasis.csv");
 	return 0;

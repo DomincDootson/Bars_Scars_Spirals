@@ -19,7 +19,7 @@ public:
 	double distFunc(double E, double J) const;
 
 	double vRSampling() const;  
-	
+	double guidingCentre(const double J) const {return J/m_vc;}
 
 	
 public:

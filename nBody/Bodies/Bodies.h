@@ -1,4 +1,4 @@
- #ifndef BODIES
+#ifndef BODIES
 #define BODIES
 
 #include <string>
@@ -31,12 +31,12 @@ public:
   Bodies(const double x, const double y, const double vx, const double vy) : m(1), xy(2), vxvy(2), n(1) {xy[0] = x; xy[1] = y; vxvy[0] = vx; vxvy[1] = vy; m[0] = 1;}
 
 
-  Bodies(std::string fileName, int numbParticles, const double xi);
+  Bodies(std::string fileName, int numbParticles, const double xi, const double sigma = 0.35);
 
   ~Bodies() {}
  
   std::valarray<double> m, xy, vxvy;
-  const int n;
+  int n;
   
   void samplingDF();
   void copy(const Bodies & ptle);
@@ -46,8 +46,8 @@ public:
   // some public functions that do the outputting of the coefficents
   std::valarray<double> angularMomentum() const;
   std::valarray<double> energy() const;
-  std::valarray<double> jacobiIntegral(const std::valarray<double> & pot, const double omegaP) const {return (energy() + pot - angularMomentum()* omegaP);} //  - angularMomentum() 
-  std::valarray<double> jacobiIntegral(const double omegaP) const {return (energy() - angularMomentum()* omegaP);} //  - angularMomentum() 
+  std::valarray<double> jacobiIntegral(const std::valarray<double> & pot, const double omegaP) const {return (energy() + pot - angularMomentum()* omegaP);} 
+  std::valarray<double> jacobiIntegral(const double omegaP) const {return (energy() - angularMomentum()* omegaP);} 
 
   std::valarray<double> radius(double softening2 = 0) const;
   std::valarray<double>  angle() const ;
@@ -55,16 +55,17 @@ public:
   template <class Tbf>
   Eigen::VectorXcd responseCoefficents(const Tbf & bf) const;
 
-  void particlePosition(std::ofstream & out, int n = 0) {out << xy[2*n] <<',' << xy[2*n+1] << ',' << vxvy[2*n] << ',' << vxvy[2*n+1] << '\n';}
+  void particlePosition(std::ofstream & out, int n = 0) const {out << xy[2*n] <<',' << xy[2*n+1] << ',' << vxvy[2*n] << ',' << vxvy[2*n+1] << '\n';}
   void convert2Cartesian();
   void print(int n) const {std::cout << xy[2*n] << " " << xy[2*n+1] << " " << vxvy[2*n] << " " << vxvy[2*n+1] << '\n';}
   
 };
 
 
-Bodies::Bodies(std::string fileName, int numbParticles, const double xi) : m(numbParticles), xy(2*numbParticles), vxvy(2*numbParticles), n(numbParticles)
+Bodies::Bodies(std::string fileName, int numbParticles, const double xi, const double sigma) : m(numbParticles), xy(2*numbParticles), vxvy(2*numbParticles), n(numbParticles)
 {
-  std::system("./particleSampling"); 
+  std::string argument = "./particleSampling " + std::to_string(numbParticles) + " " + std::to_string(sigma); 
+  std::system(argument.c_str());  
   std::cout << "Reading particles in from: " << fileName << '\n';
   std::ifstream inFile; inFile.open(fileName);
   int nFile; 
@@ -87,7 +88,7 @@ void Bodies::copy(const Bodies & ptle) {
 }
 
 template <class Tbf>
-Eigen::VectorXcd Bodies::responseCoefficents(const Tbf & bf) const{
+Eigen::VectorXcd Bodies::responseCoefficents(const Tbf & bf) const {
   
   Eigen::VectorXcd coef = Eigen::VectorXcd::Zero(bf.maxRadialIndex()+1);
   std::valarray<double> rad{radius(0)}, ang{angle()};

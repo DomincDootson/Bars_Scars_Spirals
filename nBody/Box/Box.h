@@ -1,9 +1,10 @@
 #ifndef BOX
 #define BOX 
 
+#include <fftw3.h>
+#include <vector>
 
 #include "../Bodies/Bodies.h"
-#include <fftw3.h>
 
 using namespace std; 
 
@@ -18,7 +19,9 @@ class Box {
   void density2pot();
   valarray<double> pot2accels(const Bodies &ptle);
 
- private:
+  double potential(double x = 0, double y = 0);  
+
+ //private:
   const double G; // Big G
   const int nx, ny; // Number of points in x and y direction
   const double xmin, ymin; // Minium x and y values, i.e. xmin = -xmax
@@ -133,7 +136,7 @@ valarray<double> Box::pot2accels(const Bodies &ptle) { // Gives the accels of a 
     double y = ptle.xy[2*n+1];
     double m = ptle.m[n];
     if(fabs(x)<xmax2 && fabs(y)<ymax2) {
-      int ix = int(odx*(x-xmin));
+      int ix = int(odx*(x-xmin)); // SHOULD THIS REALLY BE ROUND INSTEAD OF INT? 
       int iy = int(ody*(y-ymin));
       int ixy = ix*2*ny+iy;
       double fx = odx*(x-xmin)-ix;
@@ -201,10 +204,28 @@ void Box::bodies2density_m2(const Bodies &ptle, int fourierIndex, int nring, int
     for(int iphi=0;iphi<nphi;iphi++) {
       ring.xy[2*iphi+0] = R*cosphi[iphi];
       ring.xy[2*iphi+1] = R*sinphi[iphi];
-      ring.m[iphi] = normalisation*rhok_cos_here*cosMphi[iphi]
-  +rhok_sin_here*sinMphi[iphi];
+      ring.m[iphi] = normalisation * rhok_cos_here * cosMphi[iphi] + rhok_sin_here*sinMphi[iphi];
     }
     bodies2density(ring);
   }
+}
+
+
+double Box::potential(double x, double y) {
+
+      double dx{odx*(x-xmin)}, dy{ody*(y-ymin)}; 
+      int ix0{(int) floor(dx)}, ix1{(int) floor(dx+1)}, iy0{(int) floor(dy)}, iy1{(int) floor(dy+1)}, 
+      ix0y0{ix0*2*ny+iy0}, ix1y0{ix1*2*ny+iy0}, ix0y1{ix0*2*ny+iy1}, ix1y1{ix1*2*ny+iy1}; 
+
+      double pot = fftw_mesh[ix0y0] * (ix1-dx) * (iy1-dy) + fftw_mesh[ix1y0] * (dx-ix0) * (iy1-dy)
+      +fftw_mesh[ix0y1] * (ix1-dx) * (dy-iy0) + fftw_mesh[ix1y1] * (dx-ix0) * (dy-iy0);
+
+      return pot; 
+
+
+      // int ix = round(odx*(x-xmin));
+      // int iy = round(ody*(y-ymin));
+      // int ixy = ix*2*ny+iy;
+      // return fftw_mesh[ixy];
 }
 #endif 

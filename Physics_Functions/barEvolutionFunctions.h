@@ -24,8 +24,6 @@ void barVaryingActiveFraction();
 
 void kalnajsKernelsDiffTemp(); 
 
-void longTermEvolution();
-
 void gaussianBarEvolution();
 void guassianDifferentTemps(); 
 void gaussianBarDiffGrowthRate();

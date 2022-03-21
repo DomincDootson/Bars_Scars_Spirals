@@ -15,7 +15,7 @@ NBODY_OBJ = nBody.o nBodyFunctions.o
 
 # Define all the rules
 
-all : $(NBODY) particleSampling
+all : $(NBODY) particleSampling potentialFromDensity
 
 $(NBODY): $(NBODY_OBJ)
 	$(CXX) $(CXXFLAGS) -lfftw3 -lm  -o $@ $^ 
@@ -25,6 +25,13 @@ particleSampling : particleSampling.o
 
 particleSampling.o : Bodies/particleSampling.cpp Bodies/Bodies.h ../DF_Class/*.h  
 	 $(CXX) $(CXXFLAGS) $(INCLUDES) -c Bodies/particleSampling.cpp
+
+potentialFromDensity : potentialFromDensity.o 
+	$(CXX) $(CXXFLAGS)  -lfftw3 -lm -o potentialFromDensity potentialFromDensity.o
+
+potentialFromDensity.o : Box/potentialFromDensity.cpp Bodies/Bodies.h Box/Box.h  
+	 $(CXX) $(CXXFLAGS) $(INCLUDES) -c Box/potentialFromDensity.cpp
+
 
 # Define the rule for making .o from .cpp files 
 %.o: %.cpp ../Bar2D/*.h ../DF_Class/*.h ../Potential_Density_Pair_Classes/*.h ../Volterra_Solver/ExpansionCoeff.h \

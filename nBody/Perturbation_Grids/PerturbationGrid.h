@@ -24,7 +24,7 @@ public:
 	std::valarray<double> perturbationAccels(const Bodies & ptle) const;
 
 	void saveArray(const std::string & filename) const {
-		std::ofstream out(filename);
+		std::ofstream out(filename); std::cout << "Saving potential to: " << filename << '\n';
 		for (int i =0; i < m_potentialArray.rows(); ++i)
 			for (int j = 0; j < m_potentialArray.cols(); ++j){
 				if (j == m_potentialArray.cols()-1) {out << m_potentialArray(i,j) <<'\n';}
@@ -35,8 +35,19 @@ public:
 	double potential(const double xPosition, const double yPosition) const;
 	std::valarray<double> potential(const Bodies & ptle) const;
 	
+	void saveAccel(const std::string & filename) const { 
+		std::ofstream out(filename);
 
-protected:
+		for (int i = 1; i < m_potentialArray.cols()-1; i++) {
+			for (int j =1; j < m_potentialArray.rows()-1; j++) {
+				if (j == m_potentialArray.cols()-2) {out << xAccel(i,j) <<'\n';}
+				else {out << xAccel(i,j) << ',';}
+			}
+		}
+	}
+	
+
+//protected:
 		
 	Eigen::ArrayXXd m_potentialArray;
 	const double m_spacing, m_rMaxGrid, m_centre;
@@ -54,6 +65,7 @@ protected:
 
 	double yAccel(const int i, const int j) const {return -(1/(2*m_spacing)) * (m_potentialArray(i+1,j) - m_potentialArray(i-1,j));} 
 	double yAccel(const double xPosition, const double yPosition) const;
+	
 
 	void takeTimeStep() {m_perturbationIndex += 1;}
 
@@ -67,7 +79,7 @@ int floorInt(const double index) {return index/1;}
 int ceilInt(const double index) {return (index+1)/1;}
 
 bool PerturbationGrid::checkOnGrid(const double xPosition, const double yPosition) const{
-	if ((xPosition*xPosition + yPosition*yPosition) < (m_rMaxGrid-m_spacing)*(m_rMaxGrid-m_spacing)){
+	if ((xPosition*xPosition + yPosition*yPosition) < (m_rMaxGrid-2*m_spacing)*(m_rMaxGrid-2*m_spacing)){
 		return true;}
 	return false;
 }

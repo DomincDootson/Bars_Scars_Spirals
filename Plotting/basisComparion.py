@@ -112,23 +112,24 @@ def densityComparison(filenames):
 	radii = readingInRealCSV("BF_Comparison/radii.csv")
 	pertK, pertG = readingInRealCSV("BF_Comparison/kalnajsPerturbationK.csv"), readingInRealCSV("BF_Comparison/kalnajsPerturbationG.csv")
 	
-	xpos, xlabels = [0, 5, 10, 15, 20], ["0", r"$5r_{0}$", r"$10r_{0}$", r"$15r_{0}$", r"$20r_{0}$"]
+	xpos, xlabels = [0, 5, 10, 15], ["0", r"$5r_{0}$", r"$10r_{0}$",r"$15r_{0}$"]
 
-	axs[0].plot(radii, pertK, color = 'royalblue', linestyle = '--', label = 'Kalnajs Perturbation')
-	axs[0].plot(radii, pertG, color = 'firebrick', label = 'Gaussian Fit')
+	axs[0].plot(radii[:1500], pertK[:1500], color = 'royalblue', linestyle = '--', label = 'Kalnajs Perturbation')
+	axs[0].plot(radii[:1500], pertG[:1500], color = 'firebrick', label = 'Gaussian Fit')
 	axs[0].set_ylabel(r"Potential")
 	axs[0].set_title(r"Kalnajs Perturbation")
-	axs[0].legend(loc = 'upper right')
+	axs[0].legend(loc = 'upper left')
 	axs[0].ticklabel_format(axis='y', style = 'sci', scilimits=(0,0))
 	axs[0].set_xticks(xpos)
 	axs[0].set_xticklabels(xlabels)
 
 
+	xpos, xlabels = [0, 5, 10], ["0", r"$5r_{0}$", r"$10r_{0}$"]
 	pertK, pertG = readingInRealCSV("BF_Comparison/gaussianPerturbationK.csv"), readingInRealCSV("BF_Comparison/gaussianPerturbationG.csv")
-	axs[1].plot(radii, pertK, color = 'royalblue', label = 'Kalnajs Fit')
-	axs[1].plot(radii, pertG, color = 'firebrick', linestyle = '--', label = "Gaussian Perturbation")
+	axs[1].plot(radii[:1000], pertK[:1000], color = 'royalblue', label = 'Kalnajs Fit')
+	axs[1].plot(radii[:1000], pertG[:1000], color = 'firebrick', linestyle = '--', label = "Gaussian Perturbation")
 	axs[1].set_title(r"Gaussian Perturbation")
-	axs[1].legend(loc = 'lower right')
+	axs[1].legend(loc = 'lower left')
 	axs[1].ticklabel_format(axis='y', style = 'sci', scilimits=(0,0))
 	axs[1].set_xticks(xpos)
 	axs[1].set_xticklabels(xlabels)
@@ -161,11 +162,11 @@ def densityComparison(filenames):
 	
 	cb_ax = fig.add_axes([0.13,.04,.36,.02])
 	cbar = fig.colorbar(pcm1, cax=cb_ax, orientation='horizontal', format=ticker.FuncFormatter(fmt))# fig.colorbar(pcm1, ax = [axs[-4], axs[-3]], orientation="horizontal", format=ticker.FuncFormatter(fmt))
-	cbar.set_ticks([-2*(10**-4), 0, 2*(10**-4)])
+	cbar.set_ticks([-2.5*(10**-4), 0, 2.5*(10**-4)])
 	
 	cb_ax = fig.add_axes([0.53,.04,.36,.02])
 	cbar = fig.colorbar(pcm3, cax = cb_ax, orientation="horizontal", format=ticker.FuncFormatter(fmt))
-	cbar.set_ticks([-1*(10**-2), 0, 1*(10**-2)])
+	cbar.set_ticks([-1.5*(10**-4), 0, 1.5*(10**-4)])
 
 	
 	axs[2].set_ylabel(r"$5.0T_{dyn}$")
@@ -232,14 +233,7 @@ def varyingN(filename):
 		axs.plot(timeDyn[600:1330], 0.1*np.absolute(data[lst[i],600:1330]), label = r"$n_{upper} = $ " + str(int(data[lst[i],0])), color = colors[i])
 		axs.plot(timeDyn[startFit[i]:1330], 0.1*fittingStraightline(timeDyn[startFit[i]:1330], np.absolute(data[lst[i],startFit[i]:1330])), color = colors[i], linestyle = '--')
 
-	
-
-
-
 	axs.legend()
-
-	
-
 
 	axs.set_ylabel(r"Energy")
 	axs.set_yscale('log')
@@ -352,7 +346,7 @@ def varyingCoupling(filename):
 
 	for i in range(6,6+3):
 		axs.plot(time, data[i,1:1000], label = r"$N_{cut}=$ "+str(int(data[i,0])), color = colors[i-6])
-		if i ==6:
+		if i == 6:
 			axs.plot(time[300:1000], fittingStraightline(time[300:999], data[i,300:999]), color = colors[i-6], linestyle = '--')
 
 
@@ -386,6 +380,30 @@ def differentTimeStep():
 	axs.set_ylabel("Potential Energy")
 	plt.show()
 
+def varyingXi(filename):
+	fig, axs = plt.subplots()
+
+	data = readingInRealCSV(filename)
+	time = np.linspace(0, 80, np.shape(data)[1]-1)
+	for i in range(np.shape(data)[0]):
+		axs.plot(time, -data[i,1:], label = str(data[i,0]))
+
+	axs.legend()
+	axs.set_yscale("log")
+	plt.show()
+
+
+def varyingRka(filename):
+	fig, axs = plt.subplots()
+
+	data = readingInRealCSV(filename)
+	time = np.linspace(0, 80, np.shape(data)[1]-1)
+	for i in range(np.shape(data)[0]):
+		axs.plot(time, np.absolute(data[i,1:]), label = str(data[i,0]))
+
+	axs.legend()
+	axs.set_yscale("log")
+	plt.show()
 
 
 
@@ -396,13 +414,20 @@ def differentTimeStep():
 #bfComparison(["BF_Comparison/kalnajsPertKalnajsRepDensity.csv", "BF_Comparison/kalnajsPertGaussianRepDensity.csv"])
 #bfComparison(["BF_Comparison/gaussianPertKalnajsRepDensity.csv", "BF_Comparison/gaussianPertGaussianRepDensity.csv"]) 
 #plottingPerturbation()
-#densityComparison1D(["BF_Comparison/kalnajsPertKalnajsRepDensity.csv", "BF_Comparison/kalnajsPertGaussianRepDensity.csv", "BF_Comparison/gaussianPertKalnajsRepDensity.csv", "BF_Comparison/gaussianPertGaussianRepDensity.csv"])
+densityComparison(["BF_Comparison/kalnajsPertKalnajsRepDensity.csv", "BF_Comparison/kalnajsPertGaussianRepDensity.csv", "BF_Comparison/gaussianPertKalnajsRepDensity.csv", "BF_Comparison/gaussianPertGaussianRepDensity.csv"])
 #densityComparison(["BF_Comparison/kalnajsPertKalnajsRepDensity.csv", "BF_Comparison/kalnajsPertGaussianRepDensity.csv", "BF_Comparison/gaussianPertKalnajsRepDensity.csv", "BF_Comparison/gaussianPertGaussianRepDensity.csv"])
+#densityComparison1D(["BF_Comparison/kalnajsPertGaussianRepDensity.csv", "BF_Comparison/OldGaussianKalnajsComp/kalnajsPertGaussianRepDensity.csv", "BF_Comparison/gaussianPertGaussianRepDensity.csv", "BF_Comparison/OldGaussianKalnajsComp/gaussianPertGaussianRepDensity.csv"])
 
 #powerspectrum([9,10])
 
 
 #plottingPerturbation()
-comparingDifferentNG("GaussianTesting/gaussianVaryingNbasis.csv")
+#comparingDifferentNG("GaussianTesting/gaussianVaryingNbasis.csv")
 #plottingFittedGaussian()
+#comparingDifferentN("KalnajsTesting/kalnajsVaryingNbasisSmall.csv")
+
+
+
+#varyingXi("KalnajsTesting/VaryingXI.csv")
+#varyingRka("KalnajsTesting/varyingRka.csv")
 

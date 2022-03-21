@@ -11,9 +11,9 @@ int main()
 	//kalnajsTorque(7);
 	//kalnajsTorque(8);
 	//kalnajsTorque(9);
-	kalnajsTorque(10);
+	//kalnajsTorque(10);
 
-	//kalnajsKernelsDiffTemp();
+	kalnajsKernelsDiffTemp();
 	//longTermEvolution();
 	//barVaryingActiveFraction();
 

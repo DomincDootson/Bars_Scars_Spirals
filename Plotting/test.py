@@ -1,52 +1,94 @@
 from generalPlottingFunctions import *
-	#plt.rc('text', usetex=True)
-#plt.rc('font', family='serif')
+from scipy.integrate import odeint
+
 '''
-n = 8
-plt.subplot(131)
-
-data = readingInComplexCSV("Coeff.csv")
-
-plt.plot(1.035*np.real(data)[:,n])
-
-data = -readingInComplexCSV("evolution.csv")
-
-plt.plot(np.real(data)[:,n])
-
-
-
-plt.subplot(132)
-data = readingInComplexCSV("Coeff.csv")
-
-plt.plot(1.035*np.imag(data)[:,n])
-
-data = -readingInComplexCSV("evolution.csv")
-
-plt.plot(np.imag(data)[:,n])
-
-
-plt.subplot(133)
-data = readingInComplexCSV("Coeff.csv")
-
-plt.plot(1.035*np.absolute(data)[:,n])
-
-data = -readingInComplexCSV("evolution.csv")
-
-plt.plot(np.absolute(data)[:,n])
-plt.show()
+data = readingInRealCSV("potential.csv")
+r = np.linspace(0,20, np.shape(data[200,210:])[0])
+plt.plot(r, 2*3.14/data[200,210:])
+plt.plot(r, 2*3.14*r)'''
+#plt.plot(r[1:], -r[1:])
 '''
-fig, axs = plt.subplots(nrows=1, ncols=1)
+fig, axs = plt.subplots(ncols = 1)
 
-data = readingInRealOUT("Kalnaj_0.out")
+data = readingInRealCSV("withScar.csv")
+l = np.linspace(0, 3, np.shape(data)[0])
+
+axs.plot(l,data, label = "Scarred Mestel")
+axs.set_title("Grooved Mestel")
+axs.set_xlabel(r"$J_{\phi}$")
+axs.set_ylabel(r"$F_{m}(J_{\phi}, J_{r} = 0)$")
+
+data = readingInRealCSV("withoutScar.csv")
+axs.plot(l, data)
+'''
+'''
+n = 3
+
+data = readingInComplexCSV("Spiral_Data/SpiralAnalyticTest.csv")
+plt.plot(np.absolute(data[:,n]))
+
+data = readingInComplexCSV("Spiral_Data/SpiralQuasiTest.csv")
+plt.plot(np.absolute(data[:,n]))
+
+data = readingInComplexCSV("Spiral_Data/SpiralTrueTest.csv")
+plt.plot(np.absolute(data[:,n]))
+
+plt.show()'''
+'''
+data = readingInRealCSV("Spiral_Data/QuasiKernel.csv")
+data1 = readingInRealCSV("Spiral_Data/AnalyticKernel.csv")
+
+plotting = [(data[i,i]-data1[i,i])/data1[i,i] for i in range(1,11)]
+print(plotting)
+
+plt.plot(plotting)
+plt.show()'''
+'''
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+fig, axs = plt.subplots(ncols=3)
+
+data = readingInRealCSV("coeff.csv")
+
+axs[0].plot(data[0:10,0], label = "Real N Body")
+axs[0].plot(data[0:10,1], label = "Imag N Body")
+axs[0].plot(data[0:10,2], label = "Real Spiral Coefficent")
+axs[0].plot(data[0:10,3], label = "Imag Spiral Coefficent")
+
+axs[0].set_xlabel(r"$n$")
+axs[0].set_ylabel(r"$B_{n}$")
+axs[0].legend()
+
+#plt.axhline()
+
+axs[1].plot(data[:,0])
+axs[1].plot(data[:,1])
+axs[1].plot(data[:,2])
+axs[1].plot(data[:,3])
+axs[1].set_ylabel(r"$B_{n}$")
+axs[1].set_xlabel(r"$n$")
+
+deltaPower = (np.sum(np.square(data[:,0]) + np.square(data[:,1]))- np.sum(np.square(data[:,2]) + np.square(data[:,3])))/np.sum(np.square(data[:,2]) + np.square(data[:,3]))
+print(deltaPower)
+n, delta = [20000, 50000, 100000, 500000], [0.0636, 0.0269, 0.0163, deltaPower]
+
+axs[2].plot(n,delta)
+axs[2].ticklabel_format(axis = 'x', style = 'sci', scilimits=(0,0))
+axs[2].set_xlabel("Number of Particles")
+axs[2].set_ylabel(r"Fractional Error")
 
 
-time = np.linspace(0,-80, np.shape(data)[0])
+fig.suptitle("Initial Coefficents for Spiral Sampling")
 
-axs.plot(time, data[:,0])
-axs.plot(time, data[:,1])
+plt.show()'''
 
-axs.set_xlabel(r"$t-t'$")
+'''
+trailing = twoDdensity("Spiral_Data/Spiral_-100.csv")
+trailing.densityAnimation(5)
 
+leading = twoDdensity("Spiral_Data/Spiral_100.csv")
+leading.densityAnimation(5)'''
 
-
+data = readingInRealCSV("Positions.csv")
+plt.plot(data[:,0], data[:,1])
 plt.show()
