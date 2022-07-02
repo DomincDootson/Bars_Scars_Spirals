@@ -9,37 +9,46 @@
 #include "../DF_Class/Mestel.h"
 #include "../DF_Class/ScarredMestel.h"
 #include "../DF_Class/Scar.h"
+#include "../DF_Class/AngularMomentumScar.h"
 
 #include "../Potential_Density_Pair_Classes/KalnajsBasis.h"
 #include "../Potential_Density_Pair_Classes/PotentialDensityPairContainer.h"
 
 #include "../Volterra_Solver/VolterraSolver.h"
 
-void addScars(ScarredMestel & df, bool scar1 = true, bool scar2 = true, bool scar3 = true) { 
+void addScars(ScarredMestel<Scar> & df, bool scar1 = true, bool scar2 = true, bool scar3 = true) { 
 	if (scar1) {Scar scar1(1.20, 11, 0.29, 0.474, -0.044, -5.219, -44.796); df.addScar(scar1);}
 	//if (scar2) {Scar scar2(1.55,  6, 0.10, 0.562,  0.288, -3.371, -15.619); df.addScar(scar2);}
 	//if (scar3) {Scar scar3(1.90,  6, 0.12, 0.081,  0.869, -0.486,  -3.242); df.addScar(scar3);}
-
 }
+
+void addScars(ScarredMestel<AngularMomentumScar> & df, bool scar1 = true, bool scar2 = true, bool scar3 = true) { 
+	if (scar1) {AngularMomentumScar scar1(2, 0.1, 5); df.addScar(scar1);}
+	//if (scar2) {Scar scar2(1.55,  6, 0.10, 0.562,  0.288, -3.371, -15.619); df.addScar(scar2);}
+	//if (scar3) {Scar scar3(1.90,  6, 0.12, 0.081,  0.869, -0.486,  -3.242); df.addScar(scar3);}
+}
+
 
 void savingEvolutionKernel(bool toAddScars, double sigma = 0.35, int nTimeStep = 200, double timeStep = 0.1, const std::string & filename = "Kernels/kalnajsScarred.out", const bool generateBF = false) {
 	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_0.dat"); int l{0};
-	ScarredMestel DF(1, 1, sigma); 
-	if (toAddScars) {addScars(DF);}
-
+	//ScarredMestel<Scar> DF(1, 1, sigma); 
+	ScarredMestel<AngularMomentumScar> DF(1, 1, sigma); 
+	double unscarredDiskMass{DF.diskMass()};
+	if (toAddScars) {addScars(DF);} 
+	double scarredDiskMass{DF.diskMass()}; std::cout << "Ratio of disk masses: " << unscarredDiskMass/scarredDiskMass <<'\n';
 	if (generateBF) {
 		ActionAngleBasisContainer test("KalnajsN", 48, l, 7, 251, 20); test.scriptW(pd, DF, "KalnajsN");}
 	
 	ActionAngleBasisContainer test("KalnajsN", "KalnajsN", 48, l, 7, 251, 20);
 
 	VolterraSolver solver1(48, l, nTimeStep, timeStep);
-	solver1.generateKernel(filename, DF, test);
+	solver1.generateKernel(filename, DF, test, unscarredDiskMass/scarredDiskMass);
 }
 
 
 
 void circularCutThrought() {
-	ScarredMestel df; 
+	ScarredMestel<Scar> df; 
 
 	std::ofstream out("Plotting/Scar_Data/withScar.csv");
 	for (double r = 0.1; r<3; r += 0.01) {
@@ -59,29 +68,29 @@ void circularCutThrought() {
 
 }
 
-void scarredDensity() {
-	ScarredMestel df(1,1,0.284); 
+void scarredDensity(const double temp, const std::string & filename) {
+	ScarredMestel<AngularMomentumScar> df(1,1, temp); 
 
-	std::ofstream out("Plotting/Scar_Data/unscarredDensity.csv");
+	/*std::ofstream out("Plotting/Scar_Data/unscarredDensity.csv");
 	for (double r = 0.1; r<10; r += 0.01) {std::cout << "Density for point: " << r << '\n'; out << r << ',' << df.density(r) << '\n';}
-	out.close(); 
+	out.close(); */ 
 
 	addScars(df); 
-	std::ofstream out1("Plotting/Scar_Data/scarredDensity.csv");
+	std::ofstream out1(filename);
 	for (double r = 0.1; r<10; r += 0.01) {std::cout << "Density for point: " << r << '\n'; out1 << r << ',' << df.density(r) << '\n';}
 	out1.close();  
 }
 
 void scarredPotential() {
 	
-	ScarredMestel df(1,1,0.35);
+	ScarredMestel<Scar> df(1,1,0.35);
  
 	std::ofstream out("Plotting/Scar_Data/unscarredPotential.csv");
 	for (double r = 0.1; r<15; r += 0.01) {std::cout << "Potential for point: " << r << '\n'; out << r << ',' << df.potentialFromVector(r) << '\n';}
 	out.close(); 
 
 	Scar scar1(1.20, 11, 0.29, 0.474, -0.044, -5.219, -44.796); 
-	ScarredMestel dfS({scar1}, 1,1,0.35);
+	ScarredMestel<Scar> dfS({scar1}, 1,1,0.35);
  
 	std::ofstream out1("Plotting/Scar_Data/scarredPotential.csv");
 	for (double r = 0.1; r<15; r += 0.01) {std::cout << "Potential for point: " << r << '\n'; out1 << r << ',' << dfS.potentialFromVector(r) << '\n';}
@@ -91,7 +100,7 @@ void scarredPotential() {
 
 
 void backgroundDF() {
-	ScarredMestel DF(1, 1, 0.35); 
+	ScarredMestel<Scar> DF(1, 1, 0.35); 
 	addScars(DF);
 	int nL{2000}, nE{3000};
 	double upperE{0.5+log(8)}, upperL{5}, stepE{upperE/((double) nE)}, stepL{upperL/((double) nL)}, E, L; 
@@ -111,16 +120,13 @@ void backgroundDF() {
 }
 
 void scarredModes() {
-	VolterraSolver solver1("Kernels/scarredMestel.out", 10, 2, 500, 0.25);
-	solver1.activeFraction(0.06); 
-	solver1.kernelTesting("Plotting/scarredEvolution.csv", 10, true);
+	VolterraSolver solver1("Kernels/kalnajsScarred0.out", 48, 0, 200, 0.1);
+	solver1.activeFraction(0.5); 
+	solver1.kernelTesting("Plotting/Scar_Data/scarredEvolutionModesT.csv", 48, false);
 }
 
 // Bouncing off the Scars //
 // ---------------------- // 
-
-
-
 
 void inFallingCoefficents(double timeStep, int nTimeStep) {
 	std::vector<double> positions, velocity; 
@@ -149,17 +155,37 @@ void inFallingCoefficents(double timeStep, int nTimeStep) {
 
 
 void circularInfall() {
-	//savingEvolutionKernel(true, 0.35, 200, 0.1, "Kernels/kalnajsScarred0.out", false); 
+	//savingEvolutionKernel(false, 0.15, 200, 0.1, "Kernels/kalnajs0.out", false); 
 	inFallingCoefficents(0.1, 200);
 	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_0.dat");
 
-	VolterraSolver solver1("Kernels/kalnajs0.out", 48, 2, 200, 0.1); // kalnajsScarred0.out
-	solver1.activeFraction(0.06); 
+	std::vector<std::string> filenames = {"Plotting/Scar_Data/infallingRingSS.csv", "Plotting/Scar_Data/infallingRingST.csv", "Plotting/Scar_Data/infallingRingUS.csv", "Plotting/Scar_Data/infallingRingUT.csv"};
+	std::vector<std::string> kernels = {"Kernels/kalnajsScarred0.out", "Kernels/kalnajsScarred0.out", "Kernels/kalnajs0.out", "Kernels/kalnajs0.out"};
+	std::vector<bool> selfConsistent = {true, false, true, false};
 
-	solver1.solveVolterraEquationPerturbation("Perturbations/infallingSatellite.out", true); 
 
-	solver1.density2dEvolution("Plotting/Scar_Data/infallingRingUS.csv", pd); 
+	for (int i =0; i < filenames.size(); ++i) { 
+		VolterraSolver solver1(kernels[i], 48, 2, 200, 0.1); // kalnajsScarred0.out
+		solver1.activeFraction(0.35); 
 
+		solver1.solveVolterraEquationPerturbation("Perturbations/infallingSatellite.out", selfConsistent[i]); 
+
+		//solver1.density2dEvolution("Plotting/Scar_Data/infallingRingUS.csv", pd); 
+		solver1.density1dEvolution(filenames[i], pd);
+	}
 }
 
+// Anuglar Momentum Scars //
+// ---------------------- //
 
+void angularMomentumScar() {
+	AngularMomentumScar scar(2, 0.1, 5);
+	ScarredMestel<AngularMomentumScar> dfs;
+
+	dfs.addScar(scar);
+
+	std::ofstream out("Plotting/density.csv");
+
+	for (double r = 0.01; r < 5; r += 0.05) {out << dfs.density(r) << '\n';}
+	out.close();
+}

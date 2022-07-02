@@ -310,10 +310,10 @@ void barVaryingActiveFraction() {
 void kalnajsKernelsDiffTemp()
 {
 	double timeStep{0.25};
-	int nMax{10}, numbTimeSteps{800};
+	int nMax{48}, numbTimeSteps{1200};
 
 	std::vector sigmas = {.35,.45};
-	ActionAngleBasisContainer test("Kalnajs/Kalnajs_4_20", "Kalnajs", nMax, 2, 7, 101, 20);
+	ActionAngleBasisContainer test("KalnajsN20", "KalnajsN", nMax, 2, 7, 251, 20);
 
 	for (auto it = sigmas.begin(); it != sigmas.end(); ++it) { 
 		Mestel DF(1, 1, *it);
@@ -324,7 +324,7 @@ void kalnajsKernelsDiffTemp()
 		//solver.generateKernel(kernel, DF, test); 
 	}
 
-	bool selfConsistent{false};
+	bool selfConsistent{true};
 	for (auto it: sigmas) {
 		std::string kernel = "Kernels/Kalnajs_2_" + std::to_string((int) round(100*(it))) + ".out";
 		VolterraSolver solver(kernel, nMax, 2, numbTimeSteps, timeStep);

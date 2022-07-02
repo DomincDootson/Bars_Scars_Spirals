@@ -26,12 +26,8 @@ public:
 	void kernelCreation(const std::string fileName, const Tdf & df, const ActionAngleBasisContainer & basisFunc); 
 	void getVolterraParams(const int maxRadialIndex, const int fourierHarmonic, const int numbTimeStep, const double timeStep);
 
-	void saveForPython(const std::string & filename) const; 
 	void kernelWrite2File(const std::string & kernelFilename) const; 
-
-	void kernelDecouple(const int index, const bool isZero, const bool isDiag);
-	void kernelDecouple(const int time, const int index, const bool isZero, const bool isDiag);
-	Eigen::MatrixXcd kernelDecouple(const int time, const int index) const; 
+	void includeMassFraction(const double massRatio) {for (auto kernel : m_kernels) {kernel *= massRatio;}}
 
 	int numbTimeSteps() const {return m_kernels.size();}
 	int numbBF() const {return m_maxRadialIndex;}
@@ -246,47 +242,6 @@ void EvolutionKernels::kernelSquareReadIn(const std::string & kernelFilename) {
 		}
 	} 
 	kernelIn.close();
-}
-
-
-
-void EvolutionKernels::saveForPython(const std::string & filename) const {
-	std::ofstream out(filename);
-	for (int i = 0; i < m_kernels[0].rows(); ++i) { 
-		for (int j = 0; j < m_kernels[0].cols(); ++j)  {
-			if (j == (m_kernels[0].cols()-1)) {out << m_kernels[0](i,j).imag() << '\n';}
-			else {out << m_kernels[0](i,j).imag() << ',';}
-		}
-	}
-}
-
-void EvolutionKernels::kernelDecouple(const int index, const bool isZero, const bool isDiag){
-	for (int time = 1; time < m_numbTimeSteps; ++time) {kernelDecouple(time, index, isZero, isDiag);}
-}
-
-void EvolutionKernels::kernelDecouple(const int time, const int index, const bool isZero, const bool isDiag) {
-	for (int i = index; i <= m_maxRadialIndex; ++i){ // Get rid of side blocks
-		for (int j = 0; j < index; ++j) {
-			m_kernels[time](i,j) = 0; m_kernels[time](j,i) = 0;}}
-
-	if (isZero) {
-		for (int i = index+1; i <=m_maxRadialIndex; i++){for (int j = index+1; j <=m_maxRadialIndex; j++){m_kernels[time](i,j) = 0;}}
-			m_kernels[time](index, index) = 0; 
-	}
-
-	if (!isZero && isDiag){
-		for (int i = index+1; i<=m_maxRadialIndex; ++i){for (int j = i+1; j<=m_maxRadialIndex; j++){m_kernels[time](i,j) = 0;m_kernels[time](j,i) = 0;}}
-	}
-	if (isZero || isDiag) {
-		for (int i = index+1; i <=m_maxRadialIndex;++i) {m_kernels[time](i,index) = 0; m_kernels[time](index,i) = 0;}
-	}
-}
-
-Eigen::MatrixXcd EvolutionKernels::kernelDecouple(const int time, const int index) const {
-		Eigen::MatrixXcd kernel = m_kernels[time];
-		for (int i = index; i <= m_maxRadialIndex; ++i){ 
-			for (int j = index; j <= m_maxRadialIndex; ++j) {kernel(i,j) = 0;}}
-		return kernel; 
 }
 
 #endif

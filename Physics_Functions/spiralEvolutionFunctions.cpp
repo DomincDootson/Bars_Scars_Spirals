@@ -24,21 +24,24 @@ void savingVector(std::ofstream & out, std::vector<double> & vec, double value) 
 void savingInitialSpiral(const std::string & filename) {
 	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat");
 
-	Spiral2D spiral(pd);
-	spiral.density2dEvolution(pd, filename, 1); 
+	Spiral2D spiralLeading(pd, .5);
+	spiralLeading.density2dEvolution(pd, "Plotting/Spiral_Data/spiralLeading.csv", 1); 
+
+	Spiral2D spiralTrailing(pd, -.5);
+	spiralTrailing.density2dEvolution(pd, "Plotting/Spiral_Data/spiralTrailing.csv", 1); 
 }
 
 
-void savingEvolutionKernel(double sigma = 0.35, int nTimeStep = 200, double timeStep = 0.1, const std::string & filename = "Kernels/kalnajsN.out", const bool generateBF = false) {
-	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat");	
+void savingEvolutionKernel(double sigma = 0.35, int nTimeStep = 200, double timeStep = 0.1, const std::string & filename = "Kernels/kalnajsN.out", const bool generateBF = false, const int nMax = 48) {
+	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat", nMax);	
 	Mestel DF(1, 1, sigma); 
 
 	if (generateBF) {
-		ActionAngleBasisContainer test("KalnajsN", 48, 2, 7, 251, 20); test.scriptW(pd, DF, "KalnajsN");}
+		ActionAngleBasisContainer test("KalnajsN", nMax, 2, 7, 251, 20); test.scriptW(pd, DF, "KalnajsN");}
 	
-	ActionAngleBasisContainer test("KalnajsN", "KalnajsN", 48, 2, 7, 251, 20);
+	ActionAngleBasisContainer test("KalnajsN", "KalnajsN", nMax, 2, 7, 251, 20);
 
-	VolterraSolver solver1(48, 2, nTimeStep, timeStep);
+	VolterraSolver solver1(nMax, 2, nTimeStep, timeStep);
 	solver1.generateKernel(filename, DF, test);
 }
 
@@ -60,6 +63,20 @@ void densityEvolution(double k) {
 }
 
 
+/* To Compare with N body */ 
+/* ---------------------- */
+
+void spiralEvolution() {
+	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat");
+	Spiral2D spiral(pd, -1, 5, 0.01);
+
+	VolterraSolver solver("Kernels/kalnajsN.out", 48, 2, 250, 0.25);
+	solver.activeFraction(.4);
+
+	solver.spiralEvolution(spiral); 
+	spiral.saveEvolutionCoeff("Plotting/SpiralCoef.csv");
+}
+
 
 
 /* Code Varying */
@@ -67,17 +84,17 @@ void densityEvolution(double k) {
 
 
 void varyingKEvolution() {
-	//savingEvolutionKernel(.35, 250, 0.25, "Kernels/kalnajsN.out", false); 
+	//savingEvolutionKernel(.35, 500, 0.50, "Kernels/kalnajsN.out", false); 
 	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat");
 	
-
-std::vector<double> kVector = {.5, .75, 1, -.5, -.75, -1}; 
+	//std::ofstream out("Plotting/Spiral_Data/VaryingK.csv"); 
+	std::vector<double> kVector = {-.5, -.75, -1, .5, .75, 1};  //  
 
 	for (auto k : kVector) { 
 		auto filename = [k] () {return "Plotting/Spiral_Data/Spiral_" + std::to_string((int) round(100*k)) + ".csv";};
 		std::cout << "Saving to: " << filename() << '\n';
 		std::cout << '\n' << "Evolution for k = " << k << '\n' << '\n';
-		VolterraSolver solver("Kernels/kalnajsN.out", 48, 2, 250, 0.25);
+		VolterraSolver solver("Kernels/kalnajsN.out", 48, 2, 500, 0.50);
 		solver.activeFraction(.4);
 		
 		Spiral2D spiral(pd, k, 5);
@@ -85,8 +102,8 @@ std::vector<double> kVector = {.5, .75, 1, -.5, -.75, -1};
 
 		//std::vector<double> vec = spiral.densityPower(pd);
 		//savingVector(out, vec, k);
-
 		
+		//spiral.density2dFinal(pd, filename(), 250);
 		spiral.density2dEvolution(pd, filename(), 1, 10);
 	}
 	//out.close(); 
@@ -97,37 +114,78 @@ void varyingSigmaEvolution() {
 
 	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat");
 	
-	std::ofstream out("Plotting/VaryingSpiralTemperature.csv");
+	std::ofstream out("Plotting/Spiral_Data/VaryingSpiralTemperature.csv");
 
-	std::vector<double> sigma = {.2, .30, .40}; 
+	std::vector<double> sigma = {.20, .25, .30, .35}; 
 
 	for (auto s : sigma) { 
 		std::cout << '\n' << "Evolution for sigma = " << s << '\n' << '\n';
-		savingEvolutionKernel(s, 200, 0.25); 
-		VolterraSolver solver("Kernels/kalnajsN.out", 48, 2, 200, 0.25);
+		savingEvolutionKernel(s, 400, 0.25, "Kernels/kalnajsTempN.out"); 
+		auto filename = [s] () {return "Plotting/Spiral_Data/Spiral_Sigma_" + std::to_string((int) round(100*s)) + ".csv";};
+		VolterraSolver solver("Kernels/kalnajsTempN.out", 48, 2, 400, 0.25);
 		solver.activeFraction(.4);
 		
-		Spiral2D spiral(pd, -1);
+		Spiral2D spiral(pd, 1);
 		solver.spiralEvolution(spiral); 
 
 		std::vector<double> vec = spiral.densityPower(pd);
-		
+
+		//spiral.density2dFinal(pd, filename());
 
 		savingVector(out, vec, s);
 	}
 	out.close(); 
 }
 
+std::string smallSpiralFilename(double taper, double k) {
+	if (k > 0) {return "Plotting/Spiral_Data/TightlyWound_" + std::to_string((int) taper) + "_trailing.csv";}
+	else       {return "Plotting/Spiral_Data/TightlyWound_" + std::to_string((int) taper) + "_leading.csv";}
+}
+
 void smallSpiral() {
 	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat");
 
-	double taper{30};
-	Spiral2D spiral(pd, -1, 5, 0.01, taper);
 
-	VolterraSolver solver("Kernels/kalnajsN.out", 48, 2, 250, 0.25);
-	solver.activeFraction(.5);
-	solver.spiralEvolution(spiral); 
+	std::vector<double> tapers{10, 20, 30, 10, 20, 30}, ks{1, 1, 1, -1, -1, -1};
 
-	spiral.removeIC(); 
-	spiral.density2dEvolution(pd, "Plotting/Spiral_Data/TightlyWoundNoIC.csv", 1, 10);
+    for (int i = 0; i < tapers.size(); ++i) {		
+			Spiral2D spiral(pd, ks[i], 5, 0.01, tapers[i]);
+		
+			VolterraSolver solver("Kernels/kalnajsN.out", 48, 2, 250, 0.25);
+			solver.activeFraction(.5);
+			solver.spiralEvolution(spiral); 
+		
+			//spiral.removeIC(); 
+			spiral.density2dEvolution(pd, smallSpiralFilename(tapers[i], ks[i]), 1, 10);}
 }
+
+
+void varyingNumberBasisFunctions() {
+	
+	std::vector<double> nMax{24, 34, 48};
+
+	std::ofstream out("Plotting/Spiral_Data/VaryingK.csv"); 
+	  
+
+	for (auto n : nMax) { 
+		PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat", n);
+		std::cout << pd.maxRadialIndex() << '\n';
+		savingEvolutionKernel(0.35, 500, 0.5, "Kernels/kalnajsN.out", false, n);
+		auto filename = [n] () {return "Plotting/Spiral_Data/Spiral_" + std::to_string((int) round(n)) + ".csv";};
+		std::cout << "Saving to: " << filename() << '\n';
+		std::cout << '\n' << "Evolution for nMax = " << n << '\n' << '\n';
+		VolterraSolver solver("Kernels/kalnajsN.out", n, 2, 500, 0.50);
+		solver.activeFraction(.4);
+		
+		Spiral2D spiral(pd, 1, 5);
+		solver.spiralEvolution(spiral); 
+
+		std::vector<double> vec = spiral.densityPower(pd);
+		savingVector(out, vec, n);
+		
+		spiral.density2dFinal(pd, filename(), 250);
+		//spiral.density2dEvolution(pd, filename(), 1, 10);
+		
+	}
+	out.close(); 
+} 

@@ -8,10 +8,12 @@ void savingEvolutionKernel(double sigma, int nTimeStep, double timeStep, const s
 
 void densityEvolution(double k); 
 
-
+void spiralEvolution(); 
 
 void varyingKEvolution();
 void varyingSigmaEvolution(); 
 void smallSpiral(); 
+
+void varyingNumberBasisFunctions();
 
 #endif

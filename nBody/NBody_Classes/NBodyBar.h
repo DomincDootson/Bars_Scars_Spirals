@@ -38,7 +38,7 @@ void NBodyBar<Tbf>::testParticleEvolution(const std::string & diskFile, const st
 		this->outputInfo(time, out);
 	    this->backgroundParticleEvolution(false);
 	    
-		if (m_barGrid.updateGridNow(time,updateBarEvery)) { barUpdate(time*this->m_timeStep, freelyRotating, updateBarEvery); }
+		if (m_barGrid.updateGridNow(time,updateBarEvery)) { barUpdate(time*this->m_timeStep, freelyRotating, updateBarEvery);}
 		this->foregroundParticleEvolution(false, m_barGrid);
 	}
 	m_barGrid.saveBarEvolution(barFile);
@@ -73,11 +73,15 @@ void NBodyBar<Tbf>::barUpdate(const double time, const double freelyRotating, co
 template <class Tbf>
 void NBodyBar<Tbf>::angularMomentumSections(const std::string & filename, const bool isSelfConsistent) 
 {
-	OrbitSections sectionsClass(20); int minIndex{0}, index{0}, skip{100}; m_barGrid.updateGrid(); 
+	OrbitSections sectionsClass(48); int minIndex{0}, index{0}, skip{100}; m_barGrid.updateGrid(); 
+	std::cout << this->m_timeStep << '\n';
+	exit(0);
+
+	std::ofstream am("../Plotting/angmom.csv");
 	do 
 	{	
 		m_barGrid.driftBar(this->m_timeStep, 0);
-		if (m_barGrid.updateGridNow(index, skip)) {m_barGrid.updateGrid();} 
+		if (m_barGrid.updateGridNow(index, skip)) {m_barGrid.updateGrid(); sectionsClass.saveAngularMomentum(am);} 
 
 		sectionsClass.driftStep(this->m_timeStep);
 		std::valarray<double> accels = (this->accelsFromBackground(sectionsClass.m_ptle)+m_barGrid.perturbationAccels(sectionsClass.m_ptle));
@@ -89,17 +93,18 @@ void NBodyBar<Tbf>::angularMomentumSections(const std::string & filename, const 
 		sectionsClass.angularMomentumSections(m_barGrid.angle());
 
 		if (minIndex != sectionsClass.minIndex()) {minIndex = sectionsClass.minIndex(); std::cout << "Min Index: " << minIndex << '\n';}  	
-
+		if (index > 1000000) {am.close();  exit(0);}
  		index +=1;
 
 	} while (sectionsClass.continueSections()); 
 	std::cout << index * this->m_timeStep;
 	sectionsClass.outputSections(filename);
+
 }
 
 template <class Tbf>
 void NBodyBar<Tbf>::countTrappedOrbits(double runTime) {
-	OrbitSections sectionsClass(22); int minIndex{0}, index{0}, skip{100}; m_barGrid.updateGrid(); 
+	OrbitSections sectionsClass(20, "Bodies/particleSamples.csv"); int minIndex{0}, index{0}, skip{100}; m_barGrid.updateGrid(); 
 	sectionsClass.setUpforCounting(); 
 
 	for (double time  = 0; time < runTime; time += this->m_timeStep) {
@@ -116,7 +121,8 @@ void NBodyBar<Tbf>::countTrappedOrbits(double runTime) {
  		index +=1;
  		if (index % 100000 == 0) {std::cout << "Fraction of time completed: " << time / runTime << '\n';}
 	} 	
-	std::cout << "Fraction of trapped orbits: " << sectionsClass.fractionOfOrbitsTrapped() << '\n'; 
+	std::cout << "Fraction of trapped orbits: " << sectionsClass.fractionOfOrbitsTrapped() << '\n';
+	std::cout << "Fraction of orbits around bar: " << sectionsClass.fractionOfOrbitsAroundBar(2) << '\n';  
 }
 
 

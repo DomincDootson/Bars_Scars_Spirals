@@ -1,5 +1,5 @@
 from generalPlottingFunctions import *
-from scipy.integrate import odeint
+from Density_Classes.OneDdensity import *
 
 '''
 data = readingInRealCSV("potential.csv")
@@ -81,14 +81,54 @@ axs[2].set_ylabel(r"Fractional Error")
 fig.suptitle("Initial Coefficents for Spiral Sampling")
 
 plt.show()'''
+'''n = 0
+fig, axs = plt.subplots(ncols=2)
+data = readingInComplexCSV("SpiralCoef.csv")
+time = np.linspace(0, 50, np.shape(data)[0])
+
+lst = []
+for i in range(np.shape(data)[0]):
+	total =0
+	for j in range(np.shape(data)[1]):
+		total += data[i,j].real**2 + data[i,j].imag**2
+
+	lst.append(total)
+axs[0].plot(time, np.real(data[:,n]))
+axs[1].plot(time, np.imag(data[:,n]))
+
+
+data = readingInComplexCSV("Spiral_Data/nBodyEvolution.csv")
+time = np.linspace(0, 50, np.shape(data)[0])
+
+lst = []
+for i in range(np.shape(data)[0]):
+	total =0
+	for j in range(np.shape(data)[1]):
+		total += data[i,j].real**2 + data[i,j].imag**2
+
+	lst.append(total)
+
+
+axs[0].plot(time, np.real(data[:,n]))
+axs[1].plot(time, np.imag(data[:,n]))
+
+plt.show() '''
 
 '''
-trailing = twoDdensity("Spiral_Data/Spiral_-100.csv")
-trailing.densityAnimation(5)
+data = readingInRealCSV("angmom.csv")
+plt.plot((data[:2000,6] - data[0,6])/data[0,6])
+#plt.plot(data[:,21] - data[0,21])
+plt.plot((data[:2000,28] - data[0,28])/data[0,28])
+plt.show()'''
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
 
-leading = twoDdensity("Spiral_Data/Spiral_100.csv")
-leading.densityAnimation(5)'''
+data = readingInRealCSV("Density.csv")
 
-data = readingInRealCSV("Positions.csv")
-plt.plot(data[:,0], data[:,1])
+plt.plot(data[:,0], data[:,1], label = 'Tapered Mestel', color = 'firebrick')
+plt.plot(data[30:,0], data[30:,2], label = 'Mestel', color = 'cornflowerblue')
+
+plt.xlabel("Radius")
+plt.ylabel("Density")
+plt.legend()
 plt.show()

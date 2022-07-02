@@ -318,12 +318,12 @@ double DFClass::maxDensityRadius() const // Assume that there is only one turnin
 	double stepSize{0.1}; int size{(int) densityArray.size()};
 	do
 	{
-		densityArray.push_back(density(size*stepSize));
+		densityArray.push_back(size*stepSize*density(size*stepSize));
 		size = densityArray.size();
 	} while (densityArray[size-1] >  densityArray[size-2]);
 	
 	double gradBeforeTP{abs(densityArray[size-2] - densityArray[size-3])}, gradAfterTP{abs(densityArray[size-1] - densityArray[size-2])};
-	return stepSize * (size-1.5) + stepSize * (gradBeforeTP)/(gradBeforeTP + gradAfterTP); // Linearly interpolate
+	return  size*stepSize; //stepSize * (size-1.5) + stepSize * (gradBeforeTP)/(gradBeforeTP + gradAfterTP); // Linearly interpolate
 }
 
 

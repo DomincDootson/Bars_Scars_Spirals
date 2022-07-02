@@ -1,27 +1,28 @@
 #include "generalFunctions.h"
-#include <iostream>
-#include <chrono>
-
-#include <vector>
 
 
 int main()
 {
 	//generatingSpiralBF(2);
 	//generatingSpiralBFDiffTemp(2);
-	//generatingKalnajsKernels(2);
-	//generatingKalnajsBF(2);
+	//generatingKalnajsKernels(2, 10, 1);
+	//generatingKalnajsKernels(2, 10, 2);
+	//generatingKalnajsKernels(2, 20, 1);
+	//generatingKalnajsKernels(2, 20, 2);
+
+	
+	
+	
+
+	
+
+
+	//differentInnerTapers();
+	generatingKalnajsBF(2);
 	//testingBarTorque();
 	//testingFitting();
 	//saveKalnajs();
 	//kalnajTest();
-	
-	spiralTestAnalytic(); 
-	spiralTestQuasi(); 
-	//spiralTestTrue(); 
-	//spiralEvolution();
-
-	//spiralBasisComparions();
 	
 
 	return 0;

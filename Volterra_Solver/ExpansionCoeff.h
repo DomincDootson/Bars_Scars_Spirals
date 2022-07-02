@@ -40,13 +40,14 @@ public:
 	void coefficentReadIn(const std::string &filename);
 	void coefficentReadInConstructor(const std::string &filename);
 
-	void write2File(const std::string & filename, const int skip = 10) const;
+	void write2File(const std::string & filename, const int skip = 1) const;
+	void write2File(const int time, std::ofstream & out) const; 
 	void writePerturbation2File(const std::string &filename) const;
 
 	template <class Tbf>
 	void writeDensity2File(const std::string & outFilename, const Tbf & bf, const int skip) const; 
 	template <class Tbf>
-	void write2dDensity2File(const std::string & outFilename, const Tbf & bf, const int skip, const double rMax=10, const int nStep=201) const; 
+	void write2dDensity2File(const std::string & outFilename, const Tbf & bf, const int skip, const double rMax=5, const int nStep=201) const; 
 	template <class Tbf>
 	void write2dDensity2File(int timeIndex, const std::string & outFilename, const Tbf & bf, const double rMax=10, const int nStep=201) const; 
 	template <class Tbf>
@@ -103,7 +104,6 @@ void ExpansionCoeff::coefficentReadInConstructor(const std::string &filename)
 
 	double real, imag;
 	std::complex<double> unitComplex(0,1);
-	int time{0};
 	for (auto it = m_coeff.begin(); it != m_coeff.end(); ++it){
 		it -> setZero(maxRadialIndex+1);
 	 	for (int n = 0; n < it -> size(); ++ n) {
@@ -116,20 +116,24 @@ void ExpansionCoeff::coefficentReadInConstructor(const std::string &filename)
 }
 
 
+void ExpansionCoeff::write2File(const int time, std::ofstream & out) const {
+for (int n = 0; n < m_coeff[time].size(); ++n)
+	{
+		if (n == m_coeff[time].size() -1){
+			out << real(m_coeff[time](n)) << sign(imag(m_coeff[time](n)))  << abs(imag(m_coeff[time](n)))  << "j\n";
+		}
+		else{
+		out << real(m_coeff[time](n)) << sign(imag(m_coeff[time](n)))  << abs(imag(m_coeff[time](n))) << "j,"; // Could we change the syntax t
+		}
+	}
+}
+
 void ExpansionCoeff::write2File(const std::string & filename, const int skip) const 
 {
 	std::ofstream out(filename);
-	for (int time = 0; time < m_coeff.size(); time += 1)
+	for (int time = 0; time < m_coeff.size(); time += skip)
 	{
-		for (int n = 0; n < m_coeff[time].size(); ++n)
-		{
-			if (n == m_coeff[time].size() -1){
-				out << real(m_coeff[time](n)) << sign(imag(m_coeff[time](n)))  << abs(imag(m_coeff[time](n)))  << "j\n";
-			}
-			else{
-			out << real(m_coeff[time](n)) << sign(imag(m_coeff[time](n)))  << abs(imag(m_coeff[time](n))) << "j,"; // Could we change the syntax t
-			}
-		}
+		write2File(time, out); 
 	}
 	std::cout << "Evolution saved to: " << filename << '\n';
 	out.close();
@@ -192,6 +196,7 @@ void ExpansionCoeff::writeDensity2File(const std::string & outFilename, const Tb
 		std::vector<double> densityOnLine = bf.oneDdensity(radii, m_coeff[time]);
 		outputVector(out, densityOnLine);
 	}
+	std::cout << "Density evolution saved to: " << outFilename << '\n';
 	out.close();
 }
 

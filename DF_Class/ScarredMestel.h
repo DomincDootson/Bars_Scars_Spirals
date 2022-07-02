@@ -5,12 +5,13 @@
 
 #include "DFClass.h"
 #include "Scar.h"
+#include "AngularMomentumScar.h"
 
-
+template <class T> 
 class ScarredMestel : public DFClass
 {
 public:
-	ScarredMestel(const std::vector<Scar> & scars, double vc = 1, double r0 = 1, double litteSigma = 0.35, double xi = 0, 
+	ScarredMestel(const std::vector<T> & scars, double vc = 1, double r0 = 1, double litteSigma = 0.35, double xi = 0, 
 	double rInner = 1, double rOuter = 11.5, double nuTaper = 4, double muTaper = 5) : 
 	m_vc{vc}, m_r0{r0}, m_littleSigma{litteSigma}, m_q{pow(m_vc/m_littleSigma,2) - 1}, m_xi{xi}, 
 	m_rInner{rInner}, m_rOuter{rOuter}, m_nuTaper{nuTaper}, m_muTaper{muTaper} {
@@ -32,16 +33,16 @@ public:
 	double potential(double radius) const {return (1-m_xi) * potentialBackground(radius) + m_xi * potentialFromVector(radius);}//(1-m_xi) * potential(radius) + 
 	double distFunc(double E, double J) const;
 
-	void addScar(const Scar & scarToAdd) {v_scars.push_back(scarToAdd);}
-	void addScars(const std::vector<Scar> & scars) {for (auto scar : scars) {v_scars.push_back(scar);}}
+	template <class Ts> 
+	void addScar(const Ts & scarToAdd) {v_scars.push_back(scarToAdd);}
+	template <class Ts> 
+	void addScars(const std::vector<Ts> & scars) {for (auto scar : scars) {v_scars.push_back(scar);}}
 
 	double vRSampling() const;  
-	
-
 	double potentialFromVector(const double radius) const; 
 	
-//private:
-	std::vector<Scar> v_scars; 
+private:
+	std::vector<T> v_scars; 
 	std::vector<double> v_potential; 
 
 	const double m_vc, m_r0, m_littleSigma, m_q, m_xi, m_rInner, m_rOuter, m_nuTaper, m_muTaper;
@@ -67,18 +68,22 @@ public:
 /* DF Functions */
 /* ------------ */  
 
-double ScarredMestel::innerTaper(double J) const{
+template <class T>
+double ScarredMestel<T>::innerTaper(double J) const{
 	return pow(J, m_nuTaper) / (pow(m_rInner*m_vc, m_nuTaper) + pow(J, m_nuTaper));
 }
 
-double ScarredMestel::outerTaper(double J) const{
+template <class T>
+double ScarredMestel<T>::outerTaper(double J) const{
 	return 1/(1+pow(J/(m_rOuter*m_vc), m_muTaper));
 }
 
-double ScarredMestel::distFunc(double E, double J) const // Note that we have set G = 1
+template <class T>
+double ScarredMestel<T>::distFunc(double E, double J) const // Note that we have set G = 1
 {
 	double scarEffect{1};
-	for (auto scar : v_scars) {scarEffect *= scar.groove(E, J, equivalentLconstJr(E, J, scar.patternSpeed(), scar.jacobi()));}
+	for (auto scar : v_scars) {scarEffect *= scar.groove(E, J, 1);} // We need the other way for the other scar! 
+	//for (auto scar : v_scars) {scarEffect *= scar.groove(E, J, equivalentLconstJr(E, J, scar.patternSpeed(), scar.jacobi()));}
 	return  scarEffect*innerTaper(J)*outerTaper(J)*pow((J/(m_r0*m_vc)), m_q) * exp(-E/pow(m_littleSigma,2)) * 
 	(((pow(m_vc,2)/(2*M_PI*m_r0)) * pow(m_vc,m_q)) * pow(pow(2, 0.5*m_q) * 
 	sqrt(M_PI)*tgamma(0.5*m_q+0.5)*pow(m_littleSigma,2+m_q), -1)); 
@@ -87,7 +92,8 @@ double ScarredMestel::distFunc(double E, double J) const // Note that we have se
 /* Scarring Functions */ 
 /* ------------------ */
 
-double ScarredMestel::equivalentLconstJr(const double E, const double L, const double pattern, const double jacobi) const {
+template <class T>
+double ScarredMestel<T>::equivalentLconstJr(const double E, const double L, const double pattern, const double jacobi) const {
 	double jR{radialAction(E,L)}, epsilon{0.000001}; int nStep{20};
 	double lowerL{epsilon}, upperL{50 * m_vc}, holding{0.5*(lowerL + upperL)}; 
 
@@ -102,7 +108,8 @@ double ScarredMestel::equivalentLconstJr(const double E, const double L, const d
 /* Potential Functions */
 /* ------------------- */ 
 
-void ScarredMestel::readInPotentialVector() {
+template <class T>
+void ScarredMestel<T>::readInPotentialVector() {
 	//savingDensity("DF_Class/Densities/scarredMestelDensity.csv", 0.03, 1000);	
 	//std::system("/Users/dominicdootson/Documents/PhD/phd/Linear_Stability_Clean/nBody/potentialFromDensity"); 
 	std::ifstream inFile("DF_Class/Densities/scarredMestelPotential.csv");
@@ -116,7 +123,8 @@ void ScarredMestel::readInPotentialVector() {
 	inFile.close(); 
 }
 
-double ScarredMestel::potentialFromVector(const double radius) const {
+template <class T>
+double ScarredMestel<T>::potentialFromVector(const double radius) const {
 	if (v_potential.size() ==0) {return 0;}
 	if (radius > (v_potential.size()-2)*m_potentialSpacing) {std::cout << "Off potential grid\n"; exit(0);}
 	double index{radius/m_potentialSpacing}; int lowerIndex{(int) floor(index)};
@@ -127,19 +135,22 @@ double ScarredMestel::potentialFromVector(const double radius) const {
 /* Sampling Functions */
 /* ------------------ */ 
 
-double ScarredMestel::vRSampling() const {
+template <class T>
+double ScarredMestel<T>::vRSampling() const {
 	std::random_device generator; std::normal_distribution<double> vrDF(0, m_littleSigma);
 	return vrDF(generator);
 }
 
 
-double ScarredMestel::jMax(const double radius) const{
+template <class T>
+double ScarredMestel<T>::jMax(const double radius) const{
 
 	if (radius > m_rOuter) {return 5 * m_rOuter * m_vc;}
 	else {return sqrt(2) * 5 * m_littleSigma * radius;}
 }
 
-double ScarredMestel::dfMax(const double radius, const double vR) const {
+template <class T>
+double ScarredMestel<T>::dfMax(const double radius, const double vR) const {
 	return distFunc(0.5*vR*vR +0.5*m_q*pow(m_littleSigma,2)+potential(radius), sqrt(m_q)*m_littleSigma*radius);
 }
 

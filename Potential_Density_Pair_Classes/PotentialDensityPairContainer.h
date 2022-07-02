@@ -25,6 +25,7 @@ public:
 	}
 
 	PotentialDensityPairContainer(const std::string & filename);
+	PotentialDensityPairContainer(const std::string & filename, const int maxRadialIndex);
 
 
 	~PotentialDensityPairContainer() {}
@@ -85,10 +86,27 @@ private:
 	double scriptEelement(int k, int j) const;
 
 };
+
 template <class T>
 PotentialDensityPairContainer<T>::PotentialDensityPairContainer(const std::string & filename) {
 	std::ifstream inFile(filename); if (!inFile.good()) {std::cout << "PD file doesn't exist.\n"; exit(0);}
 	inFile >> m_maxRadialIndex; inFile >> m_fourierHarmonic;
+	double step, rMax; inFile >> step; inFile >> rMax; 
+	for (int i = 0; i <= m_maxRadialIndex; ++i) {
+		m_potentialDensityContainer.emplace_back(inFile, step, rMax, i, m_fourierHarmonic); 
+	}
+	inFile.close();
+	m_scriptE = calculateScriptE();
+}
+
+template <class T>
+PotentialDensityPairContainer<T>::PotentialDensityPairContainer(const std::string & filename, const int maxRadialIndex) : m_maxRadialIndex{maxRadialIndex} {
+	int holding{};
+	std::ifstream inFile(filename); if (!inFile.good()) {std::cout << "PD file doesn't exist.\n"; exit(0);}
+	inFile >> holding; inFile >> m_fourierHarmonic; 
+	assert(holding >= m_maxRadialIndex && "The number of basis functions in the file is less than the max radial index\n\n");
+
+
 	double step, rMax; inFile >> step; inFile >> rMax; 
 	for (int i = 0; i <= m_maxRadialIndex; ++i) {
 		m_potentialDensityContainer.emplace_back(inFile, step, rMax, i, m_fourierHarmonic); 

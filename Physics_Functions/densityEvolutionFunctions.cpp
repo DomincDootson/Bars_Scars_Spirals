@@ -174,6 +174,24 @@ void diskKickingPerturbations()
 	}
 }
 // SPIRAL EQU //
+// ---------- //
+
+void greensFunctions() {
+
+	std::vector<double> params{48, .15, 15};
+	PotentialDensityPairContainer<GaussianLogBasis> pd{params, 48, 2};	
+
+
+
+	std::string kernel{"Kernels/gaussianComparison.out"};
+	VolterraSolver solver(kernel, pd.maxRadialIndex(), 2, 200, 0.25);
+	solver.activeFraction(.40);
+
+
+	solver.kernelTesting("testing.csv", 27, false);
+	solver.density2dEvolution("Disk_Kicking/littleSigma_35/Density2D20_2.csv", pd);
+
+}
 
 
 // Coefficent Evolution //
@@ -430,3 +448,12 @@ void comparisonDensityEvolution() {
 	//guassian2D("Physics_Functions/gaussianPertGaussianRep.csv", "Plotting/BF_Comparison/gaussianPertGaussianRepDensity.csv", 48);
 }
 
+
+void densityTest() {
+	Mestel DF;
+	std::ofstream out("Plotting/Density.csv");
+
+	for (double radius = 0.01; radius < 15; radius += 0.05) {out << radius<<','<< DF.density(radius) << ',' << 1/(2*M_PI*radius) << '\n';}
+
+
+}

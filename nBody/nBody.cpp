@@ -4,10 +4,12 @@
 #include <cmath>
 
 int main(){
-	//barEvolutionKalnajs("Evolution_Test_Cold", false, 0.35); 
-	//barEvolutionKalnajs("Evolution_Test_Warm", false, 0.45);
+	barEvolutionKalnajs("Evolution_Test_Cold", true, 0.35); 
+	barEvolutionKalnajs("Evolution_Test_Warm", true, 0.45);
 
-	orbitSection(); 
+	//orbitSection(); 
+	
+	//barEvolutionGaussian();
 	/* 
 	barEvolutionKalnajs("Evolution_Self_Cold", true, 0.35); 
 	barEvolutionKalnajs("Evolution_Self_Warm", true, 0.45); */

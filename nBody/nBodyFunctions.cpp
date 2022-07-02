@@ -8,6 +8,7 @@
 
 #include "../DF_Class/Mestel.h"
 #include "../Potential_Density_Pair_Classes/KalnajsBasis.h"
+#include "../Potential_Density_Pair_Classes/KalnajsNBasis.h"
 #include "../Potential_Density_Pair_Classes/GaussianLogBasis.h"
 
 #include "../Bar2D/Bar2D.h"
@@ -16,9 +17,9 @@
 #include <cmath>
 
 
-const int NUMBPARTICLES{20000};
-const int NSTEPS{100000};  
-const double TIMESTEP{0.001};
+const int NUMBPARTICLES{500000};
+const int NSTEPS{30000};   //300000
+const double TIMESTEP{0.01};
 
 
 Eigen::VectorXcd gaussianBar(const PotentialDensityPairContainer<GaussianLogBasis> & pd) {
@@ -66,18 +67,19 @@ void barEvolutionGaussian()
 		coeff = gaussianBar(pd);	
 		Bar2D bar(coeff, 0.01, "../Bar2D/barSize.out");
 
-		NBodyBar nbodyBar(NUMBPARTICLES, NSTEPS, TIMESTEP, pd, bar);  
-		//nbodyBar.testParticleEvolution(coefficentFilenameGaussian(i), evolutionFilenameGaussian(i), 0);
-		nbodyBar.nBodyEvolution(coefficentFilenameGaussian(i), evolutionFilenameGaussian(i), 0);
+		NBodyBar nbodyBar(1, NSTEPS, TIMESTEP, pd, bar);  
+		nbodyBar.testParticleEvolution(coefficentFilenameGaussian(i), evolutionFilenameGaussian(i), 0);
+		exit(0); 
+		//nbodyBar.nBodyEvolution(coefficentFilenameGaussian(i), evolutionFilenameGaussian(i), 0);
 	}
 }
 
 void barEvolutionKalnajs(const std::string & stem, const bool isSelfConsistent, const double littleSigma)
 {
 	std::vector<double> params{4, 20};
- 	PotentialDensityPairContainer<KalnajsBasis> pd(params, 10, 2);
+ 	PotentialDensityPairContainer<KalnajsNBasis> pd("../Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_20_2.dat");
 
-	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(10+1);
+	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(48+1);
 	coeff(0) = 0.01;
 	
 
@@ -108,8 +110,8 @@ void orbitSection()
 		//nbodyBar.barOrbitSections(filenames[i], false);
 
 
-		//nbodyBar.angularMomentumSections(filenames[i], false);
-		nbodyBar.countTrappedOrbits(); 
+		nbodyBar.angularMomentumSections(filenames[i], false);
+		//nbodyBar.countTrappedOrbits(); 
 		exit(0);
 		std::cout << "Finished the funciton: " << i << '\n';
 	}
@@ -129,11 +131,9 @@ void kalanajTest()
 
 
 void spiralTesting() {
-	std::vector<double> params{4, 20};
  	PotentialDensityPairContainer<KalnajsNBasis> pd("../Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat");
 
- 	Spiral2D spiral(pd, 1, 5, 0.01);
- 	
+ 	Spiral2D spiral(pd, -1, 5, 0.001);
 
  	NBodySpiral nbody(500000, 100000*0.5, TIMESTEP, pd, spiral);
  	nbody.nBodyEvolution("../Plotting/Spiral_Data/nBodyEvolution.csv");

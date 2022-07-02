@@ -266,14 +266,44 @@ def gaussianVaryingTapers(listOfEnergies):
 	plt.show()
 
 
+def energyFromCoeff(data): #we assume that it is all orthogonal
+	energies = []
+
+	for time in range(np.shape(data)[0]):
+		sum_ = 0
+		for n in range(np.shape(data)[1]):
+			sum_ += data[time, n].real**2 + data[time, n].imag**2
+
+		energies.append(sum_)
+
+	return energies
+
+
+def varyingTaperPositition(files = ["General_Data/kalnajsComparison_10_1.out", "General_Data/kalnajsComparison_20_1.out", "General_Data/kalnajsComparison_10_2.out", "General_Data/kalnajsComparison_20_2.out"]):
+	energies = [energyFromCoeff(readingInComplexCSV(file)) for file in files]	
+
+	fig, axs = plt.subplots()
+	axs.plot(energies[0], label = r"$N_{max} = 10$ $R_{i}=1$")
+	axs.plot(energies[1], label = r"$N_{max} = 20$ $R_{i}=1$")
+	axs.plot(energies[2], label = r"$N_{max} = 10$ $R_{i}=2$")
+	axs.plot(energies[3], label = r"$N_{max} = 20$ $R_{i}=2$")
+
+	axs.set_yscale('log')
+	plt.legend()
+
+	plt.show()
+	
+
+
+'''
 listOfEnergies = [EnergyEvolutionData("GaussianLogEnergy_5_150.csv",0.5,15), EnergyEvolutionData("GaussianLogEnergy_10_150.csv",1,15), EnergyEvolutionData("GaussianLogEnergy_20_150.csv",2,15)]
 gaussianVaryingTapers(listOfEnergies)
 listOfEnergies = [EnergyEvolutionData("GaussianLogEnergy_10_100.csv",1,10), EnergyEvolutionData("GaussianLogEnergy_10_150.csv",1,15), EnergyEvolutionData("GaussianLogEnergy_10_175.csv",1,17.5)]
 gaussianVaryingTapers(listOfEnergies)
+'''
 
 
 
-
-
+varyingTaperPositition()
 
 

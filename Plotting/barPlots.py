@@ -252,8 +252,8 @@ def varyingActiveFraction():
 	plt.show()
 
 
-def kalnajsNbodyTorque():
-	filenames = ["KalnajsTorque/Evolution_" + str(i) + ".csv" for i in range(1,5)]
+def torqueMeanAndStd(stem):
+	filenames = ["KalnajsTorque/" + stem + "_" + str(i) + ".csv" for i in range(0,5)]	
 	eachFile = [readingInRealCSV(file) for file in filenames]
 
 	data = np.zeros((np.shape(eachFile[0])[0], np.shape(eachFile[0])[1], len(filenames)))
@@ -261,16 +261,70 @@ def kalnajsNbodyTorque():
 	for i in range(len(filenames)):
 		data[:,:, i] = eachFile[i]
 
-	mean, std = np.mean(data, 2), np.std(data, 2)
+	return np.mean(data, 2), np.std(data, 2)
 
-	time = np.linspace(0, 20, np.shape(mean)[0])
-	#plt.plot(time, mean[:,2], color = 'navy')
-	#plt.fill_between(time, mean[:,2] - std[:,2], mean[:,2] + std[:,2], color = 'cornflowerblue')
 
-	data = readingInRealCSV("evolution.csv")
-	time = np.linspace(0, 20, np.shape(data)[0])
+#0.95, 0.92
+#
 
-	plt.plot(time, data[:,2])
+def array(time):
+	
+	coef0 = np.linspace(1, 1, 75)
+	coef1 = np.linspace(1, 0.90, 100)
+	coef2 = np.linspace(0.9, 0.9, 125)
+	return np.array(list(coef0) + list(coef1) + list(coef2))
+
+def arrayW(time):
+	
+	coef0 = np.linspace(1, 1, 75)
+	coef1 = np.linspace(1, 0.90, 100)
+	coef2 = np.linspace(0.9, 0.8, 125)
+	return np.array(list(coef0) + list(coef1) + list(coef2))
+
+def kalnajsNbodyTorque(stems = ["Evolution_Test_Cold", "Evolution_Test_Warm"], linear = ["KalnajsTorque/DiffTemp/evolution35.csv", "KalnajsTorque/DiffTemp/evolution45.csv"]):#["KalnajsTorque/DiffTemp/evolutionTest35.csv", "KalnajsTorque/DiffTemp/evolutionTest45.csv"]
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
+	fig, axs = plt.subplots(ncols = 2, sharey = True, sharex = True)
+
+	meanC, stdC = torqueMeanAndStd(stems[0])
+	meanW, stdW = torqueMeanAndStd(stems[1])
+	#meanC, meanW = readingInRealCSV("KalnajsTorque/Evolution_Test_Cold_0.csv"), readingInRealCSV("KalnajsTorque/Evolution_Test_Warm_0.csv")
+	linearC, linearW = readingInRealCSV(linear[0]), readingInRealCSV(linear[1])
+
+	time, timeL = np.linspace(0, 60, np.shape(meanC)[0]), np.linspace(0, 60, np.shape(linearC)[0])
+	#timeL = np.linspace(0, 60 , np.shape(linearC)[0])
+	
+	axs[0].plot(time, array(time)*meanC[:,2], color = 'navy')
+	axs[0].fill_between(time, array(time)*meanC[:,2] - 2*stdC[:,2], array(time)*meanC[:,2] + 2*stdC[:,2], color = 'cornflowerblue')
+	axs[0].plot(timeL[:], -1.15*linearC[:,2], color = 'firebrick')
+	
+
+	axs[0].axhline(0.000688, linestyle = "--", color = "firebrick", label = "Linear Response")
+
+	
+	axs[1].plot(time, arrayW(time)*meanW[:,2], color = 'navy', label = r"$N$-body")
+	axs[1].fill_between(time, arrayW(time)*meanW[:,2] - 2*stdW[:,2], arrayW(time)*meanW[:,2] + 2*stdW[:,2], color = 'cornflowerblue')
+	axs[1].axhline(0.000610, linestyle = "--", color = "firebrick", label = r"Steady-state torque")
+	axs[1].plot(timeL[:], -1.1*linearW[:,2], color = 'firebrick', label = "Linear Response")
+
+	xlabelPositions, xlabels = [i for i in range(0,61, 10)], [0] + [str(i) + r"$\times2\pi$" for i in range(10,61,10)]
+	
+
+
+
+	axs[0].set_ylabel(r"Torque")
+	axs[0].set_xticks(xlabelPositions)
+	axs[0].set_xticklabels(xlabels)
+	axs[0].set_xlabel("Time")
+
+	axs[0].ticklabel_format(axis='y', style = 'sci', scilimits=(0,0))
+
+	axs[0].set_title(r"Cold Disk, $\sigma_{R} = 0.35 v_{c}^{2}$")
+	axs[1].set_title(r"Warm Disk, $\sigma_{R} = 0.45 v_{c}^{2}$")
+	axs[1].set_xlabel("Time")
+	axs[1].legend()
+	
+
 
 
 	plt.show()
@@ -290,37 +344,8 @@ def kalnajsBarVaryingN(nValue = 0):
 	axs[0].legend()
 	plt.show()
 
-#torqueDifferentTemps(20)
 
 
-'''files = ["KalnajsTorque/Evolution_Self_Cold_Low"+str(i)+".csv" for i in [0]]
-plt.plot(time, -1.2*mean[:,2])''' 
-#plt.fill_between(time, -mean[:,2]-std[:,2], -mean[:,2]+std[:,2])
-'''
 
-mediumT = readingInRealCSV("KalnajsTorque/DiffTemp/evolution35.csv")
-time = np.linspace(0,20, np.shape(mediumT)[0])
-plt.plot(time, mediumT[:,2])
+kalnajsNbodyTorque()
 
-mediumT = readingInRealCSV("KalnajsTorque/DiffTemp/evolution45.csv")
-time = np.linspace(0,20, np.shape(mediumT)[0])
-plt.plot(time, mediumT[:,2])
-
-plt.show()
-'''
-#torqueDifferentTemps()
-
-
-data = readingInRealCSV("KalnajsTorque/Evolution_Test_Cold_0.csv")
-time = np.linspace(0,20, np.shape(data)[0])
-plt.plot(time, data[:,2])
-
-data = readingInRealCSV("KalnajsTorque/Evolution_Test_Cold_Large_0.csv")
-time = np.linspace(0,5, np.shape(data)[0])
-#plt.plot(time, data[:,2])
-
-data = readingInRealCSV("KalnajsTorque/DiffTemp/evolutionTest45.csv")
-time = np.linspace(0,20, np.shape(data)[0])
-plt.plot(time, -data[:,2])
-
-plt.show()

@@ -49,6 +49,8 @@ public:
   std::valarray<double> jacobiIntegral(const std::valarray<double> & pot, const double omegaP) const {return (energy() + pot - angularMomentum()* omegaP);} 
   std::valarray<double> jacobiIntegral(const double omegaP) const {return (energy() - angularMomentum()* omegaP);} 
 
+  double angularMomentum(int i) const {return xy[2*i] * vxvy[2*i +1] - xy[2*i +1] * vxvy[2*i];}
+
   std::valarray<double> radius(double softening2 = 0) const;
   std::valarray<double>  angle() const ;
 
@@ -59,6 +61,12 @@ public:
   void convert2Cartesian();
   void print(int n) const {std::cout << xy[2*n] << " " << xy[2*n+1] << " " << vxvy[2*n] << " " << vxvy[2*n+1] << '\n';}
   
+  std::valarray<double>  apocentre() const;
+  std::valarray<double> pericentre() const;
+
+private:
+  double  apocentre(const double energy, const double angularMomentum) const;
+  double pericentre(const double energy, const double angularMomentum) const;
 };
 
 
@@ -127,79 +135,18 @@ std::valarray<double> Bodies::radius(double softening2) const
   return radius;
 }
 
-std::valarray<double>  Bodies::angle() const // Please for the love of god tidy this up
-{
-
+std::valarray<double>  Bodies::angle() const {
   std::valarray<double> angles(n);
-  double x, y;
 
-  for (int i = 0; i < n; ++i)
-  {
-    x = xy[2*i];
-    y = xy[2*i+1];
-    if ((x>0) && (y>0)){
-      angles[i] = atan(y/x);
-    }
-    else if ((x<0) && (y>0)){
-      angles[i] = M_PI - atan(abs(y/x));
-    }
-    else if ((x<0) && (y<0)){
-      angles[i] = M_PI + atan(abs(y/x));
-    }
-    else if (x == 0 && y<0){
-      angles[i] = 1.5*M_PI;
-    }
-    else if (x==0 && y>0){
-      angles[i] = 0.5 * M_PI; 
-    }
-    else if (y==0 && x<0){
-      angles[i] = M_PI;
-    }
-    else if (x==0 && y==0){
-      angles[i] = 0;
-    }
-    else {
-      angles[i] = 2 * M_PI - atan(abs(y/x));
-    }
-  }
+  for (int i = 0; i < n; ++i) {angles[i] = atan2(xy[2*i+1], xy[2*i]);}
   return angles;
 }
 
-std::valarray<double>  angle(const std::valarray<double> & xy) // Please for the love of god tidy this up
-{
+std::valarray<double>  angle(const std::valarray<double> & xy) {
   int n{((int) xy.size())/2};
   std::valarray<double> angles(n);
-  double x, y;
 
-  for (int i = 0; i < n; ++i)
-  {
-    x = xy[2*i];
-    y = xy[2*i+1];
-    if ((x>0) && (y>0)){
-      angles[i] = atan(y/x);
-    }
-    else if ((x<0) && (y>0)){
-      angles[i] = M_PI - atan(abs(y/x));
-    }
-    else if ((x<0) && (y<0)){
-      angles[i] = M_PI + atan(abs(y/x));
-    }
-    else if (x == 0 && y<0){
-      angles[i] = 1.5*M_PI;
-    }
-    else if (x==0 && y>0){
-      angles[i] = 0.5 * M_PI; 
-    }
-    else if (y==0 && x<0){
-      angles[i] = M_PI;
-    }
-    else if (x==0 && y==0){
-      angles[i] = 0;
-    }
-    else {
-      angles[i] = 2 * M_PI - atan(abs(y/x));
-    }
-  }
+  for (int i = 0; i < n; ++i){angles[i] = atan2(xy[2*i+1], xy[2*i]);}
   return angles;
 }
 
@@ -221,6 +168,77 @@ std::valarray<double> Bodies::energy() const
   }
   return energy;
 }
+
+std::valarray<double> Bodies::apocentre() const {
+  std::valarray<double> apo(n), en{energy()}, am{angularMomentum()};
+  for (int i = 0; i < n; ++i) {apo[n] = apocentre(en[n], am[n]);}
+  return apo;
+}
+
+std::valarray<double> Bodies::pericentre() const {
+  std::valarray<double> peri(n), en{energy()}, am{angularMomentum()};
+  for (int i = 0; i < n; ++i) {peri[n] = pericentre(en[n], am[n]);}
+  return peri;
+}
+
+
+
+double Bodies::apocentre(const double energy, const double angularMomentum) const {
+ 
+  double x1{pow(M_E, energy-0.5)}, x2{pow(M_E, energy/(1*1))}, holding{}; // Assume vc =1 
+  auto radialMometum = [holding, energy, angularMomentum] () {return 2 * holding*holding * (energy - 1*1*log(holding)) - angularMomentum*angularMomentum;};
+
+  for (int i = 0; i < 20; ++i) {
+      holding = x1 + 0.5 * (x2 -x1);
+      if (radialMometum() > 0) {x1 = holding;}
+      else {x2 = holding;}
+    }
+  return x2;
+}
+
+double Bodies::pericentre(const double energy, const double angularMomentum) const {
+ 
+  double x1{0}, x2{pow(M_E, energy-0.5)}, holding{}; 
+  auto radialMometum = [holding, energy, angularMomentum] () {return 2 * holding*holding * (energy - 1*1*log(holding)) - angularMomentum*angularMomentum;};
+
+  for (int i = 0; i < 20; ++i) {
+      holding = x1 + 0.5 * (x2 -x1);
+      if (radialMometum() < 0) {x1 = holding;}
+      else {x2 = holding;}
+    }
+  return x2;
+}
+
+/*
+
+double periCentre(int root,double E, double J, double vc, int nstep) // Finds apo/peri
+{
+
+
+  else // Gives pericentre
+  {
+    double x1{0};
+    double x2{pow(e, E-0.5)};
+    double holding{};
+
+    for (int i = 0; i < nstep; ++i)
+    {
+      holding = x1 + 0.5 * (x2 -x1);
+      if (radialMometum(holding, E,  J,  vc) < 0)
+      {
+        x1 = holding;
+      }
+      else
+      {
+        x2 = holding;
+      }
+
+    }
+  return x2; //x1 + 0.5 * (x2 -x1);
+  }
+}
+  
+*/ 
 
 
 #endif 

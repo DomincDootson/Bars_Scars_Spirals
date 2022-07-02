@@ -48,5 +48,4 @@ def stabilityPlotsKalnajs(filename):
 	plt.show()
 
 
-
 stabilityPlotsKalnajs(["KalnajsTesting/kalnajsVaryingm1.csv", "KalnajsTesting/kalnajsVaryingTimestep.csv", "KalnajsTesting/kalnajsVaryingGridSize.csv", "KalnajsTesting/kalnajsVaryingNbasis.csv"])

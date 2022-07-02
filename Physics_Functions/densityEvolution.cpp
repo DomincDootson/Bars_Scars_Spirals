@@ -19,10 +19,11 @@ int main()
 	//GaussianLogKernelsVaryingSigma(2, 1, 10);
 	//density2DGaussian(.25, 1.95, 2);
 
-	comparisonDensityEvolution();
+	//comparisonDensityEvolution();
 
 	//density2DGaussian(0.35, 2, 2);
-
+	//greensFunctions();
+	densityTest();
 
 
 

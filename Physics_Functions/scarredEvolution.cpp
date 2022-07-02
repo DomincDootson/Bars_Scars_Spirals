@@ -3,7 +3,6 @@
 int main() {
 
 	//circularCutThrought(); 
-	//scarredDensity();
 	//scarredPotential(); 
 	//backgroundDF();
 
@@ -11,6 +10,7 @@ int main() {
 	//scarredModes();
 
 	circularInfall(); 
+	//angularMomentumScar();
 
 
 	return 0;

@@ -11,7 +11,7 @@ class Spiral2D
 {
 public:
 	template <class Tbf>
-	Spiral2D(const Tbf & bf, double k = 1, double scale = 5, double maxDensity = .01, int taper = 6) :  // This construcutre is just for testing (only one time step help in m_responseCoef 
+	Spiral2D(const Tbf & bf, double k = 1, double scale = 5, double maxDensity = .01, int taper = 6) : 
 	m_k{k}, m_scale{scale}, m_maxDensity{maxDensity}, m_taper{taper},
 	m_responseCoef(1, bf.maxRadialIndex())
 	{m_responseCoef(0) = densityResolving(bf, 20);}
@@ -25,7 +25,7 @@ public:
 
 	template <class Tbf>
 	void density2dEvolution(int timeIndex, const Tbf & bf, const std::string & filename, const double rMax =10) const {m_responseCoef.write2dDensity2File(timeIndex, filename, bf, rMax);}
-	
+	void saveEvolutionCoeff(const std::string & filename) const {m_responseCoef.write2File(filename);}
 
 	void susceptibilityEvolution(const std::string & filename) const;
 
@@ -39,6 +39,9 @@ public:
 	void resizeVector(const int nTimeStep) {m_responseCoef.resizeVector(nTimeStep);}
 	double density(const double r, const double phi) const {return density2D(r, phi);}
 	double density(const double r) const {return (2 * m_maxDensity * pow(r/m_scale, 0.5*m_taper)) / (1+pow(r/m_scale, m_taper)); } 
+
+	template <class Tbf>
+	void density2dFinal(const Tbf & bf, const std::string & outFilename, const int fromEnd = 1, const double rMax = 10, const double nStep = 201) const {m_responseCoef.write2dDensity2File(m_responseCoef.nTimeStep() - fromEnd, outFilename, bf, rMax, nStep);}
 
 	double maxDensity() const {return m_maxDensity;}
 	void removeIC() {for (int time = 0; time < m_responseCoef.nTimeStep(); ++time) {m_responseCoef(time) -= m_responseCoef(0);}}
@@ -72,7 +75,6 @@ Eigen::ArrayXXcd Spiral2D::density2D(const int nGrid, const double rMax) const {
 	Eigen::ArrayXXcd density = Eigen::ArrayXXcd::Zero(nGrid, nGrid); 
 
 	double x{}, y{}, theta{}, r{}, spacing{2*rMax/((double) nGrid-1)}, centre{0.5*(nGrid-1)};
-	std::complex<double> unitComplex(0,1);
 	for (int i = 0; i < density.rows(); ++i)
 	{for (int j = 0; j < density.cols(); ++j){
 			x = spacing * (i - centre); y = spacing * (j - centre);

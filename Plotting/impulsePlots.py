@@ -1,10 +1,7 @@
 import matplotlib.animation as animation
+from Density_Classes.OneDdensity import *
 
 from generalPlottingFunctions import *
-
-
-## MIGHT IT BE WORTH CONVERTING THE DENSITY EVOLUTION INTO A BIG OLD DATA STRUCTURE A LA THE ENERGY ONE? 
-## 		--> YES ALMOST CERTAINLY
 
 def impulseDensityName(littleSigma, radius, angHarmonic, testParticle = False):
 	filename = "../Disk_Kicking/littleSigma_" + str(round(littleSigma*100)) + "/Density" + str(round(radius*10)) +"_" + str(angHarmonic) 

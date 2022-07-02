@@ -1,9 +1,9 @@
 # First give all the flags for the complier
 
 CXX = g++
-CXXFLAGS = -O3 -std=c++2a -Wall 
+CXXFLAGS = -O3 -std=c++2a -Wall
 INCLUDES =  -I/../DF_Class -I/../Potential_Density_Pair_Classes -I/../Volterra_Solver -I/../Physics_Functions \
- -I/Bodies -I/Box -I/NBody_Classes -I/Perturbation_Grids -I/Orbit_Sections
+ -I/Bodies -I/Box -I/NBody_Classes -I/Perturbation_Grids -I/Orbit_Sections -I/usr/local/include/eigen3 -I/usr/local/include -L/usr/local/lib/
 
 # Label all the different files that we want to compile and how they link
 
@@ -18,7 +18,7 @@ NBODY_OBJ = nBody.o nBodyFunctions.o
 all : $(NBODY) particleSampling potentialFromDensity
 
 $(NBODY): $(NBODY_OBJ)
-	$(CXX) $(CXXFLAGS) -lfftw3 -lm  -o $@ $^ 
+	$(CXX) $(CXXFLAGS) -L/usr/local/lib -lfftw3 -lm -o $@ $^ #-lfftw3 -lm
 
 particleSampling : particleSampling.o 
 	$(CXX) $(CXXFLAGS) -o particleSampling particleSampling.o

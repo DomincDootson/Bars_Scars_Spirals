@@ -1,4 +1,4 @@
-fimport matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 # we assume that vc =1 for this code
 
@@ -78,14 +78,14 @@ def lstEnergies(rCirc, patternSpeed):
 	j = [jCirc-(i)*step for i in range(nOrbits)]
 
 	f = open("particleSamplesSections.out", "w+")
-	f.write(str(nOrbits))
+	f.write(str(2*nOrbits))
 	x, y = [], []
 	for i in range(nOrbits):
 		f.flush()
 		vRadial = vR(rCirc, jacobi + j[i]*patternSpeed, j[i])
 
 		f.write('\n' +"9.82208e-05" + " " + str(rCirc) + " " + str(0) + " " +  str(vRadial) + " " + str(j[i]/rCirc))
-		#f.write('\n' +"9.82208e-05" + " " + str(-rCirc) + " " + str(0) + " " +  str(vRadial) + " " + str(-j[i]/rCirc))
+		f.write('\n' +"9.82208e-05" + " " + str(-rCirc) + " " + str(0) + " " +  str(vRadial) + " " + str(-j[i]/rCirc))
 
 		e = energy(vRadial, j[i], rCirc)
 		y.append(jacobiIntegral(e, j[i], patternSpeed))

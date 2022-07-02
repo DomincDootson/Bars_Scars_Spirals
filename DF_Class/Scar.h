@@ -17,7 +17,7 @@ public:
 	double jacobi() const {return m_jacobi;}
 
 	void outParams() const {std::cout << m_Lcirc << " " << m_pattern << " " << m_jacobi << '\n';}
-//private:
+private:
 	const double m_Lcirc, m_pattern, m_jacobi, m_alpha, m_a, m_b, m_c, m_d, m_w; 
 
 	double getX(const double equivalentL) const;

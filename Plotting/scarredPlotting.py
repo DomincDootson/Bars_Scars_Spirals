@@ -1,9 +1,11 @@
 from generalPlottingFunctions import *
+from Density_Classes.OneDdensity import *
+
 from matplotlib import ticker, cm
 from scipy.stats import linregress
 
-plt.rc('text', usetex=True)
-plt.rc('font', family='serif')
+#plt.rc('text', usetex=True)
+#plt.rc('font', family='serif')
 
 
 def circularOrbitCutThrough():
@@ -20,6 +22,22 @@ def circularOrbitCutThrough():
 	plt.legend()
 
 	plt.show()
+
+def densityDifferentTemp(temp = [10, 15, 20, 25, 30, 35]):
+	fig, axs = plt.subplots()
+
+	for t in temp:
+		filename = "Scar_Data/Angular_Momentum_Densities/scarredDensity" + str(t) + ".csv"
+		data = readingInRealCSV(filename)
+
+		axs.plot(data[:350,0],data[:350,1], label = r"$\sigma_{R}=$ " + str(t/100))
+
+	plt.legend()
+	axs.set_xlabel(r"Radius $[r_{0}]$")
+	axs.set_ylabel(r"Density")
+	axs.set_title("Angular Momentum Ridges")
+	plt.show()
+
 
 def densityPlot():
 	scarred, unscarred   = readingInRealCSV("Scar_Data/scarredDensity.csv"), readingInRealCSV("Scar_Data/unscarredDensity.csv")
@@ -85,10 +103,31 @@ def scarredModes(filename):
 	axs.set_yscale("log")
 	plt.show()
 
+def angularMomentumScarNudges(filenames = ["Scar_Data/scarredEvolutionModesS.csv", "Scar_Data/scarredEvolutionModesT.csv", "Scar_Data/evolutionModesS.csv", "Scar_Data/evolutionModesT.csv"]): 
+	fig, axs = plt.subplots(nrows = 2, ncols = 2, sharex = True)
 
+	for i in range(len(filenames)):
+		data = readingInComplexCSV(filenames[i])
+		time = np.linspace(0,20, np.shape(data)[0])
+		[axs[i//2, i%2].plot(time, np.absolute(data[:, n]), label = str(n)) for n in range(0,10, 2)]
+		axs[i//2, i%2].ticklabel_format(axis='y', style = 'sci', scilimits=(0,0))
+
+	axs[0,0].set_ylabel(r"Scarred")
+	axs[1,0].set_ylabel(r"Unscarred")
+
+	axs[0,0].set_title("Self Consistent")
+	axs[0,1].set_title("Test Particle")
+
+	axs[1,0].set_xlabel(r"Time $[t_{0}]$")
+	axs[1,1].set_xlabel(r"Time $[t_{0}]$")
+
+	axs[0,0].legend()
+
+
+	plt.show()
 
 def infallingSatelliteEvolution(filenames = ["Scar_Data/infallingRingSS.csv", "Scar_Data/infallingRingUS.csv", "Scar_Data/infallingRingST.csv", "Scar_Data/infallingRingUT.csv"]):
-	infallers = [twoDdensity(filename) for filename in filenames] 
+	infallers = [OneDdensity(filename) for filename in filenames] 
 	
 	
 	Writer = animation.writers['ffmpeg']
@@ -99,13 +138,14 @@ def infallingSatelliteEvolution(filenames = ["Scar_Data/infallingRingSS.csv", "S
 
 	
 	
-	for time in range(infallers[0].nSteps):
-		ss, = axs[0,0].plot(infallers[0].densityCutThrough(time), color = 'royalblue')
-		us, = axs[0,1].plot(infallers[1].densityCutThrough(time), color = 'royalblue')
-		st, = axs[1,0].plot(infallers[2].densityCutThrough(time), color = 'royalblue')
-		ut, = axs[1,1].plot(infallers[3].densityCutThrough(time), color = 'royalblue')
+	for time in range(infallers[0].nStep):
+		ss, = axs[0,0].plot(infallers[0].radii, infallers[0].density(time), color = 'royalblue')
+		comp, = axs[0,0].plot(infallers[1].radii, infallers[1].density(time), color = 'firebrick')
+		us, = axs[0,1].plot(infallers[1].radii, infallers[1].density(time), color = 'royalblue')
+		st, = axs[1,0].plot(infallers[2].radii, infallers[2].density(time), color = 'royalblue')
+		ut, = axs[1,1].plot(infallers[3].radii, infallers[3].density(time), color = 'royalblue')
 		
-		ims.append([ss, us, st, ut])
+		ims.append([ss,comp, us, st, ut])
 
 
 	axs[0,0].set_title("Scarred")
@@ -127,3 +167,6 @@ def infallingSatelliteEvolution(filenames = ["Scar_Data/infallingRingSS.csv", "S
 #densityPlot()
 
 infallingSatelliteEvolution()
+#angularMomentumScarNudges()
+#densityDifferentTemp()
+

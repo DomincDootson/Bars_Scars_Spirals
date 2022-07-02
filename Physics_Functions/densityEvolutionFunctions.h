@@ -23,6 +23,8 @@ void density2DGaussian(double littleSigma, double radius, int angHarmonic);
 
 void energyEvolution(const std::string & energyFilename);
 
+void greensFunctions(); 
+
 
 // Gaussian Functions //
 
@@ -32,5 +34,7 @@ void diskKickingLGEnergy(const std::string & energyFilename);
 // BF Comparison Functions //
 
 void comparisonDensityEvolution();
+
+void densityTest();
 
 #endif

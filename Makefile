@@ -1,8 +1,8 @@
 # First give all the flags for the complier
 
 CXX = g++
-CXXFLAGS = -O3 -std=c++2a -Wall 
-INCLUDES = -I/Action_Angle_Basis_Functions -I/DF_Class -I/Potential_Density_Pair_Classes -I/Volterra_Solver -I/Physics_Functions -I/DF_Function -I/nBody/Box
+CXXFLAGS = -O3 -std=c++2a -Wall
+INCLUDES = -I/usr/include/eigen3  -I/Action_Angle_Basis_Functions -I/DF_Class -I/Potential_Density_Pair_Classes -I/Volterra_Solver -I/Physics_Functions -I/DF_Function -I/nBody/Box -I/usr/local/include/eigen3 -I/usr/local/include/boost/math/special_functions
 
 # Label all the different files that we want to compile and how they link
 

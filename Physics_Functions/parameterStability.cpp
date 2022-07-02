@@ -409,25 +409,27 @@ void varyingActiveFraction(const std::string & filename) {
 
 
 void varyingRka(const std::string & filename) { 
-	std::vector<double> rKa{5,10, 15, 19, 20};
+	
+	int nMax{10}; 
+	std::vector<double> rKa{nMax, 20};
 
 	std::ofstream out(filename);
-	kalnajsDelta(10, K_TIME_STANDARD);
+	kalnajsDelta(nMax, K_TIME_STANDARD);
 
 	for (auto r : rKa) {
 		std::vector<double> params{4, r}; Mestel DF;
-		PotentialDensityPairContainer<KalnajsBasis> PD(params, 10, 2);
+		PotentialDensityPairContainer<KalnajsBasis> PD(params, nMax, 2);
 	
-		//ActionAngleBasisContainer test("Kalnajs", 10, 2, K_M1_STANDARD, K_DELTAXSTEP_STANDARD, r);
+		//ActionAngleBasisContainer test("Kalnajs", nMax, 2, K_M1_STANDARD, K_DELTAXSTEP_STANDARD, r);
 		//test.scriptW(PD, DF ,"Kalnajs/Testing");
 		
 		//std::cout << r/((double) K_DELTAXSTEP_STANDARD-1) << '\n' << '\n';
 		//ActionAngleBasisContainer readInTest("Kalnajs/Testing", "Kalnajs", 10, 2, K_M1_STANDARD, K_DELTAXSTEP_STANDARD, r); 
 
-		auto kernelFile = [r] () {return "Kalnajs/Testing/Kernel_" + std::to_string(r) + ".out"; };
+		auto kernelFile = [r] () {return "Kalnajs/Testing/Kernel_10_" + std::to_string(r) + ".out"; };
 
-		//VolterraSolver solver2(10, 2, nStep(K_TIME_STANDARD), K_TIME_STANDARD);
-		//VolterraSolver solver2(10, K_M1_STANDARD, 6, K_TIME_STANDARD);
+		//VolterraSolver solver2(nMax, 2, nStep(K_TIME_STANDARD), K_TIME_STANDARD);
+		//VolterraSolver solver2(nMax, K_M1_STANDARD, 6, K_TIME_STANDARD);
 
 		//solver2.generateKernel(kernelFile(), DF, readInTest);
 
