@@ -11,4 +11,5 @@ void orbitSection();
 void kalanajTest();
 
 void spiralTesting();
+void calculateDiscAM();
 #endif

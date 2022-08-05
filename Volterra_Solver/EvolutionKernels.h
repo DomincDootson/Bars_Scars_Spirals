@@ -189,6 +189,7 @@ void EvolutionKernels::evolutionParams(int maxRadialIndex, int fourierHarmonic, 
 	m_spacing = spacing;
 	std::cout << numbTimeSteps <<'\n';
 	assert(numbTimeSteps == m_kernels.size() && "The read in kernel is not the same length as the Volterra Solver.");
+	assert(numbTimeSteps == m_kernels.size() && "The read in kernel is not the same length as the Volterra Solver.");
 }
 
 void EvolutionKernels::kernelReadIn(const std::string & kernelFilename) // Needs checking, but should be okay

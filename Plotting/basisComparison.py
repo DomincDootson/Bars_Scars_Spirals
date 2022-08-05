@@ -105,40 +105,109 @@ def densityComparison(filenames):
 	times = [100, 150,-1]
 
 
-	fig = plt.figure()
-	axs = [fig.add_subplot(len(times)+1, 2, 1), fig.add_subplot(len(times)+1, 2, 2)]
-
-	for i in range(len(times)):
-		for j in range(len(filenames)):
-			axs.append(fig.add_subplot(len(times)+1, len(filenames), 5 + j + i * (len(filenames))))
-
-
-	radii = readingInRealCSV("BF_Comparison/radii.csv")
-	pertK, pertG = readingInRealCSV("BF_Comparison/kalnajsPerturbationK.csv"), readingInRealCSV("BF_Comparison/kalnajsPerturbationG.csv")
 	
-	xpos, xlabels = [0, 5, 10, 15], ["0", r"$5r_{0}$", r"$10r_{0}$",r"$15r_{0}$"]
+	# fig = plt.figure()
+	# axs = [fig.add_subplot(len(times)+1, 2, 1), fig.add_subplot(len(times)+1, 2, 2)]
+	
+	# for i in range(len(times)):
+	# 	for j in range(len(filenames)):
+	# 		axs.append(fig.add_subplot(len(times)+1, len(filenames), 5 + j + i * (len(filenames))))
 
-	axs[0].plot(radii[:1500], pertK[:1500], color = 'royalblue', linestyle = '--', label = 'Kalnajs Perturbation')
-	axs[0].plot(radii[:1500], pertG[:1500], color = 'firebrick', label = 'Gaussian Fit')
-	axs[0].set_ylabel(r"Potential")
-	axs[0].set_title(r"Kalnajs Perturbation")
-	axs[0].legend(loc = 'upper left')
-	axs[0].ticklabel_format(axis='y', style = 'sci', scilimits=(0,0))
-	axs[0].set_xticks(xpos)
-	axs[0].set_xticklabels(xlabels)
+	
+	#  #readingInRealCSV("BF_Comparison/radii.csv")
+	# pertK, pertG = readingInRealCSV("BF_Comparison/kalnajsPerturbationK.csv"), readingInRealCSV("BF_Comparison/kalnajsPerturbationG.csv")
+	# radii = np.linspace(0,20, np.shape(pertK)[0])
+	
+	# xpos, xlabels = [0, 5, 10, 15], ["0", r"$5$", r"$10$",r"$15$"]
+
+	# axs[0].plot(radii[:1500], pertK[:1500], color = 'royalblue', linestyle = '--', label = 'Kalnajs Perturbation')
+	# axs[0].plot(radii[:1500], pertG[:1500], color = 'firebrick', label = 'Gaussian Fit')
+	# axs[0].set_ylabel(r"Potential", fontsize = 15)
+	# axs[0].set_title(r"Kalnajs Perturbation", fontsize = 15)
+	# axs[0].legend(loc = 'upper left', fontsize = 12)
+	# axs[0].ticklabel_format(axis='y', style = 'sci', scilimits=(0,0))
+	# axs[0].set_xticks(xpos)
+	# axs[0].set_xticklabels(xlabels)
+	# axs[0].set_xlabel("Radius", fontsize = 15)
+	
 
 
-	xpos, xlabels = [0, 5, 10], ["0", r"$5r_{0}$", r"$10r_{0}$"]
-	pertK, pertG = readingInRealCSV("BF_Comparison/gaussianPerturbationK.csv"), readingInRealCSV("BF_Comparison/gaussianPerturbationG.csv")
-	axs[1].plot(radii[:1000], pertK[:1000], color = 'royalblue', label = 'Kalnajs Fit')
-	axs[1].plot(radii[:1000], pertG[:1000], color = 'firebrick', linestyle = '--', label = "Gaussian Perturbation")
-	axs[1].set_title(r"Gaussian Perturbation")
-	axs[1].legend(loc = 'lower left')
-	axs[1].ticklabel_format(axis='y', style = 'sci', scilimits=(0,0))
-	axs[1].set_xticks(xpos)
-	axs[1].set_xticklabels(xlabels)
+	# xpos, xlabels = [0, 5, 10], ["0", r"$5$", r"$10$"]
+	# pertK, pertG = readingInRealCSV("BF_Comparison/gaussianPerturbationK.csv"), readingInRealCSV("BF_Comparison/gaussianPerturbationG.csv")
+	# axs[1].plot(radii[:1000], pertK[:1000], color = 'royalblue', label = 'Kalnajs Fit')
+	# axs[1].plot(radii[:1000], pertG[:1000], color = 'firebrick', linestyle = '--', label = "Gaussian Perturbation")
+	# axs[1].set_title(r"Gaussian Perturbation", fontsize = 15)
+	# axs[1].legend(loc = 'lower left', fontsize = 12)
+	# axs[1].ticklabel_format(axis='y', style = 'sci', scilimits=(0,0))
+	# axs[1].set_xticks(xpos)
+	# axs[1].set_xticklabels(xlabels)
+	# axs[1].set_xlabel("Radius", fontsize = 15)
+	
+
+	
+	# ## Now do the density plots
+	# spacing = 20/(kalnajsK.nCols-1)
+	# centre = (kalnajsK.nCols-1)*0.5
+
+	# x = np.arange(-10,10+spacing, spacing)
+	# y = np.arange(-10,10+spacing, spacing)
+	# XX, YY = np.meshgrid(x, y)
+
+	# for i in range(len(times)):
+	# 	axs[2 + i*4].set(aspect = 1)
+	# 	axs[3 + i*4].set(aspect = 1)
+	# 	axs[4 + i*4].set(aspect = 1)
+	# 	axs[5 + i*4].set(aspect = 1)
+
+	# 	pcm1 = axs[2 + i*4].contourf(XX, YY, kalnajsK.densityAtTime(times[i]), levels = 100)
+	# 	pcm2 = axs[3 + i*4].contourf(XX, YY, gaussianK.densityAtTime(times[i]), levels = 100)
+	# 	pcm3 = axs[4 + i*4].contourf(XX, YY, kalnajsG.densityAtTime(times[i]), levels = 100)
+	# 	pcm4 = axs[5 + i*4].contourf(XX, YY, gaussianG.densityAtTime(times[i]), levels = 100)
+	# 	axs[3 + i*4].tick_params(labelleft=False) 
+	# 	axs[4 + i*4].tick_params(labelleft=False) 
+	# 	axs[5 + i*4].tick_params(labelleft=False)
+		
+	# 	if i != (len(times)-1):  
+	# 		axs[2 + i*4].tick_params(labelbottom=False)
+	# 		axs[3 + i*4].tick_params(labelbottom=False, labelleft=False) 
+	# 		axs[4 + i*4].tick_params(labelbottom=False, labelleft=False) 
+	# 		axs[5 + i*4].tick_params(labelbottom=False, labelleft=False)
+
+	
+	
+	# cb_ax = fig.add_axes([0.13,.04,.36,.02])
+	# cbar = fig.colorbar(pcm1, cax=cb_ax, orientation='horizontal', format=ticker.FuncFormatter(fmt))# fig.colorbar(pcm1, ax = [axs[-4], axs[-3]], orientation="horizontal", format=ticker.FuncFormatter(fmt))
+	# cbar.set_ticks([-2.5*(10**-4), 0, 2.5*(10**-4)])
+	
+	# cb_ax = fig.add_axes([0.53,.04,.36,.02])
+	# cbar = fig.colorbar(pcm3, cax = cb_ax, orientation="horizontal", format=ticker.FuncFormatter(fmt))
+	# cbar.set_ticks([-1.5*(10**-4), 0, 1.5*(10**-4)])
+
+	
+	# axs[2].set_ylabel(r"$t = 5.0 \times 2\pi$")
+	# axs[6].set_ylabel(r"$t = 7.5 \times 2\pi$")
+	# axs[10].set_ylabel(r"$t = 10.0 \times 2\pi$")
 
 
+
+	# axs[2].set_title("Kalnajs")
+	# axs[3].set_title("Gaussian")
+	# axs[4].set_title("Kalnajs")
+	# axs[5].set_title("Gaussian")
+	
+	# plt.show()
+
+
+	
+	
+
+	
+	fig, axs = plt.subplots(nrows = 3, ncols = 4)
+	pertK, pertG = readingInRealCSV("BF_Comparison/kalnajsPerturbationK.csv"), readingInRealCSV("BF_Comparison/kalnajsPerturbationG.csv")
+	radii = np.linspace(0,20, np.shape(pertK)[0])
+	
+
+	
 	## Now do the density plots
 	spacing = 20/(kalnajsK.nCols-1)
 	centre = (kalnajsK.nCols-1)*0.5
@@ -148,24 +217,24 @@ def densityComparison(filenames):
 	XX, YY = np.meshgrid(x, y)
 
 	for i in range(len(times)):
-		axs[2 + i*4].set(aspect = 1)
-		axs[3 + i*4].set(aspect = 1)
-		axs[4 + i*4].set(aspect = 1)
-		axs[5 + i*4].set(aspect = 1)
+		axs[i, 0].set(aspect = 1)
+		axs[i, 1].set(aspect = 1)
+		axs[i, 2].set(aspect = 1)
+		axs[i, 3].set(aspect = 1)
 
-		pcm1 = axs[2 + i*4].contourf(XX, YY, kalnajsK.densityAtTime(times[i]), levels = 100)
-		pcm2 = axs[3 + i*4].contourf(XX, YY, gaussianK.densityAtTime(times[i]), levels = 100)
-		pcm3 = axs[4 + i*4].contourf(XX, YY, kalnajsG.densityAtTime(times[i]), levels = 100)
-		pcm4 = axs[5 + i*4].contourf(XX, YY, gaussianG.densityAtTime(times[i]), levels = 100)
-		axs[3 + i*4].tick_params(labelleft=False) 
-		axs[4 + i*4].tick_params(labelleft=False) 
-		axs[5 + i*4].tick_params(labelleft=False)
+		pcm1 = axs[i, 0].contourf(XX, YY, kalnajsK.densityAtTime(times[i]), levels = 100)
+		pcm2 = axs[i, 1].contourf(XX, YY, gaussianK.densityAtTime(times[i]), levels = 100)
+		pcm3 = axs[i, 2].contourf(XX, YY, kalnajsG.densityAtTime(times[i]), levels = 100)
+		pcm4 = axs[i, 3].contourf(XX, YY, gaussianG.densityAtTime(times[i]), levels = 100)
+		axs[i, 1].tick_params(labelleft=False) 
+		axs[i, 2].tick_params(labelleft=False) 
+		axs[i, 3].tick_params(labelleft=False)
 		
 		if i != (len(times)-1):  
-			axs[2 + i*4].tick_params(labelbottom=False)
-			axs[3 + i*4].tick_params(labelbottom=False, labelleft=False) 
-			axs[4 + i*4].tick_params(labelbottom=False, labelleft=False) 
-			axs[5 + i*4].tick_params(labelbottom=False, labelleft=False)
+			axs[i, 0].tick_params(labelbottom=False)
+			axs[i, 1].tick_params(labelbottom=False, labelleft=False) 
+			axs[i, 2].tick_params(labelbottom=False, labelleft=False) 
+			axs[i, 3].tick_params(labelbottom=False, labelleft=False)
 
 	
 	
@@ -178,19 +247,18 @@ def densityComparison(filenames):
 	cbar.set_ticks([-1.5*(10**-4), 0, 1.5*(10**-4)])
 
 	
-	axs[2].set_ylabel(r"$5.0 \times 2\pi$")
-	axs[6].set_ylabel(r"$7.5 \times 2\pi$")
-	axs[10].set_ylabel(r"$10.0 \times 2\pi$")
+	axs[1-1, 0].set_ylabel(r"$t = 5.0 \times 2\pi$", fontsize = 15)
+	axs[2-1, 0].set_ylabel(r"$t = 7.5 \times 2\pi$", fontsize = 15)
+	axs[3-1, 0].set_ylabel(r"$t = 10.0 \times 2\pi$", fontsize = 15)
 
 
 
-	axs[2].set_title("Kalnajs")
-	axs[3].set_title("Gaussian")
-	axs[4].set_title("Kalnajs")
-	axs[5].set_title("Gaussian")
+	axs[0, 0].set_title("Kalnajs", fontsize = 15)
+	axs[0, 1].set_title("Gaussian", fontsize = 15)
+	axs[0, 2].set_title("Kalnajs", fontsize = 15)
+	axs[0, 3].set_title("Gaussian", fontsize = 15)
 	
 	plt.show()
-
 
 
 def densityComparison1D(filenames):

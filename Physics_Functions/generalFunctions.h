@@ -3,7 +3,7 @@
 
 #include <string>
 void freqCheck();
-
+void savingKalnajsFunctions(const std::string & filename); 
 void generatingKalnajsBF(int m2);
 void generatingSpiralBF(int m2);
 void getSpiralParam();

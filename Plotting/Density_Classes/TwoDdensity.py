@@ -8,6 +8,19 @@ import sys
 sys.path.append('/Users/dominicdootson/Documents/PhD/phd/Linear_Stability_Clean/Plotting')
 from generalPlottingFunctions import readingInRealCSV
 
+def findMaxima(array):
+	positions = []
+	for i in range(1, np.shape(array)[0]-1):
+		for j in range(1, np.shape(array)[1]-1):
+			cc, uc, cl, cr, lc = (array[i,j]), (array[i-1, j]), (array[i, j-1]),(array[i, j+1]), (array[i+1, j])
+			d1, d2, d3, d4 =  (array[i+1, j+1]), (array[i+1, j-1]),(array[i-1, j+1]), (array[i-1, j-1])
+			if ((cc > uc) and (cc > lc) and (cc > cr) and (cc > cl) and (cc > d1) and (cc > d2) and (cc > d3) and (cc > d4)):
+				positions.append([i,j]) 
+
+	return positions
+
+
+
 class TwoDdensity(object):
 	
 	def __init__(self, filename):	
@@ -18,6 +31,7 @@ class TwoDdensity(object):
 		size = self.nRows*self.nCols
 		self.density2D = [np.reshape(array[:size], (self.nRows, self.nCols,)) for array in flatternedDensity] 	
 		self.nSteps = len(self.density2D) 
+		self.centre = (self.nCols-1)*0.5
 
 	def densityAtTime(self, timeIndex):
 		return self.density2D[timeIndex]
@@ -253,7 +267,7 @@ class TwoDdensity(object):
 		ims = []
 
 		
-		R, phi = np.linspace(0,10, 100), np.linspace(0, 2*3.14,100)
+		R, phi = np.linspace(0,rMax, 100), np.linspace(0, 2*3.14,100)
 		
 
 		#maxRho, minRho, R = self.maxDensity(), self.minDensity(), self.maxDensityAtTime(0,rMax)
@@ -277,6 +291,82 @@ class TwoDdensity(object):
 		else:
 			plt.show()
 
+
+
+	def fourierCoeffT(self, angHarmonic, time):
+		
+		phase, magnitude = [], []
+		radii, angles  = np.linspace(0.01, 15, 100), np.linspace(0, 2 * 3.14, 100)
+
+		dtheta = angles[1] - angles[0]
+
+		for radius in radii:
+
+			sinI, cosI = 0, 0
+			for theta in angles:
+				sinI += sin(angHarmonic * theta) * (dtheta / pi) * self.densityPolar(time, radius, theta, radii[-1]) # Factor of pi 
+				cosI += cos(angHarmonic * theta) * (dtheta / pi) * self.densityPolar(time, radius, theta, radii[-1]) # to normalise the integrals 
+		
+			phase.append(atan(-sinI/cosI))
+			magnitude.append(sinI * cos(-phase[-1]) + cosI * cos(-phase[-1]))
+
+		return radii, magnitude, phase
+
+	def fourierAnimations(self, angHarmonic, filename = None, rMax = 15):
+		Writer = animation.writers['ffmpeg']
+		writer = Writer(fps=20, metadata=dict(artist='Me'))
+
+		fig, axs1 = plt.subplots(1,1)
+		axs2 = axs1.twinx()
+		ims = []
+
+		for time in range(self.nSteps):
+			radii, mag, ph = self.fourierCoeffT(angHarmonic, time)
+
+			magnitude, = axs1.plot(radii, mag, color = 'royalblue', label = "Magnitude") 
+
+			#phase, = axs2.plot(radii, ph, color = 'firebrick', label = "Magnitude") 
+			title = fig.text(.4,.9,(r"Time: " +str(0.5*time)))
+			
+			ims.append([magnitude, title])
+
+
+		ani = animation.ArtistAnimation(fig, ims, interval=30)
+		if (filename):
+			ani.save(filename, writer = writer)
+			print("Animation save to:" + filename)
+		else:
+			plt.show()
+
+		
+
+
+	def maximaEvolution(self):
+		positions = []
+
+		for time in range(self.nSteps):
+			positions.append(findMaxima(self.densityAtTime(time)- self.densityAtTime(0)))
+
+		radii, time = [], []
+		for i, timeSet in enumerate(positions):
+			for each in timeSet:
+				radii.append(sqrt((each[0]-self.centre)**2 + (each[1]-self.centre)**2))
+				time.append(i)
+				
+
+		return time, radii
+
+
+
+
+
+
+
+
+
+
+
+
 def maxDensity():
 	data = readingInRealCSV("../Disk_Kicking/maxDensity.csv")
 	rInner = data[1:,0]
@@ -289,3 +379,5 @@ def maxDensity():
 
 	plt.legend()
 	plt.show()
+
+

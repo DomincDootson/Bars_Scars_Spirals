@@ -143,7 +143,7 @@ Eigen::MatrixXd DFClass::omega2Grid(int dim, double spacing) const {
 
 double DFClass::theta1(double radius, double rApo, double rPer, double omega1) const
 {
-	int nstep{1000};
+	int nstep{500};
 	double E{rad2Energy(rApo, rPer)}, J{rad2AngMom(rApo, rPer)};
 	double integral{0}, upperU{asin(pow((radius- rPer)/(rApo-rPer), 0.5))}, stepSize{upperU/(nstep-1)}, rstep{};
 	
@@ -154,13 +154,13 @@ double DFClass::theta1(double radius, double rApo, double rPer, double omega1) c
 	}
 	double th1 = (rApo - rPer) * integral * omega1;
 
-	if (th1 != th1) {th1 = 0;} // For very small integrals you get numberical error that cause infinites. 
+	if ((th1 != th1) || isinf(th1)) {return 0;} // For very small integrals you get numberical error that cause infinites. 
 	return th1;
 }
 
 double DFClass::theta2(double radius, double rApo, double rPer, double omega2) const 
 {
-	int nstep{1000};
+	int nstep{500};
 	double E{rad2Energy(rApo, rPer)}, J{rad2AngMom(rApo, rPer)};
 	double integral{0}, upperU{asin(pow((radius- rPer)/(rApo-rPer), 0.5))}, stepSize{upperU/(nstep-1)}, rstep{};
 
@@ -169,10 +169,10 @@ double DFClass::theta2(double radius, double rApo, double rPer, double omega2) c
 		rstep = rPer +(rApo-rPer)*pow(sin(stepSize *i),2);
 		integral += (omega2 - J*pow(rstep,-2))* sin(2 * i * stepSize) * pow(2*(E- potential(rstep)) -J*J * pow(rstep, -2) , -0.5) * stepSize; 
 	}
+	double th2 = (rApo - rPer) * integral;
 
-	if (integral != integral) {return 0;}
-
-	return  (rApo - rPer) * integral;
+	if ((th2 != th2) || isinf(th2)) {return 0;}
+	return th2;
 }
 
 double DFClass::theta1Deriv(double radius, double rApo, double rPer, double omega1) const

@@ -63,9 +63,9 @@ def sectionPlot(filename, nPlot = 6):
 			axs.scatter(data[n:,2*i]/pi, data[n:,2*i+1], s = .1, color = 'firebrick')
 
 
-	axs.text(-.1,2.12,"Area 1", fontsize = 15)
-	axs.text(-.85,2.12,"Area 2", fontsize = 15)
-	axs.text(.65,2.12,"Area 2", fontsize = 15)
+	axs.text(-.1,2.12,"Area 1", fontsize = 20)
+	axs.text(-.85,2.12,"Area 2", fontsize = 20)
+	axs.text(.65,2.12,"Area 2", fontsize = 20)
 
 	
 	axs.set_ylim([1.79, 2.11])	
@@ -75,8 +75,8 @@ def sectionPlot(filename, nPlot = 6):
 	axs.axvline(0.5, color = 'k', linestyle = '--')
 
 
-	axs.set_xlabel(r"$\phi_{apo}/\pi$", fontsize = 15)
-	axs.set_ylabel(r"$L_{z}$", fontsize = 15)
+	axs.set_xlabel(r"$\phi_{apo}/\pi$", fontsize = 20)
+	axs.set_ylabel(r"$L_{z}$", fontsize = 20)
 	#axs.legend()
 	print(count)
 	plt.show()

@@ -69,6 +69,7 @@ public:
 	Eigen::VectorXcd densityResolving(const Eigen::ArrayXXcd &densityArray, const double rMax) const;
 
 	Eigen::VectorXcd potentialFitting(const Eigen::ArrayXXcd &potentialArrayTrue, const double rMax) const;  // This will calculate individual parts and solve matrix equation
+	Eigen::VectorXcd   densityFitting(const Eigen::ArrayXXcd   &densityArrayTrue, const double rMax) const;  // This will calculate individual parts and solve matrix equation
 
 
 
@@ -81,6 +82,10 @@ private:
 	std::complex<double> potentialFittingElement(const double rMax, const int nGrid, const int i, const int j) const;
 	Eigen::MatrixXcd     potentialFittingMatrix(const double rMax, const int nGrid) const; 
 	std::complex<double>     potentialInhomogenity(const Eigen::ArrayXXcd &potentialArrayTrue, const double rMax, const int i) const;
+
+	std::complex<double> densityFittingElement(const double rMax, const int nGrid, const int i, const int j) const;
+	Eigen::MatrixXcd     densityFittingMatrix(const double rMax, const int nGrid) const; 
+	std::complex<double>     densityInhomogenity(const Eigen::ArrayXXcd &densityArrayTrue, const double rMax, const int i) const;
 
 	void saveParamters(std::ofstream & out) const;
 	double scriptEelement(int k, int j) const;
@@ -305,6 +310,8 @@ Eigen::MatrixXd PotentialDensityPairContainer<T>::calculateScriptE() const
 	}
 	return scriptE; 
 }
+/* Potential Fitting */
+/* ----------------- */ 
 
 template <class T> 
 Eigen::VectorXcd PotentialDensityPairContainer<T>::potentialFitting(const Eigen::ArrayXXcd &potentialArrayTrue, const double rMax) const {
@@ -333,6 +340,54 @@ Eigen::MatrixXcd PotentialDensityPairContainer<T>::potentialFittingMatrix(const 
 	return matrix; 
 }
 
+template <class T> 
+std::complex<double> PotentialDensityPairContainer<T>::potentialInhomogenity(const Eigen::ArrayXXcd &potentialArrayTrue, const double rMax, const int i) const {
+	int nGrid{(int) potentialArrayTrue.cols()}; double spacing{(2*rMax)/((double) nGrid)};
+	Eigen::ArrayXXcd arrayI{(m_potentialDensityContainer[i].potentialGrid(nGrid, rMax)).conjugate()}; // 
+
+	return spacing*spacing*(arrayI*potentialArrayTrue).sum();
+}
+
+/* Density Fitting */ 
+/* --------------- */ 
+
+template <class T> 
+Eigen::VectorXcd PotentialDensityPairContainer<T>::densityFitting(const Eigen::ArrayXXcd &densityArrayTrue, const double rMax) const {
+	Eigen::VectorXcd inhomo{m_maxRadialIndex+1}; Eigen::MatrixXcd densityMatrix = densityFittingMatrix(rMax, densityArrayTrue.cols());
+	for (int i = 0; i < m_maxRadialIndex+1; ++i) {inhomo(i) = densityInhomogenity(densityArrayTrue, rMax, i);} 
+
+	
+	return (densityMatrix.inverse()) * inhomo;
+}
+
+template <class T> 
+std::complex<double> PotentialDensityPairContainer<T>::densityFittingElement(const double rMax, const int nGrid, const int i, const int j) const {
+	double spacing{(2*rMax)/((double) nGrid)};
+	Eigen::ArrayXXcd arrayI{m_potentialDensityContainer[i].densityGrid(nGrid, rMax).conjugate()}, arrayJ{m_potentialDensityContainer[j].densityGrid(nGrid, rMax)};
+	return spacing*spacing*((arrayI*arrayJ).sum());
+}
+
+template <class T> 
+Eigen::MatrixXcd PotentialDensityPairContainer<T>::densityFittingMatrix(const double rMax, const int nGrid) const {
+	Eigen::MatrixXcd matrix = Eigen::MatrixXcd::Zero(m_maxRadialIndex+1, m_maxRadialIndex+1);
+	for (int i = 0; i < m_maxRadialIndex+1; ++i) {for (int j = i; j < m_maxRadialIndex+1; ++j) {
+		matrix(i, j) = densityFittingElement(rMax, nGrid, i, j); 
+		matrix(j, i) = matrix(i, j);
+	}}
+	std::cout << "det is: " << matrix.determinant() << '\n'; 
+	return matrix; 
+}
+
+template <class T> 
+std::complex<double> PotentialDensityPairContainer<T>::densityInhomogenity(const Eigen::ArrayXXcd &densityArrayTrue, const double rMax, const int i) const {
+	int nGrid{(int) densityArrayTrue.cols()}; double spacing{(2*rMax)/((double) nGrid)};
+	Eigen::ArrayXXcd arrayI{(m_potentialDensityContainer[i].densityGrid(nGrid, rMax)).conjugate()}; // 
+
+	return spacing*spacing*(arrayI*densityArrayTrue).sum();
+}
+
+
+
 void saveArray(const Eigen::ArrayXXcd grid) {
 	std::ofstream out("Plotting/inhomo.csv");
 	for (int i = 0; i < grid.rows(); ++i) {
@@ -342,17 +397,6 @@ void saveArray(const Eigen::ArrayXXcd grid) {
 		out << grid(i, grid.cols()-1).real() << '\n';
 	}
 	out.close();
-}
-
-
-template <class T> 
-std::complex<double> PotentialDensityPairContainer<T>::potentialInhomogenity(const Eigen::ArrayXXcd &potentialArrayTrue, const double rMax, const int i) const {
-	int nGrid{(int) potentialArrayTrue.cols()}; double spacing{(2*rMax)/((double) nGrid)};
-	Eigen::ArrayXXcd arrayI{(m_potentialDensityContainer[i].potentialGrid(nGrid, rMax)).conjugate()}; // 
-
-	//saveArray(arrayI*potentialArrayTrue); 
-
-	return spacing*spacing*(arrayI*potentialArrayTrue).sum();
 }
 
 #endif 

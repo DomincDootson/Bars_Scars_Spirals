@@ -15,7 +15,7 @@ public:
 	: m_prefix{prefix}, 
 	m_intStep{500},
 	m_maxRadialIndex{maxRadialIndex}, m_fourierHarmonic{fourierHarmonic}, m_maxFourierHarmonic{maxFourierHarmonic},
-	m_sizeArray{sizeArray},
+	m_sizeArray{sizeArray}, // m_om1Grid(sizeArray, sizeArray), m_om2Grid(sizeArray, sizeArray),
 	m_spacingSize{maxRadius/((double) m_sizeArray - 1)}, // The size has minus 1 as we want the end point to be inclusive
 	m_basisContainer{},
 	v_radii(m_intStep), v_theta1(m_intStep), v_theta2(m_intStep), v_theta1Deriv(m_intStep), 
@@ -34,7 +34,7 @@ public:
 	ActionAngleBasisContainer(std::string dir, std::string prefix, int maxRadialIndex, int fourierHarmonic, int maxFourierHarmonic, int sizeArray, double maxRadius)
 	: m_prefix{prefix},
 	m_maxRadialIndex{maxRadialIndex}, m_fourierHarmonic{fourierHarmonic}, m_maxFourierHarmonic{maxFourierHarmonic},
-	m_sizeArray{sizeArray}, 
+	m_sizeArray{sizeArray}, // m_om1Grid(sizeArray, sizeArray), m_om2Grid(sizeArray, sizeArray), 
 	m_spacingSize{maxRadius/((double) m_sizeArray - 1)}, // The size has minus 1 as we want the end point to be inclusive
 	m_basisContainer{},
 	m_scriptE{ readInScriptE(dir)},
@@ -121,7 +121,8 @@ private:
 void ActionAngleBasisContainer::nonLinearRadii(double rApo, double rPer)
 {
 	double stepSize{0.5*M_PI/ ((double) v_radii.size() - 1)};
-	for (int i = 0; i < v_radii.size(); ++i){
+	
+	for (int i = 0; i < v_radii.size(); ++i) {
 		v_radii[i] = rPer + (rApo-rPer) * pow(sin(stepSize*i),2);
 	}
 }
@@ -167,8 +168,8 @@ void ActionAngleBasisContainer::checkParams(int maxRadialIndex, int fourierHarmo
 
 template <class Tdf>
 void ActionAngleBasisContainer::omegaGridSetUp(const Tdf & df) {
-	m_om1Grid = df.omega1Grid(m_sizeArray, m_spacingSize);//omega1Grid(df); 
-	m_om2Grid = df.omega2Grid(m_sizeArray, m_spacingSize);//omega2Grid(df);	
+	m_om1Grid = df.omega1Grid(m_sizeArray, m_spacingSize);
+	m_om2Grid = df.omega2Grid(m_sizeArray, m_spacingSize);
 }
 
 template <class Tdf>
@@ -195,7 +196,7 @@ void ActionAngleBasisContainer::scriptWLoop(const Tbf & basisFunctions, int i, i
 template <class Tbf>
 void ActionAngleBasisContainer::write2file(const std::string & dir, const Tbf & basisFunctions) {
 	for (auto bfGrid = m_basisContainer.begin(); bfGrid != m_basisContainer.end(); ++bfGrid){ // This to end becomes a function
-		bfGrid -> save(dir, m_prefix, m_spacingSize); // We need to use -> as bfGrid is an interator
+		bfGrid -> save(dir, m_prefix, m_spacingSize); // We need to use -> as bfGrid is a pointer
 	}
 	basisFunctions.scriptE(scriptEfilename(dir));
 }
@@ -218,10 +219,12 @@ void ActionAngleBasisContainer::scriptW(const Tbf & basisFunctions, const Tdf & 
 
 template <class Tbf, class Tdf>
 double ActionAngleBasisContainer::scriptW(const Tbf & basisFunctions, const Tdf & df, int n, int m, int i, int j) {
+	
 	checkParams(basisFunctions.maxRadialIndex(), basisFunctions.fourierHarmonic());
 	omegaGridSetUp(df);
-
 	vectorsAtRadii(df, i, j);
+	std::cout << "Now look in the basis function\n";
+	
 	return (basisFunctions(n)).scriptWElement(m, v_radii, v_theta1, v_theta2, v_theta1Deriv);
 }
 
@@ -241,6 +244,9 @@ Eigen::MatrixXd ActionAngleBasisContainer::readInScriptE(const std::string dir)
 	return scriptE;
 
 }
+
+/* Analytic Calculation */ 
+/* -------------------- */ 
 
 template <class Tbf, class Tdf>
 void ActionAngleBasisContainer::analyticScriptW(const Tbf & basisFunctions, const Tdf & df, const std::string & directory) {

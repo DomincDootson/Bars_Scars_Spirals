@@ -19,7 +19,7 @@ class OneDdensity(object):
 	def density(self, timeIndex):
 		return self.densityArray[timeIndex, :]	
 
-	def densityAnimation(self, write2file = None):
+	def densityAnimation(self, remove_ic = False,write2file = None):
 		
 		Writer = animation.writers['ffmpeg']
 		writer = Writer(fps=20, metadata=dict(artist='Me'))
@@ -27,9 +27,12 @@ class OneDdensity(object):
 		fig, axs = plt.subplots(1,1)
 		ims = []
 
-		for time in range(self.nStep):		
-			title = fig.text(.4,.9,(r"Time: " +str(0.01*time) + r"$T_{dyn}$"))
-			line, = plt.plot(self.radii, self.density(time), animated = True, color = 'navy')
+		for time in range(20, self.nStep):		
+			title = fig.text(.4,.9,(r"Time: " +str(0.02*time)))
+			if remove_ic:
+				line, = plt.plot(self.radii, self.density(time) - self.density(20), animated = True, color = 'navy')
+			else:
+				line, = plt.plot(self.radii, self.density(time), animated = True, color = 'navy')
 			ims.append([line, title]) 
 
 

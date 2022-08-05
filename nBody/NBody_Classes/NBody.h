@@ -37,6 +37,8 @@ public:
 	void barEvolution(const std::string & filename, Bar2D & bar); // derived class
 
 	void particleSampling() {m_foreground.samplingDF();}
+
+	double totalAngularMomentum() const {return m_background.m[0]*m_background.angularMomentum().sum();}
 protected:
 	
 	Box m_diskBox, m_m0Box;

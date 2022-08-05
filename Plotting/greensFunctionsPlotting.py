@@ -37,7 +37,7 @@ def greensFunctionEvolution(filename = "../Disk_Kicking/littleSigma_35/Density2D
 			contourFilled = axs[j].contourf(XX, YY, density2D.densityAtTime(time[j]), levels = 100, vmin = -absMaxValue, vmax = absMaxValue)
 		axs[j].contourf(XX, YY, density2D.densityAtTime(time[j]), levels = 100, vmin = -absMaxValue, vmax = absMaxValue)
 		axs[j].set(aspect = 1)
-		axs[j].set_title(r"$t=$ " + str(time[j] *0.25))
+		axs[j].set_title(r"$t=$ " + str(time[j] *0.25) + r"$\times 2\pi$")
 	
 	axs[0].plot(xCir, yCir, color = 'firebrick', alpha = 0.8, linestyle = '--')
 			

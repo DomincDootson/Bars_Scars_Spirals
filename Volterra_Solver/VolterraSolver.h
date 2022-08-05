@@ -32,12 +32,13 @@ public:
 	/* General Functions */
 	/* ----------------- */ 
 
-
+	int maxRadialIndex() const {return m_maxRadialIndex+1;} // Note this returns due to our silly convention of using <=..., better decisions could have been made in the past
 	int numbTimeSteps() const {return m_numbTimeSteps;}
 	double timeStep() const {return m_timeStep;}
 	void activeFraction(double xi);
 	void resetActiveFraction() {activeFraction(1/m_xi);}
 	Eigen::MatrixXcd operator()(int timeIndex) const {return m_kernels(timeIndex);} 
+
 
 	template <class Tdf>
 	void generateKernel(const std::string fileName, const Tdf & df, const ActionAngleBasisContainer & basisFunc);
@@ -46,7 +47,9 @@ public:
 	void generateKernel(const std::string fileName, const Tdf & df, const ActionAngleBasisContainer & basisFunc, const double massRatio);
 
 
-	void solveVolterraEquation(const bool isSelfConsistent); 
+	void solveVolterraEquation(const bool isSelfConsistent, const int integrateFromIndex = 1); 
+	void setInitialCondition(const Eigen::VectorXcd & ic) {m_responseCoef(0) = ic;}
+	void setInitialCondition(const std::vector<Eigen::VectorXcd> & ic);
 
 	/* Perturbation Evolution */ 
 	/* ---------------------- */ 
@@ -73,6 +76,8 @@ public:
 	void density1dEvolution(const std::string & outFilename, const Tbf & bf, const int skip = 1) const {m_responseCoef.writeDensity2File(outFilename, bf, skip);}
 	template <class Tbf>
 	void density2dEvolution(const std::string & outFilename, const Tbf & bf, const int skip = 1) const {m_responseCoef.write2dDensity2File(outFilename, bf, skip);}
+	template <class Tbf>
+	void density2dEvolution(const int timeIndex, const std::string & outFilename, const Tbf & bf, const double rMax, const int nStep) const {m_responseCoef.write2dDensity2File(timeIndex,outFilename, bf, rMax,nStep);}
 	template <class Tbf>
 	void potential2dEvolution(const std::string & outFilename, const Tbf & bf, const int skip = 1) const {m_responseCoef.write2dPotential2File(outFilename, bf, skip);}
 
@@ -148,15 +153,19 @@ Eigen::VectorXcd VolterraSolver::timeIntegration(const int timeIndex, const doub
 
 
 
-void VolterraSolver::solveVolterraEquation(const bool isSelfConsistent) {
+void VolterraSolver::solveVolterraEquation(const bool isSelfConsistent, const int integrateFromIndex) {
 	Eigen::MatrixXcd identity{Eigen::MatrixXcd::Identity(m_maxRadialIndex+1, m_maxRadialIndex+1)};
 	double includeSelfConsistent{selfConsistentDouble(isSelfConsistent)};
-	for (int timeIndex = 1; timeIndex < m_numbTimeSteps; ++timeIndex){
+	for (int timeIndex = integrateFromIndex; timeIndex < m_numbTimeSteps; ++timeIndex){
 		printTimeIndex(timeIndex);
-		m_responseCoef(timeIndex) = m_responseCoef(0) + ((identity - includeSelfConsistent*0.5*m_kernels(timeIndex)).inverse()) 
+		m_responseCoef(timeIndex) = m_responseCoef(integrateFromIndex-1) + ((identity - includeSelfConsistent*0.5*m_kernels(timeIndex)).inverse()) 
 									* timeIntegration(timeIndex, includeSelfConsistent);
 	}
 } 
+
+void VolterraSolver::setInitialCondition(const std::vector<Eigen::VectorXcd> & ic) {
+	for (int time = 0; time < ic.size(); ++time) {m_responseCoef(time) = ic[time];}
+}
 
 /* Perturbation Evolution */ 
 /* ---------------------- */ 

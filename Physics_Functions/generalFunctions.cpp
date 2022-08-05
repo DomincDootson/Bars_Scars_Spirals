@@ -58,17 +58,35 @@ void generatingSpiralBF(int m2)
 	test.scriptW(PD, DF, "GaussianLog");
 }
 
+void savingKalnajsFunctions(const std::string & filename) {
+	std::ofstream out(filename);
+	PotentialDensityPairContainer<KalnajsNBasis> PD("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat");
+
+	for (double radius = 0.01; radius < 15; radius += 0.05) {
+		out << radius << ',';
+	}
+	out << 15  << '\n';
+	for (int n = 0; n <48; ++n) {
+		for (double radius = 0.01; radius < 15; radius += 0.05) {
+			out << PD.density(radius, n) << ',';
+		}
+		out << 0 << '\n';
+	}
+	out.close();
+}
+
 // Kernel Generation //
 // ----------------- // 
 
 void generatingKalnajsKernels(int m2, int nMax, double rInner)
 {
-	ActionAngleBasisContainer test("KalnajsN/", "KalnajsN", nMax, m2, 7, 251, 20);
-	Mestel DF(1, 1, 0.35, rInner, rInner, 10*rInner);
+	ActionAngleBasisContainer test("KalnajsN", "KalnajsN", nMax, m2, 7, 251, 20);
+	Mestel DF(1, 1, 0.377, 1, 1, 11.5, 4, 5);
 
-	VolterraSolver solver2(nMax, m2, 200, 0.25);
+	VolterraSolver solver2(nMax, m2, 200, 0.5);
 
-	std::string kernel2 = "Kernels/kalnajsComparison_" +std::to_string((int) nMax) + "_" + std::to_string((int) rInner) + ".out";
+	//std::string kernel2 = "Kernels/kalnajsComparison_" +std::to_string((int) nMax) + "_" + std::to_string((int) rInner) + ".out";
+	std::string kernel2 = "Kernels/kalnajsN.out";
 	solver2.generateKernel(kernel2, DF, test);
 }
 

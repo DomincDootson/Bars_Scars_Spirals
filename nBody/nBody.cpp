@@ -4,8 +4,9 @@
 #include <cmath>
 
 int main(){
-	barEvolutionKalnajs("Evolution_Test_Cold", true, 0.35); 
-	barEvolutionKalnajs("Evolution_Test_Warm", true, 0.45);
+	//barEvolutionKalnajs("Evolution_Test_Cold", true, 0.35); 
+	//barEvolutionKalnajs("Evolution_Test_Warm", true, 0.45);
+	barEvolutionKalnajs("Large_Bar", true, 0.35);
 
 	//orbitSection(); 
 	

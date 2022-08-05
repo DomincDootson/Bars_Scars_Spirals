@@ -80,10 +80,10 @@ void barEvolutionKalnajs(const std::string & stem, const bool isSelfConsistent, 
  	PotentialDensityPairContainer<KalnajsNBasis> pd("../Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_20_2.dat");
 
 	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(48+1);
-	coeff(0) = 0.01;
+	coeff(0) = 0.2;
 	
 
-	for (int i =0; i < 5; ++i){
+	for (int i =0; i < 1; ++i){
 		std::cout << '\n' << '\n' << "Realisation: " << i << '\n';
 
 		Bar2D bar(coeff, 0.05, "../Bar2D/barSize.out");
@@ -137,4 +137,13 @@ void spiralTesting() {
 
  	NBodySpiral nbody(500000, 100000*0.5, TIMESTEP, pd, spiral);
  	nbody.nBodyEvolution("../Plotting/Spiral_Data/nBodyEvolution.csv");
+}
+
+void calculateDiscAM() {
+	std::vector<double> params{4, 20};
+ 	PotentialDensityPairContainer<KalnajsBasis> pd(params, 10, 2);
+
+
+ 	 NBodyPerturbation nbody(NUMBPARTICLES, NSTEPS, TIMESTEP, pd);
+ 	 std::cout << "Total angular momentum: " << nbody.totalAngularMomentum() << '\n';
 }

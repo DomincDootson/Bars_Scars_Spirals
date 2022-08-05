@@ -21,6 +21,8 @@ public:
 
 	double density(double r) const;
 	double potential(double r) const; 
+
+	double rMax() const {return m_rMax;} 
 	
 
 private:

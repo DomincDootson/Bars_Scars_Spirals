@@ -1,6 +1,8 @@
 from generalPlottingFunctions import *
 from Density_Classes.OneDdensity import *
 
+from numpy import linalg as LA
+
 '''
 data = readingInRealCSV("potential.csv")
 r = np.linspace(0,20, np.shape(data[200,210:])[0])
@@ -114,21 +116,48 @@ axs[1].plot(time, np.imag(data[:,n]))
 
 plt.show() '''
 
+
+
 '''
-data = readingInRealCSV("angmom.csv")
-plt.plot((data[:2000,6] - data[0,6])/data[0,6])
-#plt.plot(data[:,21] - data[0,21])
-plt.plot((data[:2000,28] - data[0,28])/data[0,28])
-plt.show()'''
+oneDDensity = OneDdensity("Waves_Data/RadiusPull_0_5.csv")
+oneDDensity.densityAnimation(write2file = "Waves_Plots/Waves_Videos/RadiusPull_0_5.mp4",remove_ic = True)
+
+oneDDensity = OneDdensity("Waves_Data/RadiusPull_0_10.csv")
+oneDDensity.densityAnimation(write2file = "Waves_Plots/Waves_Videos/RadiusPull_0_10.mp4",remove_ic = True)
+
+oneDDensity = OneDdensity("Waves_Data/RadiusPull_0_13.csv")
+oneDDensity.densityAnimation(write2file = "Waves_Plots/Waves_Videos/RadiusPull_0_13.mp4",remove_ic = True)
+'''
+'''
+m1 = [1, 2, 3, 4, 5, 6, 7]
+
+real = [0.0395109, 0.00481113, 0.000799331, 0.000185919, 0.000116288, 9.12043e-05, 7.28621e-05]
+
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
+plt.plot(m1, real, color = 'firebrick', label = "Real")
 
-data = readingInRealCSV("Density.csv")
-
-plt.plot(data[:,0], data[:,1], label = 'Tapered Mestel', color = 'firebrick')
-plt.plot(data[30:,0], data[30:,2], label = 'Mestel', color = 'cornflowerblue')
-
-plt.xlabel("Radius")
-plt.ylabel("Density")
-plt.legend()
+plt.ylabel(r"$\left|\hat{\mathcal{M}}(\omega)-I\right|$")
+plt.xlabel(r"Max $m_{1}$")
+plt.yscale('log')
+plt.title(r"Mestel Mode $\omega = 0.88 +i0.13$")
 plt.show()
+
+
+
+
+plt.plot(m1, real)
+'''
+
+rm = readingInComplexCSV("ResponseMatrix.csv")
+
+w, v = LA.eig(rm)
+print(w[0])
+
+print(v[:,0])
+
+
+plt.plot(np.abs(v[:,0]))
+
+plt.show()
+

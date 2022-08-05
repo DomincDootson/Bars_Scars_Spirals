@@ -190,7 +190,7 @@ template <class Tbf>
 void ExpansionCoeff::writeDensity2File(const std::string & outFilename, const Tbf & bf, const int skip) const 
 {
 	std::ofstream out(outFilename);
-	std::vector<double> radii = radiiVector(10, 200);
+	std::vector<double> radii = radiiVector(15, 300);
 	outputVector(out, radii);
 	for (int time = 0; time < m_coeff.size(); time += skip){
 		std::vector<double> densityOnLine = bf.oneDdensity(radii, m_coeff[time]);
