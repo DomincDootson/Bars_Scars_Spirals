@@ -50,6 +50,9 @@ public:
 		}
 	}
 
+	ActionAngleBasisContainer() : m_prefix{"DEFAULT_CONSTRUCTOR"}, m_maxRadialIndex{0}, m_fourierHarmonic{0}, m_maxFourierHarmonic{0}, m_sizeArray{0}, m_spacingSize{0}
+	{}
+
 	~ActionAngleBasisContainer() {}
 
 	template <class Tbf, class Tdf>

@@ -2,7 +2,7 @@ from generalPlottingFunctions import *
 import matplotlib.animation as animation
 
 
-class CoeffficientClass(object):
+class CoefficientClass(object):
 
 	def __init__(self, filename):
 	
@@ -11,6 +11,9 @@ class CoeffficientClass(object):
 
 	def modePower(self):
 		return np.absolute(self.coeff)
+
+	def totalModePower(self):
+		return self.modePower().sum(axis = 1)
 
 	def powerPlot(self, timeEnd):
 		time = np.linspace(0, timeEnd, self.nTime)
@@ -50,11 +53,11 @@ class CoeffficientClass(object):
 
 
 '''
-coeff = CoeffficientClass("Waves_Data/Coefficent_SelfConsistent_10.out")
+coeff = CoefficientClass("Waves_Data/Coefficent_SelfConsistent_10.out")
 coeff.powerEvolutions(index2Normalise = 10)
 
-coeff = CoeffficientClass("Waves_Data/Coefficent_SelfConsistent_20.out")
+coeff = CoefficientClass("Waves_Data/Coefficent_SelfConsistent_20.out")
 coeff.powerEvolutions("Waves_Plots/Waves_Videos/SelfConsistent_20.mp4", 20)
 
-coeff = CoeffficientClass("Waves_Data/Coefficent_SelfConsistent_30.out")
+coeff = CoefficientClass("Waves_Data/Coefficent_SelfConsistent_30.out")
 coeff.powerEvolutions("Waves_Plots/Waves_Videos/SelfConsistent_30.mp4", 30)'''

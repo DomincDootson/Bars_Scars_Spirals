@@ -83,10 +83,10 @@ void generatingKalnajsKernels(int m2, int nMax, double rInner)
 	ActionAngleBasisContainer test("KalnajsN", "KalnajsN", nMax, m2, 7, 251, 20);
 	Mestel DF(1, 1, 0.377, 1, 1, 11.5, 4, 5);
 
-	VolterraSolver solver2(nMax, m2, 200, 0.5);
+	VolterraSolver solver2(nMax, m2, 1200, 0.1);
 
 	//std::string kernel2 = "Kernels/kalnajsComparison_" +std::to_string((int) nMax) + "_" + std::to_string((int) rInner) + ".out";
-	std::string kernel2 = "Kernels/kalnajsN.out";
+	std::string kernel2 = "Kernels/kalnajsShortN.out";
 	solver2.generateKernel(kernel2, DF, test);
 }
 

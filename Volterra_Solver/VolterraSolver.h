@@ -61,8 +61,8 @@ public:
 	template <class Tbf>
 	std::vector<double> energyEvolution(const Tbf & bf, const std::string & perturbationFilename, const bool isSelfConsistent = true);
 	
-	void kernelTesting(const std::string & filename, const int nudgeCoef, const bool isSelfConsistent);
-
+	void kernelTesting(const int nudgeCoef, const bool isSelfConsistent) {m_perturbationCoef(0)[nudgeCoef] = 1; solveVolterraEquation(isSelfConsistent);}
+	void kernelTesting(const std::string & filename, const int nudgeCoef, const bool isSelfConsistent) {kernelTesting(nudgeCoef,isSelfConsistent); m_responseCoef.write2File(filename);}
 
 	/* Saving to File */
 	/* -------------- */ 
@@ -196,11 +196,6 @@ std::vector<double> VolterraSolver::energyEvolution(const Tbf & bf, const std::s
 	return m_responseCoef.energyEvolution(bf.scriptE());
 }
 
-void VolterraSolver::kernelTesting(const std::string & filename, const int nudgeCoef, const bool isSelfConsistent) {
-	m_perturbationCoef(0)[nudgeCoef] = 1;
-	solveVolterraEquation(isSelfConsistent);
-	m_responseCoef.write2File(filename); 
-}
 
 /* Bar Evolution */
 /* ------------- */

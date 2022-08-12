@@ -28,10 +28,14 @@ public:
 
 	void kernelWrite2File(const std::string & kernelFilename) const; 
 	void includeMassFraction(const double massRatio) {for (auto kernel : m_kernels) {kernel *= massRatio;}}
+	void activeFraction(const double xi) {for (auto kernel : m_kernels) {kernel *= xi;}}
 
 	int numbTimeSteps() const {return m_kernels.size();}
 	int numbBF() const {return m_maxRadialIndex;}
 	double timeStep() const {return m_timeStep;}
+
+	Eigen::MatrixXcd responseMatrix(const std::complex<double> & omega) const; 
+	Eigen::MatrixXcd unstableResponseMatrix(const std::complex<double> & omega) const; // Unstable means eta>0
 
 private:
 	std::vector<Eigen::MatrixXcd> m_kernels;
@@ -77,8 +81,6 @@ void EvolutionKernels::gridSetUp(const Tdf & df, const ActionAngleBasisContainer
 
 	m_dfdEGrid = df.dFdEgrid(basisFunc.spacing(), m_om1Grid); 
 	m_dfdJGrid = df.dFdJgrid(basisFunc.spacing(), m_om2Grid); 	
-
-	//std::cout << m_dfdJGrid << '\n' << '\n';
 
 	m_elJacobian = df.energyAngMomJacobain(basisFunc.size(0), basisFunc.spacing());	
 }
@@ -243,6 +245,31 @@ void EvolutionKernels::kernelSquareReadIn(const std::string & kernelFilename) {
 		}
 	} 
 	kernelIn.close();
+}
+
+
+/* Response Matrix */
+/* --------------- */
+
+/*Eigen::MatrixXcd EvolutionKernels::responseMatrix(const std::complex<double> & omega) const {
+	Eigen::MatrixXcd rm{0.5 * m_kernels.back()}; 
+	
+	const std::complex<double> unitComplex(0,-1), negIomega{omega * unitComplex};
+
+	for (int time = 1; time < m_numbTimeSteps-1; ++time) {rm += m_kernels[m_numbTimeSteps-1-time] * exp(negIomega * (time * m_timeStep));}
+	rm += 0.5 *m_kernels.front() * exp(negIomega * ((m_numbTimeSteps-1) * m_timeStep));
+
+	return m_timeStep*rm; 
+}*/ 
+
+Eigen::MatrixXcd EvolutionKernels::unstableResponseMatrix(const std::complex<double> & omega) const {
+	Eigen::MatrixXcd rm{0.5 * m_kernels.front()}; 
+	const std::complex<double> unitComplex(0,1), iOmega{omega * unitComplex};
+
+	for (int time = 0; time < m_numbTimeSteps-1; ++time) {rm += m_kernels[time] * exp(iOmega * (time * m_timeStep));}
+	rm += 0.5 * m_kernels.back() * exp(iOmega * ((m_numbTimeSteps-1) * m_timeStep));
+
+	return -m_timeStep * rm; 
 }
 
 #endif

@@ -7,6 +7,7 @@
 #include <Eigen/Eigenvalues> 
 
 #include "../Action_Angle_Basis_Functions/ActionAngleBasisContainer.h"
+#include "../Volterra_Solver/EvolutionKernels.h"
 
 class ResponseMatrix
 {
@@ -20,23 +21,19 @@ public:
 	
 	v_taylorCoeff.reserve(7);
 	for (int i = 0; i < 6+1; ++i) {v_taylorCoeff.emplace_back(m_intStep, m_intStep); v_taylorCoeff[i] *= 0;}
-}
+	}
+
+	ResponseMatrix() : m_BF(), m_intStep{0}, m_fourierHarmonic{0}, m_maxFourierHarmonic{0}, m_spacing{0} {}
 	~ResponseMatrix() {}
 
 	Eigen::MatrixXcd responseMatrix(const std::complex<double> & omega);
+	Eigen::MatrixXcd responseMatrix(const std::complex<double> & omegas, const EvolutionKernels & kernel) {m_responseMatrix = kernel.unstableResponseMatrix(omegas); return m_responseMatrix;}
+
 	void responseMatrixElement(const std::complex<double> & omega, int p, int q);
 	
 	std::complex<double> det() const;
 	std::complex<double> det(const std::complex<double> & omega) {responseMatrix(omega); return det();} 
 
-	Eigen::MatrixXcd eigenVectors() const {
-		Eigen::MatrixXd r = m_responseMatrix.imag(); 
-		Eigen::EigenSolver<Eigen::MatrixXd> es(r); 
-		std::cout << es.eigenvalues() <<'\n' <<'\n';
-		return es.eigenvectors();}
-	//Eigen::VectorXcd eigenValues()  const {Eigen::EigenSolver<Eigen::MatrixXcd> es(m_responseMatrix); return es.eigenvalues();}
-
-	//Eigen::VectorXcd  
 	void saveResponseMatrix(const std::string & filename) const;
 private:
 	// Some internal parameters
@@ -101,8 +98,7 @@ void ResponseMatrix::responseMatrixElement(const std::complex<double> & omega, i
 	{
 		calculateNormalisedCoeff(omega, m1, p, q); 
 		element += alephSummedOver(); 
-	} 
-
+	}  
 	m_responseMatrix(p,q) = element;
 	m_responseMatrix(q,p) = element;
 	//std::cout << element <<'\n'; 
@@ -215,7 +211,7 @@ std::complex<double> ResponseMatrix::Gfunctions(int i, int j) const { // We can 
 
 std::complex<double> ResponseMatrix::det() const {
 	Eigen::MatrixXcd id = Eigen::MatrixXcd::Identity(m_responseMatrix.rows(), m_responseMatrix.rows());
-	return (id - m_responseMatrix).determinant(); 
+	return (m_responseMatrix - id).determinant(); 
 }
 
 std::string signC(double number) {if (number < 0) {return std::to_string(number) + "j";} else {return"+" + std::to_string(number) + "j";}}

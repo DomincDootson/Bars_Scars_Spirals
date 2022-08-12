@@ -1,4 +1,4 @@
-from generalPlottingFunctions import *
+ from generalPlottingFunctions import *
 from Density_Classes.OneDdensity import *
 from Density_Classes.TwoDdensity import *
 from CoefficientClass import *
