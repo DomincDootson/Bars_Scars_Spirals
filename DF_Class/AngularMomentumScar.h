@@ -15,10 +15,10 @@ public:
 		else {return 1;}
 	} 
 
-private:
+//private:
 	const double m_position, m_width, m_depth;
 
-	double grooveFunction(const double L) const {return 1 + m_depth * pow(cos((M_PI/2) * (L-m_position)/m_width),10);}
+	double grooveFunction(const double L) const {return 1 + m_depth * exp(-0.5*pow((L - m_position)/m_width, 2));}
 };
 
 #endif

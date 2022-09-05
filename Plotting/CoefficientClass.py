@@ -1,5 +1,6 @@
 from generalPlottingFunctions import *
 import matplotlib.animation as animation
+from scipy.stats import linregress
 
 
 class CoefficientClass(object):
@@ -10,7 +11,10 @@ class CoefficientClass(object):
 		self.nTime, self.nMax = np.shape(self.coeff)
 
 	def modePower(self):
-		return np.absolute(self.coeff)
+		return np.square(np.absolute(self.coeff))
+
+	def arg(self):
+		return np.angle(self.coeff)
 
 	def totalModePower(self):
 		return self.modePower().sum(axis = 1)
@@ -21,6 +25,28 @@ class CoefficientClass(object):
 		plt.plot(time, np.sum(self.modePower(), axis = 1))
 		plt.yscale('log')
 		plt.show()
+
+	## Mode Fitting ##
+	## ------------ ##
+
+	def expoFit(self, time):
+		timeFit, logPower = time[self.nTime//2:], np.log(self.totalModePower()[self.nTime//2:])
+		fit = linregress(timeFit, logPower)
+		return timeFit, np.exp(fit.intercept + fit.slope * timeFit), fit.slope/2
+
+	def periodFitter4Index(self, index, time):
+		timeFit, arg = time[self.nTime//2:], self.arg()[self.nTime//2:, index]
+		roots = [index for index in range(1,np.shape(arg)[0]) if (arg[index]>0 and arg[index-1]<0)]
+		
+		timePeriod = (timeFit[roots[-1]] - timeFit[roots[0]]) / (len(roots) - 1)
+
+		return (2 * pi) / timePeriod
+
+	def periodFitter(self, time):
+		omega4index = [self.periodFitter4Index(i, time) for i in range(self.nMax)]
+		return sum(omega4index)/len(omega4index)
+		
+
 
 	def powerEvolutions(self, filename = None, index2Normalise = -1):
 		modePower = self.modePower()

@@ -41,6 +41,7 @@ public:
 	m_intStep{500}, v_radii(m_intStep), v_theta1(m_intStep), v_theta2(m_intStep), v_theta1Deriv(m_intStep)
 	{
 		std::cout << "Reading in basis functions.\n";
+		std::cout << m_spacingSize << '\n';
 		for (int np = 0; np <= m_maxRadialIndex; ++np)
 		{
 			for (int m1 = -m_maxFourierHarmonic; m1 <= m_maxFourierHarmonic; ++ m1)

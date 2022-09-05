@@ -11,18 +11,18 @@ template <class T>
 class ScarredMestel : public DFClass
 {
 public:
-	ScarredMestel(const std::vector<T> & scars, double vc = 1, double r0 = 1, double litteSigma = 0.35, double xi = 0, 
+	ScarredMestel(const std::vector<T> & scars, double vc = 1, double r0 = 1, double litteSigma = 0.35, double xi = 1, 
 	double rInner = 1, double rOuter = 11.5, double nuTaper = 4, double muTaper = 5) : 
 	m_vc{vc}, m_r0{r0}, m_littleSigma{litteSigma}, m_q{pow(m_vc/m_littleSigma,2) - 1}, m_xi{xi}, 
-	m_rInner{rInner}, m_rOuter{rOuter}, m_nuTaper{nuTaper}, m_muTaper{muTaper} {
+	m_rInner{rInner}, m_rOuter{rOuter}, m_nuTaper{nuTaper}, m_muTaper{muTaper}, m_massScaling{1} {
 		addScars(scars);
 		readInPotentialVector();
 	}
 
-	ScarredMestel(double vc = 1, double r0 = 1, double litteSigma = 0.35, double xi = 0, 
+	ScarredMestel(double vc = 1, double r0 = 1, double litteSigma = 0.35, double xi = 1, 
 	double rInner = 1, double rOuter = 11.5, double nuTaper = 4, double muTaper = 5) : 
 	m_vc{vc}, m_r0{r0}, m_littleSigma{litteSigma}, m_q{pow(m_vc/m_littleSigma,2) - 1}, m_xi{xi}, 
-	m_rInner{rInner}, m_rOuter{rOuter}, m_nuTaper{nuTaper}, m_muTaper{muTaper} {
+	m_rInner{rInner}, m_rOuter{rOuter}, m_nuTaper{nuTaper}, m_muTaper{muTaper}, m_massScaling{1} {
 		readInPotentialVector();
 	}
 	
@@ -30,8 +30,10 @@ public:
 	~ScarredMestel() {}
 
 	double potentialBackground(double radius) const {return m_vc*m_vc*log(radius/m_r0);}
-	double potential(double radius) const {return (1-m_xi) * potentialBackground(radius) + m_xi * potentialFromVector(radius);}//(1-m_xi) * potential(radius) + 
+	double potential(double radius) const {return m_vc*m_vc*log(radius/m_r0);}//(1-m_xi) * potentialBackground(radius) + m_xi * potentialFromVector(radius);}//(1-m_xi) * potential(radius) + 
 	double distFunc(double E, double J) const;
+
+	void setDiskMass(const double diskMassValue) {m_massScaling = diskMassValue/diskMass();}
 
 	template <class Ts> 
 	void addScar(const Ts & scarToAdd) {v_scars.push_back(scarToAdd);}
@@ -46,7 +48,8 @@ private:
 	std::vector<double> v_potential; 
 
 	const double m_vc, m_r0, m_littleSigma, m_q, m_xi, m_rInner, m_rOuter, m_nuTaper, m_muTaper;
-	double m_potentialSpacing; 
+
+	double m_massScaling, m_potentialSpacing; 
 
 	double innerTaper(double J) const;
 	double outerTaper(double J) const;
@@ -82,9 +85,11 @@ template <class T>
 double ScarredMestel<T>::distFunc(double E, double J) const // Note that we have set G = 1
 {
 	double scarEffect{1};
-	for (auto scar : v_scars) {scarEffect *= scar.groove(E, J, 1);} // We need the other way for the other scar! 
+	for (auto scar : v_scars) {scarEffect *= scar.groove(E, J, 1);} // We need the other way for the De Rijke Scar scar! 
+
 	//for (auto scar : v_scars) {scarEffect *= scar.groove(E, J, equivalentLconstJr(E, J, scar.patternSpeed(), scar.jacobi()));}
-	return  scarEffect*innerTaper(J)*outerTaper(J)*pow((J/(m_r0*m_vc)), m_q) * exp(-E/pow(m_littleSigma,2)) * 
+	return  scarEffect*innerTaper(J)*outerTaper(J) *
+	(m_xi)*pow((J/(m_r0*m_vc)), m_q) * exp(-E/pow(m_littleSigma,2)) * 
 	(((pow(m_vc,2)/(2*M_PI*m_r0)) * pow(m_vc,m_q)) * pow(pow(2, 0.5*m_q) * 
 	sqrt(M_PI)*tgamma(0.5*m_q+0.5)*pow(m_littleSigma,2+m_q), -1)); 
 }

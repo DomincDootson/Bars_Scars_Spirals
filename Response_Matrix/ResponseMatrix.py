@@ -52,11 +52,8 @@ class ResponseMatrix():
 
 
 		
-
-
-rm = ResponseMatrix("ResponseMatrix.csv")
-rm.findEigenMode()
-
-
-rm.saveEigenMode("test.out")
+for n in ['5', '6', '7', '8']:
+	rm = ResponseMatrix(f"RM/RM_Xi_{n}_Nu_6.csv")
+	rm.findEigenMode()
+	rm.saveEigenMode(f"RM/RM_Xi_{n}_Nu_6.out")
 		

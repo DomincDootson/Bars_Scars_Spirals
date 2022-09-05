@@ -4,8 +4,6 @@
 
 #include <chrono>
 
-#include <boost/math/special_functions/ellint_1.hpp>
-
 #include "../DF_Class/Mestel.h"
 #include "../DF_Class/ScarredMestel.h"
 #include "../DF_Class/Scar.h"
@@ -29,20 +27,24 @@ void addScars(ScarredMestel<AngularMomentumScar> & df, bool scar1 = true, bool s
 }
 
 
-void savingEvolutionKernel(bool toAddScars, double sigma = 0.35, int nTimeStep = 200, double timeStep = 0.1, const std::string & filename = "Kernels/kalnajsScarred.out", const bool generateBF = false) {
-	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_0.dat"); int l{0};
-	//ScarredMestel<Scar> DF(1, 1, sigma); 
-	ScarredMestel<AngularMomentumScar> DF(1, 1, sigma); 
-	double unscarredDiskMass{DF.diskMass()};
-	if (toAddScars) {addScars(DF);} 
-	double scarredDiskMass{DF.diskMass()}; std::cout << "Ratio of disk masses: " << unscarredDiskMass/scarredDiskMass <<'\n';
-	if (generateBF) {
-		ActionAngleBasisContainer test("KalnajsN", 48, l, 7, 251, 20); test.scriptW(pd, DF, "KalnajsN");}
-	
-	ActionAngleBasisContainer test("KalnajsN", "KalnajsN", 48, l, 7, 251, 20);
+void savingEvolutionKernel(double scarRadius, int nTimeStep, double timeStep, const std::string & filename, const bool generateBF) {
+	std::cout << "Calculating Scarred Kernel R: " << scarRadius << '\n' <<'\n' << '\n';
 
-	VolterraSolver solver1(48, l, nTimeStep, timeStep);
-	solver1.generateKernel(filename, DF, test, unscarredDiskMass/scarredDiskMass);
+
+	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat"); 
+	
+	double temp = sqrt(1/(1+11.4));
+	ScarredMestel<AngularMomentumScar> DF(1, 1, temp, 1, 1, 11.5, 4, 5);
+	
+	AngularMomentumScar scar1(scarRadius, 0.25, -0.5);
+	DF.addScar(scar1);
+	DF.setDiskMass(12.0); 
+	
+	
+	ActionAngleBasisContainer test("KalnajsN", "KalnajsN", 40, 2, 4, 251, 15);
+
+	VolterraSolver solver1(40, 2, nTimeStep, timeStep);
+	solver1.generateKernel(filename, DF, test);
 }
 
 
@@ -70,14 +72,16 @@ void circularCutThrought() {
 
 void scarredDensity(const double temp, const std::string & filename) {
 	ScarredMestel<AngularMomentumScar> df(1,1, temp); 
+	AngularMomentumScar scar1(5, 0.1, 5); 
+	df.addScar(scar1);
 
 	/*std::ofstream out("Plotting/Scar_Data/unscarredDensity.csv");
 	for (double r = 0.1; r<10; r += 0.01) {std::cout << "Density for point: " << r << '\n'; out << r << ',' << df.density(r) << '\n';}
 	out.close(); */ 
 
-	addScars(df); 
+	 
 	std::ofstream out1(filename);
-	for (double r = 0.1; r<10; r += 0.01) {std::cout << "Density for point: " << r << '\n'; out1 << r << ',' << df.density(r) << '\n';}
+	for (double r = 0.1; r<10; r += 0.01) {std::cout << "Density for point: " << r << '\n'; out1 << r << ',' << df.distFunc(0.5 + log(r), r) << '\n';}
 	out1.close();  
 }
 

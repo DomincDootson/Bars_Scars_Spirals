@@ -246,8 +246,8 @@ Eigen::MatrixXd DFClass::energyAngMomJacobain(const int size, const double spaci
 
 double DFClass::density(const double radius) const // Maybe include some integration constants
 {
-	int nSteps{300}, nStepsRadial{300}; 
-	double density{0}, stepVPHI{vPhiScale()/nSteps}, stepVR{vRScale()/nSteps}, energy{0}, vPhi{0}, vrIntegral{}; // FIGURE OUT THE STEP SIZE
+	int nSteps{1000}, nStepsRadial{1000}; 
+	double density{0}, stepVPHI{vPhiScale()/((double)nSteps)}, stepVR{vRScale()/((double)nSteps)}, energy{0}, vPhi{0}, vrIntegral{}; // FIGURE OUT THE STEP SIZE
 	//0.26112 // 5.49443e+14
 	for (int i = 1; i<nSteps; ++i) // Outer integral is over J (don't start at J = 0, as f(J) = 0)
 	{

@@ -8,7 +8,7 @@ void generatingKalnajsBF(int m2);
 void generatingSpiralBF(int m2);
 void getSpiralParam();
 
-void generatingKalnajsKernels(int m2, int nMax = 10, double rInner = 1);
+void generatingKalnajsKernels(const std::string & filename, int m2, int nMax = 10, double rInner = 1);
 void generatingGaussianKernels(int m2);
 
 void generatingSpiralBFDiffTemp(int m2);
@@ -31,4 +31,6 @@ void spiralEvolution();
 
 void differentInnerTapers(); 
 void energyTapping(int nMax, int rInner);
+
+void waveTesting();
 #endif

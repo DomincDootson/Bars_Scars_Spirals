@@ -30,15 +30,24 @@ public:
 		for (int i = 0; i < m_cores; ++i) {v_responseMatrices.emplace_back(BF, df);}
 	}
 
-	ResponseMatrixThread(const int nCores = 2) : m_cores{nCores}
+	ResponseMatrixThread(const ActionAngleBasisContainer & BF, const int nCores = 1) : m_cores{1} // This constructor will be used to generate modes via kernel method
+	{for (auto i = 0; i < m_cores; ++i) {v_responseMatrices.emplace_back(BF);} }
+
+	ResponseMatrixThread(const int nCores = 1) : m_cores{nCores} // This constructor will be used to generate modes via kernel method
 	{for (auto i = 0; i < m_cores; ++i) {v_responseMatrices.emplace_back();} }
 		
 	~ResponseMatrixThread() {}
 
 	ComplexVector det(const ComplexVector & omegas);
 	ComplexVector det(const ComplexVector & omegas, const EvolutionKernels & kernel);
+	
+	template <class Tdf>
+	ComplexVector det(const ComplexVector & omegas, EvolutionKernels & kernel, const Tdf & df);
 
-	void modeGridSearch(const std::string & filename, double eMin, double eMax, int eN, double oMin, double oMax, int oN);
+	void modeGridSearch(const std::string & filename, double eMin, double eMax, int eN, double oMin, double oMax, int oN); // These points should really be in a struct
+	template <class Tdf>
+	void modeGridSearch(const std::string & filename, EvolutionKernels & kernel, const Tdf & df, double eMin, double eMax, int eN, double oMin, double oMax, int oN); 
+
 	void modeGridSearch(const std::string & filename, const EvolutionKernels & kernel, double eMin, double eMax, int eN, double oMin, double oMax, int oN); 
 	
 
@@ -73,19 +82,35 @@ ComplexVector ResponseMatrixThread::det(const ComplexVector& omegas) { // CAN WE
 	return dets; 
 }
 
-ComplexVector ResponseMatrixThread::det(const ComplexVector & omegas, const EvolutionKernels & kernel) {
-	ComplexVector dets; std::cout << "Calculating Modes\n";
+ComplexVector ResponseMatrixThread::det(const ComplexVector& omegas, const EvolutionKernels & kernel) { // CAN WE TIDY UP THIS AND THE FUNCTION BELOW IT? 
+	ComplexVector dets(omegas.size()); 
 	for (int i = 0; i < omegas.size(); i += m_cores) {
-		std::vector<std::thread> threads; int nUsed{m_cores}; // Incase omeags.size()//m_cores !=0
-		//std::cout << "Percentage of modes calculated: " << int(100*i / ((double) omegas.size())) << '%' << '\n';
+		 std::vector<std::thread> threads; int nUsed{m_cores}; // Incase omeags.size()//m_cores !=0
+		
+		if (i%1000 ==0) {std::cout << "Percentage of modes calculated: " << int(100*i / ((double) omegas.size())) << '%' << '\n';}
+	
 		for (int c = 0; c < m_cores; ++c) {
 			if (i+c >= omegas.size()) {nUsed = c+1; break;}
-			std::complex<double> omega{omegas[i+c]};
-			threads.emplace_back( [this] (const int core, const std::complex<double> & om, const EvolutionKernels & ker)
-			 {v_responseMatrices[core].responseMatrix(om, ker);}, c, omega, kernel); 
+			const std::complex<double> omega{omegas[i+c]};
+			threads.emplace_back( [this, kernel] (const int core, const std::complex<double> & om) {v_responseMatrices[core].responseMatrix(om, kernel);}, c, omega); 
 		}
+
 		for (auto & th : threads) {th.join();}
-		for (int n = 0; n < nUsed; ++n) {dets.emplace_back(v_responseMatrices[n].det());}  
+		for (int n = 0; n < nUsed; ++n) {dets[i + n] = v_responseMatrices[n].det();}  
+	
+	}
+	return dets; 
+}
+
+template <class Tdf>
+ComplexVector ResponseMatrixThread::det(const ComplexVector & omegas, EvolutionKernels & kernel, const Tdf & df) {
+	ComplexVector dets; std::cout << "Calculating Modes\n";
+	for (int i = 0; i < omegas.size(); i += m_cores) {
+		std::cout << "Percentage of modes calculated: " << int(100*i / ((double) omegas.size())) << '%' << '\n';
+		
+		std::complex<double> omega{omegas[i]}; 
+		v_responseMatrices[i].responseMatrix(omega, kernel, df); 
+		dets.emplace_back(v_responseMatrices[i].det());
 	}
 	return dets; 
 }
@@ -104,9 +129,17 @@ void ResponseMatrixThread::modeGridSearch(const std::string & filename, double e
 	searchSave(filename, omegaVec, detVec, eN, oN); 
 }
 
+template <class Tdf>
+void ResponseMatrixThread::modeGridSearch(const std::string & filename, EvolutionKernels & kernel, const Tdf & df,double eMin, double eMax, int eN, double oMin, double oMax, int oN) {
+	ComplexVector omegaVec{uniformOmegaVector(eMin, eMax, eN, oMin, oMax, oN)}, detVec(eN*oN);
+ 	detVec = det(omegaVec, kernel, df); 
+	searchSave(filename, omegaVec, detVec, eN, oN);
+}
+
+
 void ResponseMatrixThread::modeGridSearch(const std::string & filename, const EvolutionKernels & kernel, double eMin, double eMax, int eN, double oMin, double oMax, int oN) {
 	ComplexVector omegaVec{uniformOmegaVector(eMin, eMax, eN, oMin, oMax, oN)}, detVec(eN*oN);
-	detVec = det(omegaVec, kernel); 
+ 	detVec = det(omegaVec, kernel); 
 	searchSave(filename, omegaVec, detVec, eN, oN);
 }
 
@@ -124,6 +157,8 @@ void ResponseMatrixThread::searchSave(const std::string & filename, const Comple
 ComplexVector ResponseMatrixThread::uniformOmegaVector(double eMin, double eMax, int eN, double oMin, double oMax, int oN) {
 	ComplexVector holding; std::complex<double> unitComplex(0,1);
 	double oSpacing{(oMax-oMin)/ ((double) oN-1)}, eSpacing{(eMax-eMin)/ ((double) eN-1)}; 
+	if (eN ==1) {eSpacing = 0;}
+	
 	for (int i = 0; i < eN; ++i) {
 		for (int j = 0; j < oN; ++j) {
 			holding.emplace_back((j * oSpacing + oMin) + unitComplex * (i * eSpacing +eMin)); // Access with [j + i * oN]

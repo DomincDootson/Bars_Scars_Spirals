@@ -23,11 +23,20 @@ public:
 	for (int i = 0; i < 6+1; ++i) {v_taylorCoeff.emplace_back(m_intStep, m_intStep); v_taylorCoeff[i] *= 0;}
 	}
 
-	ResponseMatrix() : m_BF(), m_intStep{0}, m_fourierHarmonic{0}, m_maxFourierHarmonic{0}, m_spacing{0} {}
+	ResponseMatrix(const ActionAngleBasisContainer & BF) : m_BF{BF}, m_intStep{m_BF.size(0)}, m_fourierHarmonic{m_BF.fourierHarmonic()}, 
+	m_maxFourierHarmonic{m_BF.maxFourierHarmonic()}, m_spacing{m_BF.step()} 
+	{}
+
+	ResponseMatrix() : m_BF{}, m_intStep{}, m_fourierHarmonic{}, m_maxFourierHarmonic{}, m_spacing{} {}
+	
 	~ResponseMatrix() {}
 
 	Eigen::MatrixXcd responseMatrix(const std::complex<double> & omega);
-	Eigen::MatrixXcd responseMatrix(const std::complex<double> & omegas, const EvolutionKernels & kernel) {m_responseMatrix = kernel.unstableResponseMatrix(omegas); return m_responseMatrix;}
+	
+	template <class Tdf>
+	Eigen::MatrixXcd responseMatrix(const std::complex<double> & omegas, EvolutionKernels & kernel, const Tdf & df) {m_responseMatrix = kernel.responseMatrix(omegas, df, m_BF); return m_responseMatrix;}
+
+	Eigen::MatrixXcd responseMatrix(const std::complex<double> & omegas, const EvolutionKernels & kernel) {m_responseMatrix = kernel.responseMatrix(omegas); return m_responseMatrix;}
 
 	void responseMatrixElement(const std::complex<double> & omega, int p, int q);
 	

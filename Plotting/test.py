@@ -149,15 +149,8 @@ plt.show()
 plt.plot(m1, real)
 '''
 
-rm = readingInComplexCSV("ResponseMatrix.csv")
-
-w, v = LA.eig(rm)
-print(w[0])
-
-print(v[:,0])
-
-
-plt.plot(np.abs(v[:,0]))
-
+data = readingInRealCSV("../wavetest.csv")
+plt.plot(data[:,0], data[:,1])
+plt.plot(data[:,0], data[:,2])
 plt.show()
 
