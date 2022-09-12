@@ -30,7 +30,9 @@ int main()
 	//saveKalnajs();
 	//kalnajTest();
 	
-	waveTesting();
+	//waveTesting();
+
+	savingDensity("WKB_Disc/Tapered_Density.csv");
 
 	return 0;
 }

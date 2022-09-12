@@ -36,7 +36,7 @@ void savingEvolutionKernel(double scarRadius, int nTimeStep, double timeStep, co
 	double temp = sqrt(1/(1+11.4));
 	ScarredMestel<AngularMomentumScar> DF(1, 1, temp, 1, 1, 11.5, 4, 5);
 	
-	AngularMomentumScar scar1(scarRadius, 0.25, -0.5);
+	AngularMomentumScar scar1(scarRadius, 0.25, -0.95);
 	DF.addScar(scar1);
 	DF.setDiskMass(12.0); 
 	
@@ -183,13 +183,39 @@ void circularInfall() {
 // ---------------------- //
 
 void angularMomentumScar() {
-	AngularMomentumScar scar(2, 0.1, 5);
-	ScarredMestel<AngularMomentumScar> dfs;
+	AngularMomentumScar scar(2, 0.25, -0.5);
+	ScarredMestel<AngularMomentumScar> DF(1, 1, sqrt(1/12.4), 1, 1, 11.5, 4, 5);;
 
-	dfs.addScar(scar);
-
+	DF.addScar(scar);
+	std::cout << DF.diskMass() << '\n';
 	std::ofstream out("Plotting/density.csv");
+	//std::cout << dfs.diskMass() <<'\n';
+	for (double r = 0.01; r < 3; r += 0.01) {
+		double E{0.5*r*r - log(r)}, J{r}; 
 
-	for (double r = 0.01; r < 5; r += 0.05) {out << dfs.density(r) << '\n';}
+		out << r << ',' << DF.density(r) << '\n';}
 	out.close();
 }
+
+// Saving Density Files // 
+// -------------------- //
+
+void savingDensityFile(double scarRadius, const std::string & filename) {
+	std::cout << "Calculating Scarred Density R: " << scarRadius << '\n' <<'\n' << '\n';
+	ScarredMestel<AngularMomentumScar> DF(1, 1, sqrt(1/(1+11.4)), 1, 1, 11.5, 4, 5);
+	
+	AngularMomentumScar scar1(scarRadius, 0.25, -0.95);
+	DF.addScar(scar1);
+
+	
+	std::ofstream out(filename);
+	int nStep{100}; double stepSize{0.05};
+	out << nStep << ',' << stepSize <<'\n';
+	out << DF.diskMass() << ',' << 0 << '\n';
+	out << 0 << ',' << 0 <<'\n';
+
+	for (double radius = stepSize; radius < nStep * stepSize; radius += stepSize) {out << radius << ',' <<  DF.density(radius) << '\n';}
+
+	out.close(); 
+}
+

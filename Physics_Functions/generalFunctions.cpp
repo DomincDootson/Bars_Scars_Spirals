@@ -211,3 +211,21 @@ void waveTesting() {
 	for (double radius = 6; radius < 7; radius += 0.01) {out << radius << ',' << (test.density(radius, 0)).imag() << ',' << test.envelope(radius) <<'\n';}
 	out.close(); 
 }
+
+
+
+/* Misc */
+/* ---- */
+
+void savingDensity(const std::string & filename) {
+	Mestel DF(1, 1, sqrt(1/12.4), 1, 1, 11.5, 4, 5);
+	std::cout << DF.diskMass() << '\n';
+	std::ofstream out(filename);
+	int nStep{100}; double stepSize{0.05};
+	out << nStep << ',' << stepSize <<'\n';
+	out << 0 << ',' << 0 <<'\n';
+
+	for (double radius = stepSize; radius < nStep * stepSize; radius += stepSize) {out << radius << ',' <<  DF.density(radius) << '\n';}
+
+	out.close(); 
+}

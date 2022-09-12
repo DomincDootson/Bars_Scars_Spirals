@@ -15,4 +15,6 @@ void scarredModes();
 
 void circularInfall(); 
 void angularMomentumScar();
+
+void savingDensityFile(double scarRadius, const std::string & filename);
 #endif

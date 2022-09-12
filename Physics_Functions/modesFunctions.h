@@ -6,8 +6,8 @@
 void m1Stability();
 void testingKernelMethod();
 
-void saveResponseMatrix(const std::string & filename, const double omega0, const double eta, const double xi = 1);
-void generatingEigenMode(const std::string & modeFile, const std::string & densityFile); 
+void saveResponseMatrix(const std::string & filename, const std::string & kernelFile, const double omega0, const double eta, const double xi = 0.5);
+void eigenvector2Density(const std::string & modeFile, const std::string & densityFile); 
 
 void unstableTimeEvolution(const std::string & stem = "Coefficent_JB_Mode_");
 

@@ -60,11 +60,12 @@ class ModeFinder():
 		cbar = fig.colorbar(contour)
 		cbar.ax.set_title(r"$\log\left[\det\left[\hat{\mathcal{M}}(\omega) - I \right]\right] $")
 
-		minVal = self.mostUnstableMode()
-		print(minVal)
+		minVal =self.modes()
+		
 
-		if minVal != None:
-			axs.scatter(minVal.real, minVal.imag, color = 'firebrick')
+		for each in minVal:
+			print(each)
+			axs.scatter(each.real, each.imag, color = 'firebrick')
 
 		
 		plt.show()
@@ -99,7 +100,21 @@ class ModeFinder():
 			for j in range(1, self.nO-1):
 				cc, cl, cr, uc, lc = det[i,j], det[i,j-1], det[i,j+1], det[i-1,j], det[i+1,j]
 				if ((cc < cl) & (cc < cr) & (cc < uc) & (cc < lc)):
+
 					return self.omegas[i,j]
+
+
+	def modes(self):
+		det = self.abs()
+		modes = []
+		for i in range(self.nE-2, 0, -1):
+			for j in range(1, self.nO-1):
+				cc, cl, cr, uc, lc = det[i,j], det[i,j-1], det[i,j+1], det[i-1,j], det[i+1,j]
+				if ((cc < cl) & (cc < cr) & (cc < uc) & (cc < lc)):
+					modes.append(self.omegas[i,j])
+
+		return modes
+				
 
 
 
@@ -113,9 +128,9 @@ class ModeFinder():
 #det = ModeFinder("../SM_5_Upper.csv")
 #det = ModeFinder("../scarredMode_Depth_0_Lower_Eta.csv")
 #det = ModeFinder("../scarredMode_Depth_10.csv") #
-# det = ModeFinder("Modes_Data/Kernel_Search/Single_Scar/AM_Scarred_Kernel_R_12_W_25_D_-05.csv") #(0.813924+0.102703j)
+#det = ModeFinder("Modes_Data/Kernel_Search/Single_Scar/AM_Scarred_Kernel_R_20_W_25_D_-95_G.csv") #(0.813924+0.102703j)
 
-# det.contourPlotShow()
+#det.contourPlotShow()
 # det.cutThrough(20)
 
 

@@ -33,4 +33,6 @@ void differentInnerTapers();
 void energyTapping(int nMax, int rInner);
 
 void waveTesting();
+
+void savingDensity(const std::string & filename);
 #endif

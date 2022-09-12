@@ -149,8 +149,12 @@ plt.show()
 plt.plot(m1, real)
 '''
 
-data = readingInRealCSV("../wavetest.csv")
-plt.plot(data[:,0], data[:,1])
-plt.plot(data[:,0], data[:,2])
+data = readingInRealCSV("densityOG.csv")
+
+plt.plot(data[:,0],data[:,1])
+
+data = readingInRealCSV("density.csv")
+
+plt.plot(data[:,0],data[:,1])
 plt.show()
 

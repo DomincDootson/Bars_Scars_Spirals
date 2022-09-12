@@ -54,18 +54,20 @@ void testingKernelMethod() {
 /* ---------------------- */ 
 
 
-void saveResponseMatrix(const std::string & filename, const double omega0, const double eta, const double xi) {
+void saveResponseMatrix(const std::string & filename, const std::string & kernelFile, const double omega0, const double eta, const double xi) {
 	ResponseMatrix rm; std::complex<double> omega(omega0, eta); 
-	EvolutionKernels kernels("Kernels/kalnajs_6_Long.out", 1600);
+	EvolutionKernels kernels(kernelFile, 800);
+	kernels.activeFraction(xi); 
 
 	rm.responseMatrix(omega, kernels);
 	rm.saveResponseMatrix(filename);
+	std::cout << rm.det() << '\n';
 }
 
-void generatingEigenMode(const std::string & modeFile, const std::string & densityFile) {
+void eigenvector2Density(const std::string & modeFile, const std::string & densityFile) {
 	ExpansionCoeff mode(modeFile, 1);
 	PotentialDensityPairContainer<KalnajsNBasis> PD("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat", 40);
-	mode.write2dDensity2File(densityFile, PD, 1, 5, 301);
+	mode.write2dDensity2File(densityFile, PD, 1, 6, 301);
 }
 
 
@@ -144,13 +146,13 @@ std::string outFilename(const std::string & radius, const std::string & width, c
 }
 
 void uniformSearchScarredDensity(const std::string & radius, const std::string & width, const std::string & depth, bool isLong) {
-	ResponseMatrixThread rmt(2); int nStep{400};
+	ResponseMatrixThread rmt(2); int nStep{800};
 
 	if (isLong) {nStep = 800;}
 	
 	EvolutionKernels kernels(kernelFilename(radius, width, depth, isLong), nStep);
-	kernels.activeFraction(0.7);
+	kernels.activeFraction(0.5 * (11.6873/12));
 
-	rmt.modeGridSearch(outFilename(radius, width, depth), kernels, 0.001, 0.01, 60, 0.25, 1.2, 60);
+	rmt.modeGridSearch(outFilename(radius, width, depth), kernels, 0.02, 0.05, 60, 0.3, 0.7, 60);
 }
 

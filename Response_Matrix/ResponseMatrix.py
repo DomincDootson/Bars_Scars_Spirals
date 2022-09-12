@@ -33,7 +33,11 @@ class ResponseMatrix():
 
 		for i, eigenValue in enumerate(self.eigenValues): # Can we check that the eigen mode is always the largest? 
 			if ((abs(eigenValue - 1)) < abs(closeest - 1)):
+				closeest = eigenValue
 				self.eigenMode = self.eigenVectors[:, i]
+
+		print("Closest Eigenvalue ", closeest, abs(closeest))
+				
 
 
 	def saveEigenMode(self, filename):
@@ -52,8 +56,9 @@ class ResponseMatrix():
 
 
 		
-for n in ['5', '6', '7', '8']:
-	rm = ResponseMatrix(f"RM/RM_Xi_{n}_Nu_6.csv")
+for n in ['12', '14', '16', '18', '20']:
+	rm = ResponseMatrix(f"RM/Single_Scarred_RM/RM_{n}_25_-95.csv")
 	rm.findEigenMode()
-	rm.saveEigenMode(f"RM/RM_Xi_{n}_Nu_6.out")
+	
+	rm.saveEigenMode(f"RM/Single_Scarred_RM/EV_{n}_25_-95.out")
 		
