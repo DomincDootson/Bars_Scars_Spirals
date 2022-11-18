@@ -14,7 +14,7 @@ public:
 	Spiral2D(const Tbf & bf, double k = 1, double scale = 5, double maxDensity = .01, int taper = 6) : 
 	m_k{k}, m_scale{scale}, m_maxDensity{maxDensity}, m_taper{taper},
 	m_responseCoef(1, bf.maxRadialIndex())
-	{m_responseCoef(0) = densityResolving(bf, 20);}
+	{m_responseCoef(0) = densityResolving(bf, 15);} // This number is the upper limit of the basis function
 
 
 	~Spiral2D() {}
@@ -40,6 +40,8 @@ public:
 	double density(const double r, const double phi) const {return density2D(r, phi);}
 	double density(const double r) const {return (2 * m_maxDensity * pow(r/m_scale, 0.5*m_taper)) / (1+pow(r/m_scale, m_taper)); } 
 
+	//double density(double r) const {return exp(-0.5 * pow((radius - )))}
+
 	template <class Tbf>
 	void density2dFinal(const Tbf & bf, const std::string & outFilename, const int fromEnd = 1, const double rMax = 10, const double nStep = 201) const {m_responseCoef.write2dDensity2File(m_responseCoef.nTimeStep() - fromEnd, outFilename, bf, rMax, nStep);}
 
@@ -47,8 +49,8 @@ public:
 	void removeIC() {for (int time = 0; time < m_responseCoef.nTimeStep(); ++time) {m_responseCoef(time) -= m_responseCoef(0);}}
 
 private: 
-	double m_k, m_scale, m_maxDensity;
-	int m_taper; 
+	const double m_k, m_scale, m_maxDensity;
+	const int m_taper; 
 	
 	ExpansionCoeff m_responseCoef; 
 
@@ -56,7 +58,9 @@ private:
 	/* Functions defining Spiral Shape */ 
 	/*-------------------------------- */ 
 
-	double density2D(const double r, const double phi, const double m = 2) const {return density(r) * cos(m*(phi-spiral(r)));} 
+	//double density2D(const double r, const double phi, const double m = 2) const {return density(r) * cos(m*(phi-spiral(r)));} 
+
+	double density2D(const double r, const double phi, const double m = 2) const {return density(r) * cos(m*(phi+m_k*r));} 
 	double spiral(const double r, const double a = 1) const {return (1/m_k) * log(r/a);} 
 
 	Eigen::ArrayXXcd density2D(const int nGrid, const double rMax) const; 

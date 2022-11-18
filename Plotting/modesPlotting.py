@@ -1,5 +1,6 @@
 from Density_Classes.TwoDdensity import *
 from generalPlottingFunctions import *
+from matplotlib.cm import *
 from CoefficientClass import *
 from ModeFinder import *
 from scipy.stats import linregress
@@ -172,7 +173,7 @@ def savingModes(radii, filename = 'VaryingInnerPositionResponse.csv', readinFile
 			print(omegas)
 			for omega in omegas:
 				f.write(f"{radius},{omega.real},{omega.imag}\n")
-		
+	
 
 ## Plotting Scarred Eigenmodes ## 
 ## --------------------------- ##
@@ -204,17 +205,51 @@ def scarredModesDensity(files, radius, omega0s, rMax = 6):
 		ax.plot(CR[0], CR[1], color = 'firebrick', linestyle ='--')
 		#ax.plot(OLR[0], OLR[1], color = 'firebrick', linestyle ='--')
 		ax.plot([r *cos(th) for th in np.linspace(0, 2 * pi)], [r * sin(th) for th in np.linspace(0, 2 * pi)], linestyle = ':', color = "white")
-	ax.set_title(f"$R_{{i}} = {r}$", fontsize = 12)
+		ax.set_title(f"$R_{{i}} = {r}$", fontsize = 12)
 
 
 		ax.set_aspect('equal')
-
 	fig.tight_layout()
 
 	plt.show()
 
+def scarredModesDensityRadii(files, radius, omega0s, rMax = 6):
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
+	colors = ['firebrick','royalblue','navy']
+	fig, axs = plt.subplots(nrows = 2, sharex = True, sharey=False)
+
+	cmap = ScalarMappable(Normalize(0.5,3), cmap = "plasma")
 
 
+	for file, r, om, color in zip(files, radius, omega0s, colors):
+		print(file)
+		mode = TwoDdensity(file)
+
+		rad, amp, phs = mode.fourierCoeffT(2, -1, rMax) 
+		#color = cmap.to_rgba(r)
+		#print(color)
+
+		axs[0].plot((1/r)*rad, amp*(rad/(2*pi)), label = r, color = color)
+		axs[1].plot((1/r)*rad, phs, color = color)
+
+	axs[0].set_xlim([0,3])
+
+	axs[0].set_xlabel(r"$R/R_{in}$", fontsize = 12)
+	axs[1].set_xlabel(r"$R/R_{in}$", fontsize = 12)
+
+	axs[0].set_ylabel(r"Normalised Amplitude", fontsize = 12)
+	axs[1].set_ylabel(r"$\phi(R)$", fontsize = 12)
+
+	axs[0].legend(title = r"$R_{in}$")
+
+	plt.show()
+
+
+def modeEvolutionComplexComponents(filestem):
+
+	pr, pi, nr, ni = TwoDdensity(filestem + "/pos_real.csv"), TwoDdensity(filestem + "/pos_imag.csv"), TwoDdensity(filestem + "/neg_real.csv"), TwoDdensity(filestem + "/neg_imag.csv")
+	nr.fourierAnimations(2,rMax = 5)
 
 #eigenModeComparison(["Modes_Data/JB_mode.csv", "Modes_Data/JB_mode_Time.csv"], 0.88)
 
@@ -236,10 +271,13 @@ def scarredModesDensity(files, radius, omega0s, rMax = 6):
 
 #comparingXi([f"Modes_Data/Xi_Modes/RM_Xi_{x}_Nu_6.out" for x in ['5','6','7','8']], [0.74661, 0.77, 0.8, 0.83])
 
-scarredModesDensity([f"Modes_Data/Scarred_Density/SD_{r}_25_-95.csv" for r in ['12', '14','16','18','20']], [1.2, 1.4, 1.6, 1.8, 2.0], [0.564407, 0.510169, 0.469492, 0.428814, 0.394915])
+#scarredModesDensity([f"Modes_Data/Scarred_Density/SD_{r}_25_-95.csv" for r in ['12', '14','16','18','20']], [1.2, 1.4, 1.6, 1.8, 2.0], [0.564407, 0.510169, 0.469492, 0.428814, 0.394915])
 #scarredModesDensity([f"Modes_Data/Scarred_Density/SD_{r}_25_-95.csv" for r in ['14','16', '18']], [1.4, 1.6, 1.8], [0.510169, 0.469492, 0.428814])
 
+#scarredModesDensityRadii([f"Modes_Data/Scarred_Density/SD_{r}_25_-95.csv" for r in ['12','18','20']], [1.2, 1.8, 2.0], [0.564407, 0.428814, 0.394915])
+#scarredModesDensityRadii([f"Modes_Data/Scarred_Density/SD_{r}_25_-95.csv" for r in ['12','18','20']], [1.2, 1.8, 2.0], [0.564, 0.428814, 0.394915])
 
 
+modeEvolutionComplexComponents("Modes_Data/Real_Imag_Modes")
 
 

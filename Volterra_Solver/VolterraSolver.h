@@ -8,6 +8,7 @@
 
 #include "../Bar2D/Bar2D.h"
 #include "../Spiral2D/Spiral2D.h"
+#include "../Wave/Wave.h"
 
 class VolterraSolver
 {
@@ -27,6 +28,9 @@ public:
 
 	Eigen::VectorXcd     responseCoef(const int timeIndex) const {return     m_responseCoef(timeIndex);}
 	Eigen::VectorXcd perturbationCoef(const int timeIndex) const {return m_perturbationCoef(timeIndex);}
+
+
+
 
 
 	/* General Functions */
@@ -56,6 +60,9 @@ public:
 
 	void solveVolterraEquationPerturbation(const std::string & perturbationFilename, const bool isSelfConsistent);
 	void coefficentEvolution(const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent = true);
+	void setInitalPerturbation(const Eigen::VectorXcd & coeff, int time = 0) {m_perturbationCoef(time) = coeff;}
+
+
 	template <class Tbf>
 	void densityEvolution(const Tbf & bf, const std::string & outFilename, const std::string & perturbationFilename, const bool isSelfConsistent = true);
 	template <class Tbf>
@@ -63,6 +70,9 @@ public:
 	
 	void kernelTesting(const int nudgeCoef, const bool isSelfConsistent) {m_perturbationCoef(0)[nudgeCoef] = 1; solveVolterraEquation(isSelfConsistent);}
 	void kernelTesting(const std::string & filename, const int nudgeCoef, const bool isSelfConsistent) {kernelTesting(nudgeCoef,isSelfConsistent); m_responseCoef.write2File(filename);}
+	
+	void deltaPerturbationTest();
+	void deltaPerturbationConsistent();
 
 	/* Saving to File */
 	/* -------------- */ 
@@ -75,7 +85,7 @@ public:
 	template <class Tbf> 
 	void density1dEvolution(const std::string & outFilename, const Tbf & bf, const int skip = 1) const {m_responseCoef.writeDensity2File(outFilename, bf, skip);}
 	template <class Tbf>
-	void density2dEvolution(const std::string & outFilename, const Tbf & bf, const int skip = 1) const {m_responseCoef.write2dDensity2File(outFilename, bf, skip);}
+	void density2dEvolution(const std::string & outFilename, const Tbf & bf, const int skip = 1) const {m_responseCoef.write2dDensity2File(outFilename, bf, skip, 10);}
 	template <class Tbf>
 	void density2dEvolution(const int timeIndex, const std::string & outFilename, const Tbf & bf, const double rMax, const int nStep) const {m_responseCoef.write2dDensity2File(timeIndex,outFilename, bf, rMax,nStep);}
 	template <class Tbf>
@@ -90,11 +100,13 @@ public:
 	/* Bar Evolution */
 	/* ------------- */
 	void barRotation(Bar2D & bar, const std::string & outFilename, const std::string & evolutionFilename, const bool isSelfConsistent = true, const bool isFreelyRotating = true, const bool isEvolving = false); 
+	void barRotation(Bar2D & bar, const bool isSelfConsistent);
 
 	/* Spiral */ 
 	/* ------ */ 
 
-	void spiralEvolution(Spiral2D & spiral); 
+	template <class T> 
+	void spiralEvolution(T & spiral);  // This can also be used for Wave class
 	
 
 private:
@@ -111,7 +123,8 @@ private:
 	double selfConsistentDouble(bool isSelfConsistent) {if (isSelfConsistent) {return 1;} else {return 0;}}
 	double freelyRotatingDouble(bool isFreelyRotating) {if (isFreelyRotating) {return 1;} else {return 0;}}
 
-	void transferCoeff(Spiral2D & spiral) {for (int time = 1; time < m_numbTimeSteps; ++time) {spiral(time) = m_responseCoef(time);}}
+	template <class T>
+	void transferCoeff(T & spiral) {for (int time = 1; time < m_numbTimeSteps; ++time) {spiral(time) = m_responseCoef(time);}}
 };
 
 
@@ -196,6 +209,22 @@ std::vector<double> VolterraSolver::energyEvolution(const Tbf & bf, const std::s
 	return m_responseCoef.energyEvolution(bf.scriptE());
 }
 
+void VolterraSolver::deltaPerturbationTest() {
+	for (int t = 0; t < m_numbTimeSteps; ++t) {m_responseCoef(t) = m_kernels(t) * m_perturbationCoef(0);}
+}
+
+void VolterraSolver::deltaPerturbationConsistent() {
+	deltaPerturbationTest(); 
+	Eigen::MatrixXcd identity = Eigen::MatrixXcd::Identity(m_maxRadialIndex+1, m_maxRadialIndex+1);
+	for (int timeIndex = 1; timeIndex < m_numbTimeSteps; ++timeIndex) {
+		printTimeIndex(timeIndex); 
+		Eigen::VectorXcd integral = 0.5 * m_timeStep * m_kernels(timeIndex) *  m_responseCoef(0);
+		for (int i = 1; i < (timeIndex); ++i){ integral += m_timeStep * m_kernels(timeIndex - i) * m_responseCoef(i); }
+		integral += m_responseCoef(timeIndex);	
+		m_responseCoef(timeIndex) =  ((identity - 0.5*m_kernels(timeIndex)).inverse()) * integral;  
+	}
+}
+
 
 /* Bar Evolution */
 /* ------------- */
@@ -222,11 +251,21 @@ void VolterraSolver::barRotation(Bar2D & bar, const std::string & outFilename, c
 	bar.saveBarEvolution(evolutionFilename);
 }
 
+void VolterraSolver::barRotation(Bar2D & bar, const bool isSelfConsistent)
+{
+	for (int timeIndex = 0; timeIndex < m_numbTimeSteps; ++timeIndex) {
+		m_perturbationCoef(timeIndex) = bar.barCoeff(-1); 
+		bar.drift(m_timeStep, 0); 
+	}
+	solveVolterraEquation(isSelfConsistent);
+}
+
 
 /* Spiral Function */
 /* --------------- */ 
 
-void VolterraSolver::spiralEvolution(Spiral2D & spiral) {
+template <class T>
+void VolterraSolver::spiralEvolution(T & spiral) {
 	spiral(0) = m_xi * spiral(0);
 	m_responseCoef(0) = spiral(0); 
 	solveVolterraEquation(true);
@@ -236,5 +275,6 @@ void VolterraSolver::spiralEvolution(Spiral2D & spiral) {
 }
 
 #endif
+
 
 

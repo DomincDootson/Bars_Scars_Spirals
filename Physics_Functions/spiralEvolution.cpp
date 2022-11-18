@@ -5,14 +5,14 @@
 #include <numeric>
 
 int main() {
-	//savingInitialSpiral();
+	savingInitialSpiral();
 	//savingEvolutionKernel(0.35, 500, 0.25, "Kernels/kalnajsN.out", true);
 	//varyingKEvolution();
 	//densityEvolution(1);
 	//varyingSigmaEvolution();
 	//spiralEvolution(); 
 	//smallSpiral(); 
-	varyingNumberBasisFunctions();
+	//varyingNumberBasisFunctions();
 
 	return 0;  
 }

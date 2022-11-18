@@ -3,6 +3,7 @@ import csv
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.cm import ScalarMappable
 
 class WKB_Disc():
 
@@ -20,6 +21,9 @@ class WKB_Disc():
 			self.taperedDensity = True
 			self.readin_density(densityFile)
 
+	def __repr__(self):
+		return f"WKB_Disc({self.sigmaR!r}, {self.taperedDensity}, {self.epsilon}, {self.activeFraction})"
+
 	## General Functions ##
 	## ----------------- ##
 
@@ -30,7 +34,7 @@ class WKB_Disc():
 		return self.Omega(radius) * sqrt(2)
 
 	def Sigma(self, radius):
-		if self.taperedDensity == None:
+		if self.taperedDensity == False:
 			return self.Sigma0 * (1/radius)
 		else:
 			return ((11.6873/self.discMass)) *self.tapered_Sigma(radius) ## ((11.6873/self.discMass)) * is the mass ratio
@@ -152,7 +156,6 @@ class WKB_Disc():
 	    k_index = [i for i in range(1, len(lst)) if lst[i]*lst[i-1] < 0]	    
 
 	    if (len(k_index) ==1): # If we find one, we haven't looked at large enough k, therefore repeat this function with larger k range
-	    	print("Searching for larger k, k_upper = " + str(upper * 2 * kc))
 	    	self.k_from_omega(omega, r, nstep, upper * 2) 
 	    
 	    interpolate = lambda i : k_list[i-1] + ((k_list[i] - k_list[i-1])/(1 + abs(lst[i]/lst[i-1])))
@@ -209,7 +212,7 @@ class WKB_Disc():
 	    kc = self.k_crit(radius)
 	    x0, x1, x2 = abs(k/kc)- deltaX, abs(k/kc), abs(k/kc) + deltaX
 	    s0, s1, s2 = self.s_from_k(x0*kc, radius), self.s_from_k(x1*kc, radius), self.s_from_k(x2*kc, radius)
-	    grad = -((1/(x2-x1)) * (abs(s2)-abs(s1)))
+	    grad = -((1/(x2-x0)) * (abs(s2)-abs(s0)))
 	    
 	    return (self.kappa(radius)/kc)* np.sign(k * s1) * grad
 
@@ -235,6 +238,11 @@ class WKB_Disc():
 	    
 	    for n in range(nstep):
 	        integralM = self.integrate_k(omegaM, r_inf/self.CR(omegaM), rUpperScar = rUpperScar) - pi
+		# integralL = self.integrate_k(omegaL, 0.5*(2-sqrt(2)), rUpperScar = rUpperScar) - pi
+		# integralU = self.integrate_k(omegaU, 0.5*(2-sqrt(2)), rUpperScar = rUpperScar) - pi
+	    
+		# for n in range(nstep):
+		# 	integralM = self.integrate_k(omegaM, 0.5*(2-sqrt(2)), rUpperScar = rUpperScar) - pi
 	        #print(omegaL, omegaU)
 	        if (integralM*integralL < 0):
 	            omegaU, integralU = omegaM, integralM
@@ -269,9 +277,9 @@ class WKB_Disc():
 
 	def modeFinder(self, range_omega0 = [0.5, 0.6], rScar = 1.2, rUpperScar = 100000):
 		omega = self.find_mode_omega0(range_omega0, rScar, rUpperScar = rUpperScar)
-		eta = self.find_mode_eta(omega, rScar, rUpperScar = rUpperScar)
+		#eta = self.find_mode_eta(omega, rScar, rUpperScar = rUpperScar) ## This can sometimes produce an indexing error. 
 
-		return omega + 1j* eta
+		return omega + 1j* 1
 
 
     ## Wave Motion in WKB Disc ##
@@ -285,7 +293,7 @@ class WKB_Disc():
 		return sgn * min(k_lst) if bool_lst[0] == True else sgn * max(k_lst)
 
 	def update_region(self, omega0, radius, bool_lst, fr):
-		if radius > 0.999 * fr *self.CR(omega0): 
+		if radius > 0.995 * fr *self.CR(omega0): 
 			if ((bool_lst[0] == bool_lst[1])):
 				bool_lst[0] = not (bool_lst[0])
 			
@@ -298,27 +306,52 @@ class WKB_Disc():
 
 
 
-	def motion_of_wave(self, omega0): # Figure out why it is quite jumpu
-		time, region, fr = np.linspace(0, 40, 300), [False, False], self.forbidden_radius(omega0)
+	def motion_of_wave(self, omega0): 
+		time, region, fr = np.linspace(0, 50, 400), [False, False], self.forbidden_radius(omega0)
 		radius, k, vg, deltaT = np.zeros_like(time), np.zeros_like(time), np.zeros_like(time), time[1]
-		radius[0] = 1.2*self.ILR(omega0) 
+		radius[0] = 1.15*self.ILR(omega0) 
 		k[0]  = self.correct_k(omega0, radius[0], region)
 		vg[0] = self.stellar_vg(k[0], radius[0])
-		print(region, radius[0], k[0], vg[0])
+		
+		cmap = ScalarMappable(cmap = 'viridis')
+		
 		
 		for t in range(1, np.shape(time)[0]):
 			radius[t] = radius[t-1] + vg[t-1] * deltaT 
 			region = self.update_region(omega0, radius[t], region, fr)
 			k[t]  = self.correct_k(omega0, radius[t], region)
 			vg[t] = self.stellar_vg(k[t], radius[t])
-			
-			print(region, radius[t], k[t], vg[t])
-			
-		plt.plot([k[i]/self.k_crit(r) for i, r in enumerate(radius)], [r/self.CR(omega0) for r in radius])
-		plt.axhline(fr)
-		plt.axhline(self.ILR(omega0)/self.CR(omega0))
+
+		plt.rc('text', usetex=True)
+		plt.rc('font', family='serif')			
+		fig, axs = plt.subplots()
+		for i in range(np.shape(time)[0]-1):
+			axs.plot([k[i]/self.k_crit(radius[i]) for i in [i,i+1]], [radius[i]/self.CR(omega0) for i in [i, i+1]], color = cmap.to_rgba(time)[i])
+			axs.plot([k[i]/self.k_crit(radius[i]) for i in [i,i+1]], [2-(radius[i])/self.CR(omega0) for i in [i, i+1]], color = cmap.to_rgba(time)[i])
+
+		axs.axhline(fr, linestyle = ':',  color = 'navy')
+		axs.axhline(2-fr, linestyle = ':', color = 'navy')
+		#axs.fill_between([k[i]/self.k_crit(radius[i]) for i in range(np.shape(time)[0])], [fr for _ in range(np.shape(time)[0])], [2-fr for _ in range(np.shape(time)[0])])
+
+		axs.axhline(self.ILR(omega0)/self.CR(omega0), color = 'firebrick', linestyle = '--')
+		axs.axhline(1, color = 'firebrick', linestyle = '--')
+		axs.axhline(self.OLR(omega0)/self.CR(omega0), color = 'firebrick', linestyle = '--')
+
+		axs.set_ylabel(r"$R/R_{CR}$", fontsize = 12)
+		axs.set_xlabel(r"$k/k_{crit}$", fontsize = 12)
+
+		axs.text(-7.5, 0.35, "A", fontsize = 12)
+		axs.text(-1.80, 0.84, "B", fontsize = 12)
+		axs.text(-0.19, 0.40, "C", fontsize = 12)
+		axs.text(1.66, 0.84, "D", fontsize = 12)
+		axs.text(7.5, 0.35, "E", fontsize = 12)
+
+		fig.colorbar(cmap, ax=axs, label = "Time").set_label(label = "Time", fontsize = 12)
 		plt.show()
 
 
-# disc = WKB_Disc(1/sqrt(12.4), densityFile = "Disc_Density/Tapered_R_20_W_25_D_-95_G.csv", epsilon = 0)
-# disc.check_interploation_density()
+disc = WKB_Disc(0.366, epsilon = 0)
+print(disc.forbidden_radius(0.4) * disc.CR(0.4))
+
+
+

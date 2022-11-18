@@ -1,37 +1,25 @@
 #include "wavesFunctions.h"
+#include <cmath>
 
 int main() {
-	/*selfConsistentWaves(10);
-	perturbationWaves(10);
+	//scarredTappingCoefficents("test");
+	//checkingDeltaFunctionFitting(); 
 
-	selfConsistentWaves(20);
-	perturbationWaves(20);
+	//savingInitialWave();
+	//waveEvolutionTest();
+	//waveTest("Plotting/IngoingOutgoingWave.csv");
+	//waveTestSpinning("Plotting/Spinning_wave.csv"); 
 
-	selfConsistentWaves(30);
-	perturbationWaves(30);*/ 
+	//turnOffBarFile("Bar2D/barSizeTurnOff.out", 1);
+
 	
-	selfConsistentDensity(2);
-	selfConsistentDensity(5);
-	selfConsistentDensity(10);
-	selfConsistentDensity(13);
+	//waveEvolutionTest("Plotting/Waves_Data/Stirring/CR_5_ILR_R_P.csv", 5, 5 * (1-0.5*sqrt(2)));
+	//waveEvolutionTest("Plotting/Waves_Data/Stirring/CR_5_CR_R_P.csv", 5, 5);
+	waveEvolutionTest("Plotting/Waves_Data/Stirring/CR_5_OLR_R_N.csv", 5, 5 * (1+0.5*sqrt(2)));
 
-	pullingDensity(2);
-	pullingDensity(5);
-	pullingDensity(10);
-	pullingDensity(13);
-
-	// selfConsistentPotential(2);
-	// selfConsistentPotential(5);
-	// selfConsistentPotential(10);
-	// selfConsistentPotential(13);
-
-	// pullingPotential(2);
-	// pullingPotential(5);
-	// pullingPotential(10);
-	// pullingPotential(13);
-
-	selfConsistentQuadDensity(5); 
-
-	//generatingKalnajsKernels(0, 38);
+	//waveEvolutionTest("Plotting/Waves_Data/Stirring/CR_5_ILR_W_P.csv", 5, 5 * (1-0.5*sqrt(2)), "None");
+	//waveEvolutionTest("Plotting/Waves_Data/Stirring/CR_5_CR_W_P.csv", 5, 5, "None");
+	waveEvolutionTest("Plotting/Waves_Data/Stirring/CR_5_OLR_W_N.csv", 5, 5 * (1+0.5*sqrt(2)), "None");
 	return 0; 
+	
 }

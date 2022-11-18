@@ -10,6 +10,10 @@ class CoefficientClass(object):
 		self.coeff = readingInComplexCSV(filename)
 		self.nTime, self.nMax = np.shape(self.coeff)
 
+	def __getitem__(self, index):
+		return self.coeff[index, time]
+
+
 	def modePower(self):
 		return np.square(np.absolute(self.coeff))
 

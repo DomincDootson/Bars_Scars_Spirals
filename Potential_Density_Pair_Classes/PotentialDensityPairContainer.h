@@ -40,6 +40,8 @@ public:
 	double potential(const double radius, const Eigen::VectorXcd coef) const;
 	double   density(const double radius, const Eigen::VectorXcd coef) const;
 
+	double maxRadius() const {return m_potentialDensityContainer[0].maxRadius();}
+
 
 
 	void scriptE(const std::string &filename) const;
@@ -70,8 +72,6 @@ public:
 
 	Eigen::VectorXcd potentialFitting(const Eigen::ArrayXXcd &potentialArrayTrue, const double rMax) const;  // This will calculate individual parts and solve matrix equation
 	Eigen::VectorXcd   densityFitting(const Eigen::ArrayXXcd   &densityArrayTrue, const double rMax) const;  // This will calculate individual parts and solve matrix equation
-
-
 
 protected:
 	std::vector<T> m_potentialDensityContainer;

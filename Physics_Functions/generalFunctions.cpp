@@ -38,10 +38,11 @@
 void generatingKalnajsBF(int m2)
 {
 	Mestel DF;
-	PotentialDensityPairContainer<KalnajsNBasis> PD("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat");
+	PotentialDensityPairContainer<KalnajsNBasis> PD("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_0.dat");
 
-	ActionAngleBasisContainer test("KalnajsN", 48, m2, 7, 100, 15); 
-	test.scriptW(PD, DF, "KalnajsN_Small"); // Use file function name here
+	//ActionAngleBasisContainer test("KalnajsN_Inner", 48, m2, 4, 251, 10); 
+	ActionAngleBasisContainer test("KalnajsN", 48, m2, 4, 251, 15); 
+	test.scriptW(PD, DF, "KalnajsN"); // Use file function name here
 }
 
 void getSpiralParam() {
@@ -82,14 +83,22 @@ void savingKalnajsFunctions(const std::string & filename) {
 
 void generatingKalnajsKernels(const std::string & filename, int m2, int nMax, double rInner)
 {
-	ActionAngleBasisContainer test("KalnajsN_Small", "KalnajsN", 40, 2, 7, 100, 15);
-	Mestel DF(1, 1, 0.377, 1, 1, 11.5, nMax, 5);
+	ActionAngleBasisContainer test("KalnajsN_Small", "KalnajsN", 48, 2, 7, 100, 10);
+	Mestel DF(1, 1, 0.377, 1, 1, 11.5, 4, 5);
 
-	VolterraSolver solver2(40, 2, 1600, 1);
+	VolterraSolver solver2(48, 2, 400, 0.1);
 
 	//std::string kernel2 = "Kernels/kalnajsComparison_" +std::to_string((int) nMax) + "_" + std::to_string((int) rInner) + ".out";
 	
 	solver2.generateKernel(filename, DF, test);
+}
+
+void generatingKalnajsKernelsAxisymmetric(const std::string & filename) {
+	ActionAngleBasisContainer test("KalnajsN", "KalnajsN", 48, 0, 4, 251, 15);
+	Mestel DF(1, 1, 0.238, 1, 1, 11.5, 4, 5);
+
+	VolterraSolver solver2(48, 0, 100, 0.35543);
+	solver2.generateKernel(filename, DF, test); 
 }
 
 void generatingGaussianKernels(int m2)
@@ -199,17 +208,6 @@ void energyTapping(int nMax, int rInner) {
 	
 	std::string filename = "Plotting/General_Data/kalnajsComparison_" +std::to_string((int) nMax) + "_" + std::to_string((int) rInner) + ".out"; 
 	solver2.kernelTesting(filename, 0, true);
-}
-
-
-/* Waves Testing */
-/* ------------- */ 
-
-void waveTesting() {
-	Wave test(0.55, 6.5, 40); 
-	std::ofstream out("wavetest.csv");
-	for (double radius = 6; radius < 7; radius += 0.01) {out << radius << ',' << (test.density(radius, 0)).imag() << ',' << test.envelope(radius) <<'\n';}
-	out.close(); 
 }
 
 

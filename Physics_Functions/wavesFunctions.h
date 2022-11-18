@@ -1,17 +1,16 @@
 #ifndef WAVESFUNCTIONS
 #define WAVESFUNCTIONS
 
-void generatingKalnajsKernels(int m2, int nMax = 48);
+#include <string>
 
-void selfConsistentWaves(int nMode);
-void perturbationWaves(int nMode);
+void checkingDeltaFunctionFitting();
 
-void selfConsistentDensity(double radius);
-void pullingDensity(double radius);
+void waveTest(const std::string & filename); 
+void waveTestSpinning(const std::string & filename);
 
-void selfConsistentPotential(double radius);
-void pullingPotential(double radius);
+void savingInitialWave();
 
-void selfConsistentQuadDensity(double radius); 
+void turnOffBarFile(const std::string & filename, double turnOffTime); 
+void waveEvolutionTest(const std::string & densityfile, double CRposition, double perturberRadius, const std::string & growthFile = "Bar2D/barSizeTurnOff.out");
 
 #endif

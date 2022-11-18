@@ -33,6 +33,9 @@ class TwoDdensity(object):
 		self.nSteps = len(self.density2D) 
 		self.centre = (self.nCols-1)*0.5
 
+	def __getitem__(self, index):
+		return self.density2D[index]
+
 	def densityAtTime(self, timeIndex):
 		return self.density2D[timeIndex]
 
@@ -96,7 +99,7 @@ class TwoDdensity(object):
 
 
 
-	def densityAnimation(self, rMax=10, filename = None):
+	def densityAnimation(self, rMax=10, filename = None, lines = []):
 		#plt.rc('text', usetex=True)
 		#plt.rc('font', family='serif')
 		
@@ -123,6 +126,9 @@ class TwoDdensity(object):
 			#ims.append([contourFilled, title, point])
 			ims.append([contourFilled, title])
 
+
+		for line in lines:
+			axs.plot([line * cos(th) for th in np.linspace(0, 2*pi)], [line * sin(th) for th in np.linspace(0, 2*pi)], linestyle = '--', color = "firebrick")
 
 		fig.subplots_adjust(right=0.8)
 		cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
@@ -273,7 +279,7 @@ class TwoDdensity(object):
 		#maxRho, minRho, R = self.maxDensity(), self.minDensity(), self.maxDensityAtTime(0,rMax)
 		for time in range(len(self.density2D)):
 			#contourFilled = axs.imshow(self.densityAtTime(time), vmax = maxRho, vmin = minRho, extent = (-rMax,rMax,-rMax,rMax,))
-			contourFilled = axs.imshow(self.densityPolar2D(time, R, phi, rMax), extent = (0,2 * 3.14,0,rMax,))
+			contourFilled = axs.imshow(self.densityPolar2D(time, R, phi, rMax), extent = (0,2 * 3.14,rMax,0))
 
 			title = fig.text(.4,.9,(r"Time: " +str(0.5* time)))
 			ims.append([contourFilled, title])
@@ -293,10 +299,10 @@ class TwoDdensity(object):
 
 
 
-	def fourierCoeffT(self, angHarmonic, time):
+	def fourierCoeffT(self, angHarmonic, time, rMax = 15): # We fit rho = A(R)Cos(l phi + psi(R)) 
 		
 		phase, magnitude = [], []
-		radii, angles  = np.linspace(0.01, 15, 100), np.linspace(0, 2 * 3.14, 100)
+		radii, angles  = np.linspace(0.01, rMax, 100), np.linspace(0, 2 * 3.14, 100)
 
 		dtheta = angles[1] - angles[0]
 
@@ -308,7 +314,9 @@ class TwoDdensity(object):
 				cosI += cos(angHarmonic * theta) * (dtheta / pi) * self.densityPolar(time, radius, theta, radii[-1]) # to normalise the integrals 
 		
 			phase.append(atan(-sinI/cosI))
-			magnitude.append(sinI * cos(-phase[-1]) + cosI * cos(-phase[-1]))
+			if isnan(phase[-1]): # For the case when the amplitude is zero everywhere at the start
+				phase[-1] = 0
+			magnitude.append(sqrt(sinI**2  + cosI**2))
 
 		return radii, magnitude, phase
 
@@ -321,7 +329,7 @@ class TwoDdensity(object):
 		ims = []
 
 		for time in range(self.nSteps):
-			radii, mag, ph = self.fourierCoeffT(angHarmonic, time)
+			radii, mag, ph = self.fourierCoeffT(angHarmonic, time, rMax)
 
 			magnitude, = axs1.plot(radii, mag, color = 'royalblue', label = "Magnitude") 
 
@@ -339,7 +347,10 @@ class TwoDdensity(object):
 			plt.show()
 
 		
+	def fouierEvolution(self, angHarmonic, rMax = 10):
+		lst = [[*self.fourierCoeffT(angHarmonic, timeIndex, rMax)] for timeIndex in range(self.nSteps)]
 
+		return np.asarray(lst[0][0]), np.asarray([each[1] for each in lst]), np.asarray([each[2] for each in lst])
 
 	def maximaEvolution(self):
 		positions = []
@@ -356,28 +367,5 @@ class TwoDdensity(object):
 
 		return time, radii
 
-
-
-
-
-
-
-
-
-
-
-
-def maxDensity():
-	data = readingInRealCSV("../Disk_Kicking/maxDensity.csv")
-	rInner = data[1:,0]
-	print(rInner)
-	for s in range(1, np.shape(data)[1]):
-		plt.plot(rInner, data[1:, s]-rInner, label = r"$\sigma_{r}=$ " + str(data[0,s]))
-
-	plt.ylabel(r"$R_{Max Density}- R_{i}$")
-	plt.xlabel(r"$R_{i}$")
-
-	plt.legend()
-	plt.show()
 
 

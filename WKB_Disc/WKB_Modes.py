@@ -18,50 +18,40 @@ def deRijkeMode():
 
 
 
-def varyingSoftening(softeningValues, innerPosition = 1.2):
-	omega0 = []
-
-	for ep in softeningValues:
-		print(f"Finding mode for {ep:.2f}")
-		disc = WKB_Disc(1/sqrt(12.4), epsilon = ep)
-		omega0.append(disc.modeFinder([0.4, 0.7], innerPosition))
-		print(omega0)
-
-	fig, axs = plt.subplots(ncols = 2)
-
-	axs[0].plot(softeningValues, [each.real for each in omega0])
-	
-	axs[0].set_xlabel(r"Softening, $\epsilon$")
-	axs[0].set_ylabel(r"$\omega_{0}$")
-
-	axs[1].plot(softeningValues, [each.imag for each in omega0]) 
-	axs[1].set_xlabel(r"Softening, $\epsilon$")
-	axs[1].set_ylabel(r"$\eta$")
-	plt.show()
-	# ep = softeningValues[-1]
-	# disc = WKB_Disc(1/sqrt(12.4))
-	# print(disc.find_mode_eta(0.5657197, 1.2, 200)) 
-	# print(disc.find_mode_eta(0.5657197, 1.2, 500)) 
-	# print(disc.find_mode_eta(0.5657197, 1.2, 1000)) 
-	# print(disc.find_mode_eta(0.5657197, 1.2, 2000)) 
-
-	# (0.5657197475433351+0.007992813861886824j)
-	# 0.017550837684988975
-	
-	
-def varyingInnerPositon(innerPosition, filename = "Cavity_Modes/VaryingInnerPosition.csv"):
+def varyingSoftening(innerPosition, filename, softeningValues):
 	omega0, rInner = [], []
 	f = open(filename, 'w')
 	for rIn in innerPosition:
 		print(f"Finding mode for {rIn:.2f}")
 		densityFile = f"Disc_Density/Tapered_R_{str(int(rIn*10))}_W_25_D_-95_G.csv"
 		print("Density file: " + densityFile)
-		disc = WKB_Disc(1/sqrt(12.4), epsilon = 0, densityFile = densityFile)
-		omega0.append(disc.modeFinder([0.4, 0.9], rScar = rIn))
+		disc = WKB_Disc(1/sqrt(12.4), epsilon = softeningValues, densityFile = "Tapered_Density.csv")
+		omega0.append(disc.modeFinder([0.2, 0.9], rScar = rIn))
 		rInner.append(disc.forbidden_radius(omega0[-1].real) * disc.CR(omega0[-1].real))
 		f.write(f"{rIn},{omega0[-1].real},{omega0[-1].imag}\n")
 		print(f"{rIn},{omega0[-1].real},{omega0[-1].imag}\n")
 
+	f.close()
+
+
+	
+	
+def varyingInnerPositon(innerPosition, filename = "Cavity_Modes/VaryingInnerPosition.csv", softeningValues = 0):
+	omega0, rInner = [], []
+	f = open(filename, 'w')
+	for rIn in innerPosition:
+		print(f"Finding mode for {rIn:.2f}")
+		
+		densityFile = f"Disc_Density/Tapered_R_{str(int(rIn*10))}_W_25_D_-95_G.csv"
+		print("Density file: " + densityFile)
+		
+
+		disc = WKB_Disc(1/sqrt(12.4), epsilon = softeningValues, densityFile = densityFile)
+		omega0.append(disc.modeFinder([0.4, 0.9], rScar = rIn))
+		rInner.append(disc.forbidden_radius(omega0[-1].real) * disc.CR(omega0[-1].real))
+		
+		f.write(f"{rIn},{omega0[-1].real},{omega0[-1].imag}\n")
+		print(f"{rIn},{omega0[-1].real},{omega0[-1].imag}\n")
 
 	f.close()
 
@@ -74,7 +64,7 @@ def plottingInnerPosition(files = ["Cavity_Modes/VaryingInnerPosition.csv", "Cav
 	labels, colors, ls = ["Untapered","Tapered", "Tapered Scarred"], ["royalblue", "firebrick", "firebrick"], ['-', '--', '-']
 	for file, l,c,s in zip(files, labels, colors, ls):
 		data = readingInRealCSV(file)
-		axs.plot(data[:,0]+0.125, data[:,1], label = l, color = c, linestyle = s)
+		axs.plot(data[:,0]+0.125, data[:,1], label = l, color = c, linestyle = s) 
 		#axs[1].plot(data[:,0], data[:,2]) 
 
 	
@@ -120,6 +110,42 @@ def varyingOuterPositon(outerPosition, innerPosition = 1.2):
 
 	plt.show()
 
+## Softened Data ##
+## ------------- ##
+
+def softenedComparison():
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
+
+	files = ["Softening_Data/Tapered_Scared_Hard.csv", "Softening_Data/Tapered_Scared_Soft.csv", "Softening_Data/Tapered_Uncared_Hard.csv", "Softening_Data/Tapered_Unscared_Soft.csv","Softening_Data/Untapered_Unscared_Hard.csv","Softening_Data/Untapered_Unscared_Soft.csv"]
+	data = [readingInRealCSV(file) for file in files]
+	fig, axs = plt.subplots(ncols = 2, sharey = True)
+
+	# Hard #
+
+	axs[0].set_title(r"$\epsilon = 0$", fontsize = 12)
+	axs[0].plot(data[4][:,0]+0.125, data[4][:,1], color = 'royalblue', label = "Untapered")
+	axs[0].plot(data[2][:,0]+0.125, data[2][:,1], color = 'firebrick', linestyle = '--', label = "Tapered")
+	axs[0].plot(data[0][:,0]+0.125, data[0][:,1], color = 'firebrick', label = "Tapered Scarred")
+	axs[0].set_xlabel(r"$R_{s}$", fontsize = 12)
+	axs[0].set_ylabel(r"$\omega_{0}$", fontsize = 12)
+
+
+	# Soft #
+	axs[1].set_title(r"$\epsilon = 1/8$", fontsize = 12)
+	axs[1].plot(data[5][:,0]+0.125, data[5][:,1], color = 'royalblue', label = "Untapered")
+	axs[1].plot(data[3][:,0]+0.125, data[3][:,1], color = 'firebrick', linestyle = '--', label = "Tapered")
+	axs[1].plot(data[1][:,0]+0.125, data[1][:,1], color = 'firebrick', label = "Tapered Scarred")
+	axs[1].set_xlabel(r"$R_{s}$", fontsize = 12)
+	
+	axs[1].legend()
+
+	plt.show()
+	
+
+
+
+
 def WKBapproximation():
 	plt.rc('text', usetex=True)
 	plt.rc('font', family='serif')
@@ -158,7 +184,7 @@ def forbiddenRadii(rScar, omega0 = []):
 		print(disc.CR(o) * disc.forbidden_radius(o))
 
 
-#deRijkeMode()
+
 
 
 
@@ -168,7 +194,7 @@ def forbiddenRadii(rScar, omega0 = []):
 #varyingOuterPositon(np.linspace(1.5, 2, 1))
 
 #plottingInnerPosition(scatterFiles = ["Cavity_Modes/VaryingInnerPositionResponse_25_-95.csv"])
-forbiddenRadii(rScar = [1.2, 1.4, 1.6, 1.8, 2.0], omega0 = [0.564407, 0.510169, 0.469492, 0.428814, 0.394915])
+#forbiddenRadii(rScar = [1.2, 1.4, 1.6, 1.8, 2.0], omega0 = [0.564407, 0.510169, 0.469492, 0.428814, 0.394915])
 #deRijkeMode()
 
 '''disc = WKB_Disc(1/sqrt(12.4), epsilon = 0)
@@ -176,4 +202,18 @@ disc.plotting_k_vs_r(0.40453948974609377, scars = [2])'''
 
 
 # disc = WKB_Disc(1/sqrt(12.4), densityFile = "Disc_Density/Tapered_R_20_W_25_D_-95_G.csv", epsilon = 0)
+# print(disc.forbidden_radius(0.9288)*disc.CR(0.9288), disc.ILR(0.9288), disc.CR(0.9288), disc.OLR(0.9288))
+
+
 # disc.modeFinder([0.35, 0.55], rScar = 2)
+
+
+#varyingSoftening(np.linspace(1, 2, 11), "Softening_Data/Tapered_Uncared_Hard.csv", 0)
+#varyingSoftening(np.linspace(1, 2, 11), "Softening_Data/Tapered_Unscared_Soft.csv", 0.125)
+
+
+
+
+disc = WKB_Disc(0.377, activeFraction = 0.5, densityFile = "Tapered_Density.csv")
+omega0 = 0.8
+print(omega0, (disc.forbidden_radius(omega0)+1)*disc.CR(omega0))

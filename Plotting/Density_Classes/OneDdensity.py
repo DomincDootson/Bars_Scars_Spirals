@@ -16,6 +16,9 @@ class OneDdensity(object):
 		self.nRows = np.shape(self.densityArray)[1]
 		
 
+	def __getitem__(self, timeIndex):
+		return self.densityArray[timeIndex,:]
+
 	def density(self, timeIndex):
 		return self.densityArray[timeIndex, :]	
 

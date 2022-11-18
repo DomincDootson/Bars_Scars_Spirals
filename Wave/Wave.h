@@ -4,53 +4,81 @@
 #include <cmath>
 #include <Eigen/Dense>
 
-#include "../Potential_Density_Pair_Classes/PotentialDensityPairContainer.h"
 #include "../Potential_Density_Pair_Classes/KalnajsNBasis.h"
+#include "../Volterra_Solver/ExpansionCoeff.h"
 
 class Wave
 {
 public:
-	Wave(const double omega, const double centre, const double k) :
-	m_fourierHarmonic{2}, m_omega{omega}, m_centre{centre}, m_k{k}, m_sigma{0.5}, m_amplitude{0.01}
-	{}
+	template <class Tbf>
+	Wave(const Tbf & bf, double k, double centre, double sigma) : 
+	m_k{k}, m_centre{centre}, m_sigma{sigma}, 
+	m_responseCoef(1, bf.maxRadialIndex())
+	{m_responseCoef(0) = densityResolving(bf, bf.maxRadius());} 
+
+
 	~Wave() {}
 
-	// We need some funciton that can return the initial coefficents. 
 
+	template <class Tbf>
+	void density2dEvolution(const Tbf & bf, const std::string & filename, const int skip, const double rMax =10) const {m_responseCoef.write2dDensity2File(filename, bf, skip, rMax);}
 
+	template <class Tbf>
+	void density2dEvolution(int timeIndex, const Tbf & bf, const std::string & filename, const double rMax =10) const {m_responseCoef.write2dDensity2File(timeIndex, filename, bf, rMax);}
+	void saveEvolutionCoeff(const std::string & filename) const {m_responseCoef.write2File(filename);}
+
+	Eigen::VectorXcd operator()(int timeIndex) const {return m_responseCoef(timeIndex);}
+	Eigen::VectorXcd& operator()(int timeIndex) {return m_responseCoef(timeIndex);}
+
+	void resizeVector(const int nTimeStep) {m_responseCoef.resizeVector(nTimeStep);}
+	double density(const double r, const double phi) const {return density2D(r, phi);}
+
+	double density(double r) const {return 1/sqrt(2 * M_PI * m_sigma * m_sigma)*exp(-0.5 * pow((r - m_centre )/m_sigma,2));}
+
+	template <class Tbf>
+	void density2dFinal(const Tbf & bf, const std::string & outFilename, const int fromEnd = 1, const double rMax = 10, const double nStep = 201) const {m_responseCoef.write2dDensity2File(m_responseCoef.nTimeStep() - fromEnd, outFilename, bf, rMax, nStep);}
+
+	void removeIC() {for (int time = 1; time < m_responseCoef.nTimeStep(); ++time) {m_responseCoef(time) -= m_responseCoef(0);}}
+
+	void checkCoeff() const {for (int time = 0; time < m_responseCoef.nTimeStep(); ++time) {std::cout << m_responseCoef(time)(0) <<'\n';}}
+
+private: 
 	
-	const int m_fourierHarmonic;
-	const double m_omega, m_centre, m_k, m_sigma, m_amplitude; 
+	const double m_centre, m_sigma, m_k; 
 	
-	double envelope(const double radius) const;
-	std::complex<double> density(const double radius, const double phi) const;
+	ExpansionCoeff m_responseCoef; 
 
-	std::complex<double> resolveCoefficent(const int n) const;
-	Eigen::VectorXcd resolveIC() const; 
+
+	double density2D(const double r, const double phi, const double m = 2) const {return density(r) * cos(m*(phi+m_k*r));} 	
+	Eigen::ArrayXXcd density2D(const int nGrid, const double rMax) const; 
+
+	template <class Tbf>
+	Eigen::VectorXcd densityResolving(const Tbf & bf, const double rMax, const int nGrid = 1000) const;
+	
 };
 
 
+Eigen::ArrayXXcd Wave::density2D(const int nGrid, const double rMax) const {
+	Eigen::ArrayXXcd density = Eigen::ArrayXXcd::Zero(nGrid, nGrid); 
 
-double Wave::envelope(const double radius) const {
-	double phi = 0.5 * (M_PI/m_sigma) * (radius - m_centre);
-	if (abs(phi) < 0.5*M_PI) {return m_amplitude * cos(phi)/(8.0*m_sigma * m_centre);}  
-	else {return 0;}
+	double x{}, y{}, theta{}, r{}, spacing{2*rMax/((double) nGrid-1)}, centre{0.5*(nGrid-1)};
+	for (int i = 0; i < density.rows(); ++i)
+	{for (int j = 0; j < density.cols(); ++j){
+			x = spacing * (i - centre); y = spacing * (j - centre);
+			r = sqrt(x*x+y*y); theta = atan2(y,x);
+			if (r!= 0){density(i,j) = density2D(r, theta);}
+		}
+	}
+	return density;
 }
 
-std::complex<double> Wave::density(const double radius, const double phi) const {
-	std::complex<double> unitComplex(0,1.0);
-	return envelope(radius) * exp(unitComplex * (m_fourierHarmonic*phi + m_k*radius)); 
+template <class Tbf>
+Eigen::VectorXcd Wave::densityResolving(const Tbf & bf, const double rMax, const int nGrid) const {
+	Eigen::ArrayXXcd density = density2D(nGrid, rMax);
+	return bf.densityResolving(density, rMax);
 }
-
 
 #endif
 
 
 
-/*
-Things to do with this class:
-
-	1. Some way to give it an inital frequency and radius and get k, maybe for the time being just pass both? 
-	2. We need a constructor to make the initial conditions , i.e. to get the coefficents
-
-*/ 

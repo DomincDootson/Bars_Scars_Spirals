@@ -71,6 +71,46 @@ void eigenvector2Density(const std::string & modeFile, const std::string & densi
 }
 
 
+// Evolution of eigenen Modes
+
+void saveComplexArray(std::ofstream & out, const Eigen::ArrayXXd & array){ 
+	for (int i = 0; i < array.rows(); ++i) { 
+		for (int j = 0; j < array.rows(); ++j) { 
+			if ((i == (array.rows()-1)) && (j == (array.rows()-1))) {out << array(i,j) << '\n';}
+			else {out << array(i,j) << ','; }
+		}
+	} 
+} 
+
+void eigenModeEvolution(const std::string & modeFile, const double omega0, const double eta, const std::string & stem) {
+	double timeStep{0.1}, time;
+	int nTimeStep{100}; 
+	ExpansionCoeff posLmode(modeFile, 1); 
+	ExpansionCoeff posL(modeFile, nTimeStep), negL(modeFile, nTimeStep);
+
+	PotentialDensityPairContainer<KalnajsNBasis> PD("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat", 40);
+
+	std::complex<double> omegaTimesi(eta,-omega0);  // check this 
+
+	std::ofstream outPR(stem + "/pos_real.csv"), outPI(stem + "/pos_imag.csv"), outNR(stem + "/neg_real.csv"), outNI(stem + "/neg_imag.csv"); 
+
+	for (int t = 0; t < nTimeStep; ++t){
+		std::cout << "At time step: " << t << '\n'; 	 
+		time = timeStep * t; 
+		posL(t) = exp(omegaTimesi * time) * posLmode(0);
+		negL(t) = std::conj(exp(omegaTimesi * time)) * posLmode(0); 
+
+		Eigen::ArrayXXcd array = PD.densityArray(posL(t), 100, 5);
+		saveComplexArray(outPR, array.real());
+		saveComplexArray(outPI, array.imag());
+
+		array = PD.densityArray(negL(t), 100, 5).conjugate();
+		saveComplexArray(outNR, array.real());
+		saveComplexArray(outNI, array.imag());
+	}
+	outPR.close(); outPI.close(); outNR.close(); outNI.close(); 
+}
+
 /* Eigemode Search */ 
 /* --------------- */ 
 
@@ -150,9 +190,12 @@ void uniformSearchScarredDensity(const std::string & radius, const std::string &
 
 	if (isLong) {nStep = 800;}
 	
-	EvolutionKernels kernels(kernelFilename(radius, width, depth, isLong), nStep);
+	//EvolutionKernels kernels(kernelFilename(radius, width, depth, isLong), nStep);
+	EvolutionKernels kernels("Kernels/AM_Scarred_Kernel_R_20_W_25_D_-95_Inner.out", nStep);
 	kernels.activeFraction(0.5 * (11.6873/12));
 
-	rmt.modeGridSearch(outFilename(radius, width, depth), kernels, 0.02, 0.05, 60, 0.3, 0.7, 60);
+	rmt.modeGridSearch(outFilename(radius, width, depth), kernels, 0.001, 0.2, 60, 0.2, 1.5, 30);
+	//rmt.modeGridSearch("Plotting/Modes_Data/Kernel_Search/Single_Scar/InnerScarTest.csv", kernels, 0.02, 0.1, 60, 0.3, 1, 60);
+
 }
 

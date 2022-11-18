@@ -1,6 +1,7 @@
- from generalPlottingFunctions import *
+from generalPlottingFunctions import *
 from Density_Classes.OneDdensity import *
 from Density_Classes.TwoDdensity import *
+from Density_Classes.WaveFitter import * 
 from CoefficientClass import *
 
 import matplotlib.animation as animation
@@ -67,12 +68,29 @@ def saveAnimations():
 	oneDdensity = OneDdensity("Waves_Data/RadiusPing_Density_0_13.csv")
 	oneDdensity.densityAnimation(remove_ic = True, write2file = "Waves_Plots/Waves_Videos/RadiusPing_Density_0_13.mp4")
 
+def decomposed1Danimations(readStem, writeStem, file2read):
+	for f2r in file2read:
+		wavefitter = WaveFitter(readStem + f2r + '.csv', 10)
+		wavefitter.split_waves()
+		
+		write2 = writeStem + f2r +".mp4"
+		wavefitter.density_animation(filename = write2)
+
+
 #saveAnimations()
 
+#decomposed1Danimations("Waves_Data/Stirring/", "Waves_Plots/Waves_Videos/Stirring/", [f"CR_5_OLR_{w}_{d}" for w, d  in zip(['W', 'W', 'R', 'R'], ['P', 'N', 'P', 'N'])])
+#twoD.fourierAnimations(2, rMax = 10, filename ="Another_vid_4_ali.mp4 2")
 
-twoD = TwoDdensity("Waves_Data/RadiusPing_Density_2_5.csv")
+#den = TwoDdensity("Waves_Data/Stirring/CR_5_OLR_W_N.csv")
 
 
-time, radii = twoD.maximaEvolution()
-plt.scatter(time, radii, s = 1)
-plt.show()
+fitter = WaveFitter("Waves_Data/Stirring/CR_5_OLR_W_N.csv", 10)
+fitter.split_waves_singular_k([49])
+fitter.density_animation()
+
+
+
+
+#fitter.density_animation()
+#den.fourierAnimations(2)

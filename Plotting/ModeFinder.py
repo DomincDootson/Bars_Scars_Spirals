@@ -60,9 +60,8 @@ class ModeFinder():
 		cbar = fig.colorbar(contour)
 		cbar.ax.set_title(r"$\log\left[\det\left[\hat{\mathcal{M}}(\omega) - I \right]\right] $")
 
-		minVal =self.modes()
+		minVal = self.modes()
 		
-
 		for each in minVal:
 			print(each)
 			axs.scatter(each.real, each.imag, color = 'firebrick')
@@ -129,7 +128,15 @@ class ModeFinder():
 #det = ModeFinder("../scarredMode_Depth_0_Lower_Eta.csv")
 #det = ModeFinder("../scarredMode_Depth_10.csv") #
 #det = ModeFinder("Modes_Data/Kernel_Search/Single_Scar/AM_Scarred_Kernel_R_20_W_25_D_-95_G.csv") #(0.813924+0.102703j)
-
+'''lst = []
+for i in range(12,21):
+	det = ModeFinder(f"Modes_Data/Kernel_Search/Single_Scar/AM_Scarred_Kernel_R_{i}_W_25_D_-95_G.csv")
+	lst.append(2/det.modes()[0].real)
+	print('\n')
+plt.plot(np.linspace(1.2, 2., len(lst)), lst)
+plt.fill_between(np.linspace(1.2, 2., len(lst)),np.linspace(1.2, 2., len(lst))-0.25, np.linspace(1.2, 2., len(lst))+0.25, alpha = 0.7)
+plt.show()
+''' 
 #det.contourPlotShow()
 # det.cutThrough(20)
 

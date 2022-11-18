@@ -13,7 +13,7 @@
 class Bar2D
 {
 public: 
-	Bar2D(const Eigen::VectorXcd expansionCoeff, const double omega0) :
+	Bar2D(const Eigen::VectorXcd expansionCoeff, const double omega0) : // Note that omega0 is the pattern speed! 
 	m_expansionCoeff{expansionCoeff},
 	m_momentOfInertia{1},
 	m_fourierHarmonic{2},
@@ -42,6 +42,7 @@ public:
 	void kick(const double timeStep, const Eigen::VectorXcd &diskCoeff, const double freelyRotating, const double time = -1);
 
 	void saveBarEvolution(const std::string & evolutionFilename, const int skip = 1) const;
+	void readInSize(const std::string & filename);
 	
 	
 private: 
@@ -59,7 +60,7 @@ private:
 
 	int findTimeIndex(const double time) const;
 	double barSize(const double time) const;
-	void readInSize(const std::string & filename);
+	
 };
 
 void Bar2D::saveBarEvolution(const std::string & evolutionFilename, const int skip) const {

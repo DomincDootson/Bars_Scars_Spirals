@@ -23,6 +23,8 @@ public:
 	double potential(double r) const; 
 
 	double rMax() const {return m_rMax;} 
+
+	double maxRadius() const {return m_rMax;}
 	
 
 private:

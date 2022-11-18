@@ -49,7 +49,7 @@ public:
 	template <class Tbf>
 	void write2dDensity2File(const std::string & outFilename, const Tbf & bf, const int skip, const double rMax=5, const int nStep=201) const; 
 	template <class Tbf>
-	void write2dDensity2File(int timeIndex, const std::string & outFilename, const Tbf & bf, const double rMax=10, const int nStep=201) const; 
+	void write2dDensity2File(int timeIndex, const std::string & outFilename, const Tbf & bf, const double rMax=5, const int nStep=201) const; 
 	template <class Tbf>
 	void write2dPotential2File(const std::string & outFilename, const Tbf & bf, const int skip) const;
 
@@ -190,8 +190,13 @@ template <class Tbf>
 void ExpansionCoeff::writeDensity2File(const std::string & outFilename, const Tbf & bf, const int skip) const 
 {
 	std::ofstream out(outFilename);
-	std::vector<double> radii = radiiVector(15, 300);
+	// std::vector<double> radii = radiiVector(15, 300);
+	
+	std::vector<double> radii(400);
+	std::iota(radii.begin(), radii.end(), 0); 
+	std::for_each(radii.begin(), radii.end(), [] (double & n){n =(0.02*n)+4;});
 	outputVector(out, radii);
+
 	for (int time = 0; time < m_coeff.size(); time += skip){
 		std::vector<double> densityOnLine = bf.oneDdensity(radii, m_coeff[time]);
 		outputVector(out, densityOnLine);

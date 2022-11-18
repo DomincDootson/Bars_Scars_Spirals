@@ -30,20 +30,18 @@ void addScars(ScarredMestel<AngularMomentumScar> & df, bool scar1 = true, bool s
 void savingEvolutionKernel(double scarRadius, int nTimeStep, double timeStep, const std::string & filename, const bool generateBF) {
 	std::cout << "Calculating Scarred Kernel R: " << scarRadius << '\n' <<'\n' << '\n';
 
-
-	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat"); 
 	
 	double temp = sqrt(1/(1+11.4));
 	ScarredMestel<AngularMomentumScar> DF(1, 1, temp, 1, 1, 11.5, 4, 5);
 	
-	AngularMomentumScar scar1(scarRadius, 0.25, -0.95);
+	AngularMomentumScar scar1(2, scarRadius, -timeStep); //undo this
 	DF.addScar(scar1);
 	DF.setDiskMass(12.0); 
 	
 	
-	ActionAngleBasisContainer test("KalnajsN", "KalnajsN", 40, 2, 4, 251, 15);
+	ActionAngleBasisContainer test("KalnajsN", "KalnajsN_Inner", 48, 2, 4, 251, 10);
 
-	VolterraSolver solver1(40, 2, nTimeStep, timeStep);
+	VolterraSolver solver1(48, 2, nTimeStep, 0.1);
 	solver1.generateKernel(filename, DF, test);
 }
 
