@@ -18,7 +18,7 @@ template <class Tbf>
 class NBody
 {
 public:
-	NBody(const int nParticles, const int numbTimeSteps, const double timesStep, const Tbf & bf, const double xi = 0.4, const double sigma = 0.35) : 
+	NBody(const int nParticles, const int numbTimeSteps, const double timesStep, const Tbf & bf, const double xi = 0.5, const double sigma = 0.35) : 
 	 m_DF(),
 	 m_diskBox(120, 26.0, 0.18,1), m_m0Box(120, 26.0, 0.18,1),
 	 m_basisFunction(bf),
@@ -27,12 +27,12 @@ public:
 	 m_background{m_foreground}
 	 {if (m_fourierHarmonic == 0){
 	 	m0Grid();}
-	 	std::cout << "xi is: " << xi << '\n';}
+	 	std::cout << "xi is: " << xi << '\n';
+	 	std::cout << "Fourier Harmonic: " << m_fourierHarmonic <<'\n';}
 
 	~NBody() {}
 
 	void cumulativeDistribution(const std::string & filename) const {m_DF.cumulativeDensity(filename);}
-
 	
 	void barEvolution(const std::string & filename, Bar2D & bar); // derived class
 
@@ -53,6 +53,7 @@ protected:
 	Bodies m_foreground, m_background;
 
 	void outputInfo(int timeIndex, std::ofstream & out);
+	void outputInfo(int timeIndex) const {if (timeIndex % m_skip == 0) {std::cout << "Fraction of Run: " << timeIndex/((double) m_numbTimeSteps) << '\n';}}; 
 	void outputCoefficents(std::ofstream & out);
 
 
@@ -85,6 +86,7 @@ void NBody<Tbf>::outputInfo(int timeIndex, std::ofstream & out) {
 	}
 }
 
+
 template <class Tbf>
 void NBody<Tbf>::outputCoefficents(std::ofstream & out) {
 	Eigen::VectorXcd coef = m_foreground.responseCoefficents(m_basisFunction) - m_background.responseCoefficents(m_basisFunction);
@@ -100,8 +102,9 @@ valarray<double>  NBody<Tbf>::accelsFromBackground(const Bodies & ptle) const {
 	std::valarray<double> accels(2*ptle.n);
 	for(int i=0;i<ptle.n;i++) 
     {
-    	double x{ptle.xy[2*i]}, y{ptle.xy[2*i+1]}, R2{x*x+y*y}, ax{0}, ay{0}; 
+    	double x{ptle.xy[2*i]}, y{ptle.xy[2*i+1]}, R2{x*x+y*y}, ax{0}, ay{0}, e2{0.25}; 
     	ax += m_DF.xAccel(x, y); ay += m_DF.yAccel(x, y);
+    	//ax += -x/(R2 + e2); ay += -y/(R2 +e2); // Do this to include softening 
     	accels[2*i] = ax; accels[2*i+1] = ay;
     }
 	return accels;
@@ -136,6 +139,8 @@ void NBody<Tbf>::foregroundParticleEvolution(const bool isSelfConsistent, const 
 	if (isSelfConsistent) {m_foreground.vxvy += accelsFromDisk(m_foreground) * m_timeStep;}
 	m_foreground.xy   += m_foreground.vxvy * m_timeStep * 0.5;
 }
+
+
 
 template <class Tbf>
 void NBody<Tbf>::foregroundParticleEvolution(const bool isSelfConsistent) {

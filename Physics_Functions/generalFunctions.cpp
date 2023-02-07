@@ -38,12 +38,22 @@
 void generatingKalnajsBF(int m2)
 {
 	Mestel DF;
-	PotentialDensityPairContainer<KalnajsNBasis> PD("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_0.dat");
+	PotentialDensityPairContainer<KalnajsNBasis> PD("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_" + std::to_string(m2) + ".dat", 48);
 
 	//ActionAngleBasisContainer test("KalnajsN_Inner", 48, m2, 4, 251, 10); 
-	ActionAngleBasisContainer test("KalnajsN", 48, m2, 4, 251, 15); 
+	ActionAngleBasisContainer test("KalnajsN", PD.maxRadialIndex(), 2, 10, 251, 15); 
+	
 	test.scriptW(PD, DF, "KalnajsN"); // Use file function name here
 }
+
+void multipleKalnajsBF() {
+	for (int i = 0; i < 15; ++i)
+	{
+		std::cout << "Ang Harmonic: " << i <<'\n';
+		generatingKalnajsBF(i); 
+	}
+}
+
 
 void getSpiralParam() {
 	std::vector<double> params{24, .5, 15};
@@ -83,10 +93,10 @@ void savingKalnajsFunctions(const std::string & filename) {
 
 void generatingKalnajsKernels(const std::string & filename, int m2, int nMax, double rInner)
 {
-	ActionAngleBasisContainer test("KalnajsN_Small", "KalnajsN", 48, 2, 7, 100, 10);
-	Mestel DF(1, 1, 0.377, 1, 1, 11.5, 4, 5);
+	ActionAngleBasisContainer test("KalnajsN", "KalnajsN", 40, 2, 4, 251, 15);
+	Mestel DF(1, 1, 0.377, 1, 1, 11.4, 4, 5);
 
-	VolterraSolver solver2(48, 2, 400, 0.1);
+	VolterraSolver solver2(40, 2, 400, 0.1);
 
 	//std::string kernel2 = "Kernels/kalnajsComparison_" +std::to_string((int) nMax) + "_" + std::to_string((int) rInner) + ".out";
 	
@@ -227,3 +237,11 @@ void savingDensity(const std::string & filename) {
 
 	out.close(); 
 }
+
+
+void checkMass() {
+	Mestel DF(1, 1, 0.35);
+
+	std::cout << DF.diskMass(15) <<'\n';
+}
+

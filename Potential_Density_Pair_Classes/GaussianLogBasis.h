@@ -24,6 +24,8 @@ public:
 	double r0() const;
 	double sigma() const;
 
+	double const maxRadius() const {return 15;}
+
 private:
 	const int m_maxIndex;
 	const double m_innerRadius, m_outerRadius, m_r0, m_sigma;

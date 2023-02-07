@@ -1,5 +1,9 @@
 from generalPlottingFunctions import *
 import matplotlib.animation as animation
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import Normalize
+
+from Density_Classes.TwoDdensity import *
 
 def barDensity():
 	plt.rc('text', usetex=True)
@@ -166,94 +170,8 @@ def coeffDifferentGrowth():
 	plt.show()
 
 
-
-def densityAnimation2D(filename, timeStep, patternSpeed):
-	
-	flatternedDensity = list(readingInRealCSV(filename))
-	nRows, nCols = int(sqrt(np.size(flatternedDensity[0]))), int(sqrt(np.size(flatternedDensity[0]))) # Assume square
-
-	density2D = [np.reshape(array[:nRows*nCols], (nRows, nCols,)) for array in flatternedDensity] 	
-	maxValues, minValues = [np.amax(each) for each in density2D],  [np.amin(each) for each in density2D]
-
-
-	Writer = animation.writers['ffmpeg']
-	writer = Writer(fps=20, metadata=dict(artist='Me'))
-
-	fig, axs = plt.subplots(1,1)
-	ims = []
-
-
-
-	spacing = 20/(nCols-1)
-	centre = (nCols-1)*0.5
-
-	x = np.arange(-5,5+spacing, spacing)
-	y = np.arange(-5,5+spacing, spacing)
-	XX, YY = np.meshgrid(x, y)
-
-	print(np.shape(density2D))
-	for time in range(len(density2D)):
-		#axis,  = axs.contour(XX, YY, density2D[time], 6, colors = 'k')
-		contourFilled = axs.imshow(density2D[time], vmin = min(minValues) , vmax = max(maxValues), extent = (-5,5,-5,5,))
-		title = fig.text(.4,.9,(r"Time: " +str(round(20*time/len(density2D), 1))) + r"$T_{dyn}$")
-
-		angle = -time*timeStep*patternSpeed
-		barX, barY = [2.05*cos(angle), 2.05*cos(angle+3.14)], [2.05*sin(angle), 2.05*sin(angle+3.14)]
-		bar = axs.scatter(barX, barY, color = 'firebrick')
-
-		ims.append([contourFilled, title, bar])
-
-	
-	xCir, yCir = [2.05*cos(theta) for theta in np.linspace(0,2*3.14)], [2.05*sin(theta) for theta in np.linspace(0,2*3.14)] 
-	plt.plot(xCir, yCir, color = 'firebrick', linestyle = '--')
-
-	ani = animation.ArtistAnimation(fig, ims, interval=30)
-	ani.save("BarEvolutionSelfConsistentFurtherOut.mp4", writer = writer)
-	#plt.show()
-
-
-def varyingNumberN():
-	fig, axs = plt.subplots(nrows = 1, ncols = 1)	
-	timeSuffix = ['7', '8', '9', '10']
-
-	files = ["KalnajsTorque/evolutionN" +nRadial +".csv" for nRadial in timeSuffix]
-	data = [readingInRealCSV(file) for file in files]
-
-	time = np.linspace(0,40, np.shape(data[0])[0])
-
-	for i in range(len(timeSuffix)):
-		axs.plot(time, data[i][:,2], label = r"$N_{max} = $ " + timeSuffix[i])
-
-	axs.set_xlabel("Time")
-	axs.set_ylabel("Torque")
-	axs.set_title(r"Varying $N_{max}$ for Kalnajs")
-
-	axs.legend()
-	plt.show()
-
-
-def varyingActiveFraction():
-	fig, axs = plt.subplots(nrows = 1, ncols = 1)	
-	activefraction = ['40', '42', '44', '46', '48', '50']	
-
-	files = ["KalnajsTorque/evolution" +xi +".csv" for xi in activefraction]
-	data = [readingInRealCSV(file) for file in files]
-
-	time = np.linspace(0,40, np.shape(data[0])[0])
-	for i in range(len(data)):
-		axs.plot(time, (data[i][:,2])/(float(activefraction[i])/100), label = r"$\xi=$ " + str(float(activefraction[i])/100))
-
-
-	axs.set_xlabel("Time")
-	axs.set_ylabel(r"Torque/$\xi$")
-	axs.set_title("Varying Active fraction Kalnajs Bar")
-	axs.legend()
-
-	plt.show()
-
-
 def torqueMeanAndStd(stem):
-	filenames = ["KalnajsTorque/" + stem + "_" + str(i) + ".csv" for i in range(0,5)]	
+	filenames = ["KalnajsTorque/" + stem + "_" + str(i) + ".csv" for i in range(0,1)]	
 	eachFile = [readingInRealCSV(file) for file in filenames]
 
 	data = np.zeros((np.shape(eachFile[0])[0], np.shape(eachFile[0])[1], len(filenames)))
@@ -264,88 +182,502 @@ def torqueMeanAndStd(stem):
 	return np.mean(data, 2), np.std(data, 2)
 
 
-#0.95, 0.92
-#
 
-def array(time):
-	
-	coef0 = np.linspace(1, 1, 75)
-	coef1 = np.linspace(1, 0.90, 100)
-	coef2 = np.linspace(0.9, 0.9, 125)
-	return np.array(list(coef0) + list(coef1) + list(coef2))
-
-def arrayW(time):
-	
-	coef0 = np.linspace(1, 1, 75)
-	coef1 = np.linspace(1, 0.90, 100)
-	coef2 = np.linspace(0.9, 0.8, 125)
-	return np.array(list(coef0) + list(coef1) + list(coef2))
-
-def kalnajsNbodyTorque(stems = ["Evolution_Test_Cold", "Evolution_Test_Warm"], linear = ["KalnajsTorque/DiffTemp/evolution35.csv", "KalnajsTorque/DiffTemp/evolution45.csv"]):#["KalnajsTorque/DiffTemp/evolutionTest35.csv", "KalnajsTorque/DiffTemp/evolutionTest45.csv"]
+def kalnajsNbodyTorque(stems = ["Monari_Bar/Evolution_Consistent_Cold", "Monari_Bar/Evolution_Test_Warm"], linear = ["KalnajsTorque/Sormani_Bar/evolution_Sormani_35.csv", "KalnajsTorque/Sormani_Bar/evolution_Sormani_45.csv", "KalnajsTorque/Sormani_Bar/evolutionTest_Sormani_35.csv", "KalnajsTorque/Sormani_Bar/evolutionTest_Sormani_45.csv"]):#["KalnajsTorque/DiffTemp/evolutionTest35.csv", "KalnajsTorque/DiffTemp/evolutionTest45.csv"]
 	plt.rc('text', usetex=True)
 	plt.rc('font', family='serif')
-	fig, axs = plt.subplots(ncols = 2, sharey = True, sharex = True)
+	fig, axs = plt.subplots(ncols = 2, nrows = 2)#,  sharey = True, sharex = True
 
-	meanC, stdC = torqueMeanAndStd(stems[0])
-	meanW, stdW = torqueMeanAndStd(stems[1])
-	#meanC, meanW = readingInRealCSV("KalnajsTorque/Evolution_Test_Cold_0.csv"), readingInRealCSV("KalnajsTorque/Evolution_Test_Warm_0.csv")
-	linearC, linearW = readingInRealCSV(linear[0]), readingInRealCSV(linear[1])
-
-	time, timeL = np.linspace(0, 60, np.shape(meanC)[0]), np.linspace(0, 60, np.shape(linearC)[0])
-	#timeL = np.linspace(0, 60 , np.shape(linearC)[0])
+	# meanC, stdC = torqueMeanAndStd(stems[0])
+	# meanW, stdW = torqueMeanAndStd(stems[1])
 	
-	axs[0].plot(time, array(time)*meanC[:,2], color = 'navy')
-	axs[0].fill_between(time, array(time)*meanC[:,2] - 2*stdC[:,2], array(time)*meanC[:,2] + 2*stdC[:,2], color = 'cornflowerblue')
-	axs[0].plot(timeL[:], -1.15*linearC[:,2], color = 'firebrick')
+	linear  = [readingInRealCSV(file) for file in linear]
+	timeL = np.linspace(0,100, np.shape(linear[2])[0])
+
+	# axs[0,0].plot(timeL[:], linear[0][:,2], color = 'firebrick')
+	# axs[0,1].plot(timeL[:], linear[1][:,2], color = 'firebrick')
+	axs[1,0].plot(timeL[:-1], linear[2][1:,2], color = 'firebrick', label = "Linear Response")
+	# axs[1,1].plot(timeL[:], linear[3][:,2], color = 'firebrick')
+
+	# axs[0,0].axhline(-0.00013, linestyle = "--", color = "firebrick")
+	# axs[0,1].axhline(-0.00019, linestyle = "--", color = "firebrick")
+	# axs[1,0].axhline(-0.00200, linestyle = "--", color = "firebrick", label = r"Steady-state Torque")
+	# axs[1,1].axhline(-0.00195, linestyle = "--", color = "firebrick")
+
+	
+	mean, std = torqueMeanAndStd("Sormani_Bar/Evolution_Consistent_Cold")
+	time = np.linspace(0,100, np.shape(mean)[0])
+	axs[0,0].plot(time, mean[:,2], color = 'navy')
+	axs[0,0].fill_between(time, mean[:,2] - std[:,2], mean[:,2] + std[:,2], color = 'cornflowerblue')
+
+	# mean, std = torqueMeanAndStd("Sormani_Bar/Evolution_Consistent_Warm")
+	# time = np.linspace(0,100, np.shape(mean)[0])
+	# axs[0,1].plot(time, mean[:,2], color = 'navy')
+	# axs[0,1].fill_between(time, mean[:,2] - std[:,2], mean[:,2] + std[:,2], color = 'cornflowerblue')
+
+	mean, std = torqueMeanAndStd("Sormani_Bar/Evolution_Test_Cold")
+	time = np.linspace(0,100, np.shape(mean)[0])
+	axs[1,0].plot(time, mean[:,2], color = 'navy')
+	axs[1,0].fill_between(time, mean[:,2] - std[:,2], mean[:,2] + std[:,2], color = 'cornflowerblue')
+
+	mean, std = torqueMeanAndStd("Sormani_Bar/Evolution_Test_Warm")
+	time = np.linspace(0,100, np.shape(mean)[0])
+	axs[1,1].plot(time, mean[:,2], color = 'navy')
+	axs[1,1].fill_between(time, mean[:,2] - std[:,2], mean[:,2] + std[:,2], color = 'cornflowerblue')
+
+
+	# axs[0].axhline(0.00187, linestyle = "--", color = "firebrick", label = "Linear Response")
+
+	
+	# #axs[1].plot(time, meanW[:,2], color = 'navy', label = r"$N$-body")
+	# #axs[1].fill_between(time, meanW[:,2] - 2*stdW[:,2], meanW[:,2] + 2*stdW[:,2], color = 'cornflowerblue')
+	# #axs[1].axhline(0.00366, linestyle = "--", color = "firebrick", label = r"Steady-state torque")
+
+
+	axs[0,0].set_xlim([0,100])
+	axs[0,1].set_xlim([0,100])
+	axs[1,0].set_xlim([0,100])
+	axs[1,1].set_xlim([0,100])
+
+	axs[1,1].ticklabel_format(axis = 'y', style = 'sci', scilimits = (0,4))
+	
+	xlabelPositions, xlabels = [2*pi*i for i in range(0,16, 3)], [0] + [str(i) + r"$\times2\pi$" for i in range(3,16, 3)]
+	axs[0,0].set_ylabel("Self Consistent\n" + r"$\tau$", fontsize = 15)
+	axs[1,0].set_ylabel("Test Particle\n" +r"$\tau$", fontsize = 15)
+	axs[1,0].set_xticks(xlabelPositions)
+	axs[1,0].set_xticklabels(xlabels)
+	axs[1,1].set_xticks(xlabelPositions)
+	axs[1,1].set_xticklabels(xlabels)
+	axs[1,0].set_xlabel("Time", fontsize = 15)
+	axs[1,1].set_xlabel("Time", fontsize = 15)
+
+	axs[0,0].ticklabel_format(axis='y', style = 'sci', scilimits=(0,0))
+	axs[1,0].ticklabel_format(axis='y', style = 'sci', scilimits=(0,0))
+
+	axs[1,0].set_title(r"Cold", fontsize = 15)
+	axs[1,1].set_title(r"Warm", fontsize = 15)
+	
+	#axs[1,0].legend(loc = 'upper right', fontsize = 12)
 	
 
-	axs[0].axhline(0.000688, linestyle = "--", color = "firebrick", label = "Linear Response")
+	plt.show()
 
+
+def densityWakeDiffTemp(rMax = 5):
+	twoDden = [TwoDdensity("Bar_Data/Sormani_Diff_Temp/evolution_Sormani_35.csv"), 
+	TwoDdensity("Bar_Data/Sormani_Diff_Temp/evolutionTest_Sormani_35.csv"), 
+	TwoDdensity("Bar_Data/Sormani_Diff_Temp/evolution_Sormani_45.csv"),
+	TwoDdensity("Bar_Data/Sormani_Diff_Temp/evolutionTest_Sormani_45.csv")]
 	
-	axs[1].plot(time, arrayW(time)*meanW[:,2], color = 'navy', label = r"$N$-body")
-	axs[1].fill_between(time, arrayW(time)*meanW[:,2] - 2*stdW[:,2], arrayW(time)*meanW[:,2] + 2*stdW[:,2], color = 'cornflowerblue')
-	axs[1].axhline(0.000610, linestyle = "--", color = "firebrick", label = r"Steady-state torque")
-	axs[1].plot(timeL[:], -1.1*linearW[:,2], color = 'firebrick', label = "Linear Response")
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
+	fig, axs = plt.subplots(nrows = 4, ncols = 4, sharex = True, sharey = True )
+	XX, YY = twoDden[0].meshgrid(rMax)
+	time = [1, 2, 3, 4]
+	print([np.amax((den[time[0]])) for den in twoDden])
+	print([np.amax((den[time[1]])) for den in twoDden])
+	print([np.amax((den[time[2]])) for den in twoDden])
+	print([np.amax((den[time[3]])) for den in twoDden])
+	max_values = max([np.amax((den[time[i]])) for i in range(0,4) for den in twoDden])
+	for i in range(4):
+		xBar, yBar = np.linspace(-sqrt(2)*rMax, sqrt(2)*rMax)*cos(2*(1/5.5) * time[i] * 10), np.linspace(-sqrt(2)*rMax, sqrt(2)*rMax)*sin((1/5.5) * time[i] * 10)
+		axs[i, 0].set_ylabel(f"{(i+1)*4}" +r"$\times 2\pi$", fontsize = 15)
+		for j in range(4):
+			m = np.amax((twoDden[j][time[i]]))/max_values
+			levels = [m*0.3, m*0.90]
+			pcm1 = axs[i,j].contourf(XX, YY, (twoDden[j][time[i]])/max_values, levels  =50)
+			axs[i,j].contour(XX, YY, (twoDden[j][time[i]])/max_values, levels  =levels, colors = 'k')
+			axs[i,j].set(aspect = 1),
+			axs[i,j].plot(xBar, yBar, color = 'firebrick', linestyle =':')
+			axs[i,j].set_xlim([-rMax, rMax])
+			axs[i,j].set_ylim([-rMax, rMax])
 
-	xlabelPositions, xlabels = [i for i in range(0,61, 10)], [0] + [str(i) + r"$\times2\pi$" for i in range(10,61,10)]
+	cb_ax = fig.add_axes([0.92,.11,0.02,.76])
+	cbar = fig.colorbar(pcm1, cax=cb_ax, orientation='vertical')
+	cbar.set_ticks([-0.6,-0.3, 0, 0.3, 0.6])
+
+
+	axs[0,0].set_title("Self Consistent", fontsize = 13)
+	axs[0,1].set_title("Test Particle", fontsize = 13)
+	axs[0,2].set_title("Self Consistent", fontsize = 13)
+	axs[0,3].set_title("Test Particle", fontsize = 13)
+
+	plt.figtext(0.30,0.93, "Cold", va="center", ha="center", fontsize=17)
+	plt.figtext(0.71,0.93,"Warm", va="center", ha="center", fontsize=17)
+
+	plt.show()
+
+
+
+## Sormani Bar ##
+## ----------- ##
+
+def sormaniFits():
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
+	dar = readingInRealCSV("Bar_Data/Sormani_Fitting/Sormani_Small.csv")
+	plt.plot(dar[:,0], dar[:,1], label = r"$1.0$ [Kpc]", color = 'royalblue')
+
+	dar = readingInRealCSV("Bar_Data/Sormani_Fitting/Sormani_Medium.csv")
+	plt.plot(dar[:,0], dar[:,1], label = r"$1.5$ [Kpc]", color = 'cornflowerblue')
+
+	dar = readingInRealCSV("Bar_Data/Sormani_Fitting/Sormani_Large.csv")
+	plt.plot(dar[:,0], dar[:,1], label = r"$2.0$ [Kpc]", color = 'firebrick')
+
+	dar = readingInRealCSV("Bar_Data/Sormani_Fitting/Sormani_Small_Fit.csv")
+	plt.plot(dar[:,0], dar[:,1], linestyle = '--', color = 'royalblue')
+
+	dar = readingInRealCSV("Bar_Data/Sormani_Fitting/Sormani_Medium_Fit.csv")
+	plt.plot(dar[:,0], dar[:,1], linestyle = '--' , color = 'cornflowerblue')
+
+	dar = readingInRealCSV("Bar_Data/Sormani_Fitting/Sormani_Large_Fit.csv")
+	plt.plot(dar[:,0], dar[:,1], linestyle = '--', color = 'firebrick')
+
+	plt.xlim([0,8])
+
+	plt.ylabel(r"$\Phi_{2}(R)$", fontsize = 15)
+	plt.xlabel(r"$R$ [Kpc]", fontsize = 15)
+	plt.legend(title = r"$R_{q}$", fontsize = 15, title_fontsize = 15)
+	plt.show()
+
+def sormaniTorque():
+	data = readingInRealCSV("KalnajsTorque/Sormani_Bar/evolution_Sormani_35.csv")
+	plt.plot(data[:, 2], color = 'royalblue')
+
+	data = readingInRealCSV("KalnajsTorque/Sormani_Bar/evolution_Sormani_45.csv")
+	plt.plot(data[:, 2], color = 'firebrick')
+
+	data = readingInRealCSV("KalnajsTorque/Sormani_Bar/evolutionTest_Sormani_35.csv")
+	plt.plot(data[:, 2], color = 'royalblue', linestyle = '--')
+
+	data = readingInRealCSV("KalnajsTorque/Sormani_Bar/evolutionTest_Sormani_45.csv")
+	plt.plot(data[:, 2], color = 'firebrick', linestyle = '--')
+	plt.xlim([0,100])
+	plt.show()
+
+def sormaniShape():
+	# plt.rc('text', usetex=True)
+	# plt.rc('font', family='serif')
+
+	# fig, axs = plt.subplots(ncols=2, nrows=2, sharey = True)
+	# gs = axs[0, 0].get_gridspec()
+	# # remove the underlying axes
+	# for ax in axs[0, :]:
+	#     ax.remove()
+	# axbig = fig.add_subplot(gs[0, :])
+	
+
+	# data = readingInRealCSV("Bar_Data/Kalnajs_Shape/Kalnajs_consistent_Small.csv")
+	# axbig.plot(data[:, 2], color = 'royalblue', label = "1.0 Kpc")
+	# data = readingInRealCSV("Bar_Data/Kalnajs_Shape/Kalnajs_test_Small.csv")
+	# axbig.plot(data[:, 2], color = 'royalblue', linestyle = '--')
+	
+	# data = TwoDdensity("Bar_Data/Kalnajs_Shape/Kalnajs_consistent_density_Small.csv")
+	# r, a, _ = data.fourierCoeffT(2, 5, 10)
+	# axs[1,0].plot(r,a, color = 'royalblue')
+	# data = TwoDdensity("Bar_Data/Kalnajs_Shape/Kalnajs_test_density_Small.csv")
+	# r, a, _ = data.fourierCoeffT(2, 5, 10)
+	# axs[1,1].plot(r,a, linestyle = '--', color = 'royalblue')
+	
+
+	# data = readingInRealCSV("Bar_Data/Kalnajs_Shape/Kalnajs_consistent_Medium.csv")
+	# axbig.plot(data[:, 2], color = 'cornflowerblue', label = "1.5 Kpc")
+	# data = readingInRealCSV("Bar_Data/Kalnajs_Shape/Kalnajs_test_Medium.csv")
+	# axbig.plot(data[:, 2], color = 'cornflowerblue', linestyle = '--')
+	
+	# data = TwoDdensity("Bar_Data/Kalnajs_Shape/Kalnajs_consistent_density_Medium.csv")
+	# r, a, _ = data.fourierCoeffT(2, 5, 10)
+	# axs[1,0].plot(r/1.5,a, color = 'cornflowerblue')
+	# data = TwoDdensity("Bar_Data/Kalnajs_Shape/Kalnajs_test_density_Medium.csv")
+	# r, a, _ = data.fourierCoeffT(2, 5, 10)
+	# axs[1,1].plot(r/1.5,a, linestyle = '--', color = 'cornflowerblue')
+
+
+	# data = readingInRealCSV("Bar_Data/Kalnajs_Shape/Kalnajs_consistent_Large.csv")
+	# axbig.plot(data[:, 2], color = 'firebrick', label = "2.0 Kpc")
+	# data = readingInRealCSV("Bar_Data/Kalnajs_Shape/Kalnajs_test_Large.csv")
+	# axbig.plot(data[:, 2], color = 'firebrick', linestyle = '--')
+	
+	# data = TwoDdensity("Bar_Data/Kalnajs_Shape/Kalnajs_consistent_density_Large.csv")
+	# r, a, _ = data.fourierCoeffT(2, 5, 10)
+	# axs[1,0].plot(r/2.0,a,color = 'firebrick')
+	# data = TwoDdensity("Bar_Data/Kalnajs_Shape/Kalnajs_test_density_Large.csv")
+	# r, a, _ = data.fourierCoeffT(2, 5, 10)
+	# axs[1,1].plot(r/2.0,a, linestyle = '--', color = 'firebrick')
+
+
+
+
+	# axbig.set_xlim([0,100])
+	# axbig.set_ylabel(r"$\tau/\epsilon^{2}$", fontsize = 15)
+	# axbig.set_xlabel(r"Time", fontsize = 15)
+
+	# xlabelPositions, xlabels = [2*pi*i for i in range(0,16, 3)], [0] + [str(i) + r"$\times2\pi$" for i in range(3,16, 3)]
+	# axbig.set_xticks(xlabelPositions)
+	# axbig.set_xticklabels(xlabels)
+	# axbig.legend(title = r"$R_{q}$", title_fontsize = 15, fontsize = 15, loc = 'lower right') # This might want to go on the other set of axis
+
+	# axs[1,0].set_xlim([0,5])
+	# axs[1,1].set_xlim([0,5])
+
+	# axs[1,1].set_xlabel(r"$R/R_{q}$", fontsize = 15)
+	# axs[1,1].set_title("Test Particle")
+	# axs[1,0].set_title("Self Consistent")
+
+	# axs[1,0].set_xlabel(r"$R/R_{q}$", fontsize = 15)
+	# axs[1,0].set_ylabel(r"$\rho(R)/\epsilon$", fontsize = 15)
+
+	# plt.show()
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
+
+	fig, axs = plt.subplots(ncols=2)
+
+	data = readingInRealCSV("Bar_Data/Kalnajs_Shape/Kalnajs_consistent_Small.csv")
+	axs[0].plot(data[:, 2], color = 'royalblue', label = "1.0 Kpc")
+	
+	
+	data = TwoDdensity("Bar_Data/Kalnajs_Shape/Kalnajs_consistent_density_Small.csv")
+	r, a, _ = data.fourierCoeffT(2, 5, 10)
+	axs[1].plot(r*0.18,a, color = 'royalblue', label = "1.0 Kpc")
+	
+	
+
+	data = readingInRealCSV("Bar_Data/Kalnajs_Shape/Kalnajs_consistent_Medium.csv")
+	axs[0].plot(data[:, 2], color = 'cornflowerblue', label = "1.5 Kpc")
+	
+	
+	data = TwoDdensity("Bar_Data/Kalnajs_Shape/Kalnajs_consistent_density_Medium.csv")
+	r, a, _ = data.fourierCoeffT(2, 5, 10)
+	axs[1].plot(r*0.18,a, color = 'cornflowerblue', label = "1.5 Kpc")
 	
 
 
+	data = readingInRealCSV("Bar_Data/Kalnajs_Shape/Kalnajs_consistent_Large.csv")
+	axs[0].plot(data[:, 2], color = 'firebrick', label = "2.0 Kpc")
+	
+	
+	data = TwoDdensity("Bar_Data/Kalnajs_Shape/Kalnajs_consistent_density_Large.csv")
+	r, a, _ = data.fourierCoeffT(2, 5, 10)
+	axs[1].plot(r*0.18,a,color = 'firebrick', label = "2.0 Kpc")
+	
 
-	axs[0].set_ylabel(r"Torque")
+	axs[0].set_xlim([0,100])
+	axs[0].set_ylabel(r"$\tau/\epsilon^{2}$", fontsize = 15)
+	axs[0].set_xlabel(r"Time", fontsize = 15)
+
+	xlabelPositions, xlabels = [2*pi*i for i in range(0,16, 3)], [0] + [str(i) + r"$\times2\pi$" for i in range(3,16, 3)]
 	axs[0].set_xticks(xlabelPositions)
 	axs[0].set_xticklabels(xlabels)
-	axs[0].set_xlabel("Time")
+	axs[1].legend(title = r"$R_{q}$", title_fontsize = 15, fontsize = 15, loc = 'upper right') # This might want to go on the other set of axis
 
-	axs[0].ticklabel_format(axis='y', style = 'sci', scilimits=(0,0))
-
-	axs[0].set_title(r"Cold Disk, $\sigma_{R} = 0.35 v_{c}^{2}$")
-	axs[1].set_title(r"Warm Disk, $\sigma_{R} = 0.45 v_{c}^{2}$")
-	axs[1].set_xlabel("Time")
-	axs[1].legend()
-	
-
-
+	axs[1].set_xlim([0,1])
+	axs[1].set_ylabel(r"$\rho(R)/\epsilon$", fontsize = 15)
+	axs[1].set_xlabel(r"$R/R_{CR}$", fontsize = 15)
 
 	plt.show()
 
-def kalnajsBarVaryingN(nValue = 0):
-	
-	nmax = [7,10]
-	fig, axs = plt.subplots(nrows=1, ncols=2)
+def sormaniSpeed():
+	# plt.rc('text', usetex=True)
+	# plt.rc('font', family='serif')
+	# filename_C, filename_T = [f"Bar_Data/Pattern_Speed/Kalanajs_evolution_consistent_{i}.csv" for i in range(0, 25, 6)], [f"Bar_Data/Pattern_Speed/Kalanajs_evolution_test_{i}.csv" for i in range(0, 25, 6)]
+	# evolution_C, evolution_T = [readingInRealCSV(file) for file in filename_C], [readingInRealCSV(file) for file in filename_T]
 
-	for n in nmax:
-		data = readingInRealCSV("KalnajsTorque/VaryingN/Evolution_" + str(n) + ".csv")
-		axs[0].plot(data[:,2], label = str(n))
+	# filename_C, filename_T = [f"Bar_Data/Pattern_Speed/Kalanajs_density_consistent_{i}.csv" for i in range(0, 25, 6)], [f"Bar_Data/Pattern_Speed/Kalanajs_density_test_{i}.csv" for i in range(0, 25, 6)]
+	# density_C, density_T = [TwoDdensity(file) for file in filename_C], [TwoDdensity(file) for file in filename_T]
+
+	# fig, axs = plt.subplots(ncols = 2, nrows = 2, sharey = 'row')
+	# cmap = ScalarMappable(cmap = 'plasma', norm = Normalize(vmin=-0.0, vmax=0.30))
+
+	# for c, t, dc, dt, op, in zip(evolution_C, evolution_T, density_C, density_T, [0, 0.06, 0.12, 0.18, 0.24]):
+	# 	axs[0,0].plot(c[:,2]/(1), color =  cmap.to_rgba(op))
+	# 	r, a, _ = dc.fourierCoeffT(2, 5, 5)
+	# 	axs[1,0].plot(r, a, color =  cmap.to_rgba(op))
 		
-		data = readingInComplexCSV("KalnajsTorque/VaryingN/Coeff_" + str(n) + ".csv")
-		axs[1].plot((np.absolute(data[:,nValue])))
+	# 	axs[0,1].plot(t[:,2]/(1), label = f"{op:.2f}", color =  cmap.to_rgba(op))
+	# 	r, a, _ = dt.fourierCoeffT(2, 5, 5)
+	# 	axs[1,1].plot(r,a, label = f"{op:.2f}",color =  cmap.to_rgba(op))
 
-	axs[0].legend()
+	# axs[0,0].set_xlim([0,100])
+	# axs[0,1].set_xlim([0,100])
+
+	# axs[0,0].set_ylabel(r"$\tau/\epsilon^{2}$", fontsize = 15)
+	# axs[0,0].set_xlabel(r"Time", fontsize = 15)
+	# axs[0,1].set_xlabel(r"Time", fontsize = 15)
+	# axs[0,0].set_title("Self Consistent", fontsize =15)
+	# axs[0,1].set_title("Test Particle", fontsize =15)
+
+
+	# xlabelPositions, xlabels = [2*pi*i for i in range(0,16, 3)], [0] + [str(i) + r"$\times2\pi$" for i in range(3,16, 3)]
+	# axs[0,0].set_xticks(xlabelPositions)
+	# axs[0,0].set_xticklabels(xlabels)
+	# axs[0,1].set_xticks(xlabelPositions)
+	# axs[0,1].set_xticklabels(xlabels)
+
+	# axs[1,1].legend(title = r"$\Omega_{p}$", title_fontsize = 12, fontsize = 12, loc = 'lower right')
+
+
+	# plt.show()
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
+	filename_C, filename_T = [f"Bar_Data/Pattern_Speed/Kalanajs_evolution_consistent_{i}.csv" for i in range(0, 25, 6)], [f"Bar_Data/Pattern_Speed/Kalanajs_evolution_test_{i}.csv" for i in range(0, 25, 6)]
+	evolution_C, evolution_T = [readingInRealCSV(file) for file in filename_C], [readingInRealCSV(file) for file in filename_T]
+
+	filename_C, filename_T = [f"Bar_Data/Pattern_Speed/Kalanajs_density_consistent_{i}.csv" for i in range(0, 25, 6)], [f"Bar_Data/Pattern_Speed/Kalanajs_density_test_{i}.csv" for i in range(0, 25, 6)]
+	density_C, density_T = [TwoDdensity(file) for file in filename_C], [TwoDdensity(file) for file in filename_T]
+
+	fig, axs = plt.subplots(ncols = 2)
+	cmap = ScalarMappable(cmap = 'plasma', norm = Normalize(vmin=-0.0, vmax=0.30))
+
+	for c, t, dc, dt, op, in zip(evolution_C, evolution_T, density_C, density_T, [0, 0.06, 0.12, 0.18, 0.24]):
+		axs[0].plot(c[:,2]/(1), color =  cmap.to_rgba(op))
+		
+		r, a, _ = dc.fourierCoeffT(2, 5, 10)
+		axs[1].plot(op*r, a, color =  cmap.to_rgba(op), label = f"{op:.2f}")
+		
+
+	axs[0].set_xlim([0,100])
+
+
+	axs[0].set_ylabel(r"$\tau/\epsilon^{2}$", fontsize = 15)
+	axs[0].set_xlabel(r"Time", fontsize = 15)
+	axs[0].set_title("Torque", fontsize =15)
+	
+
+
+	xlabelPositions, xlabels = [2*pi*i for i in range(0,16, 3)], [0] + [str(i) + r"$\times2\pi$" for i in range(3,16, 3)]
+	axs[0].set_xticks(xlabelPositions)
+	axs[0].set_xticklabels(xlabels)
+	axs[0].set_xticks(xlabelPositions)
+	axs[0].set_xticklabels(xlabels)
+
+	axs[1].legend(title = r"$\Omega_{p}$", title_fontsize = 12, fontsize = 12, loc = 'upper right')
+	axs[1].set_xlim([0,1])
+	axs[1].set_xlabel(r"$R/R_{CR} = R \Omega_{p}/v_{c}$", fontsize = 15)
+	axs[1].set_ylabel(r"$\rho(R)/\epsilon$", fontsize = 15)
+	axs[1].set_title("Density", fontsize = 15)
+
+
+	plt.show()
+
+def sormaniRatio():
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
+
+	fig, axs = plt.subplots(ncols=2)
+
+	data = readingInRealCSV("Bar_Data/Sormani_Ratio/Kalnajs_consistent_Small.csv")
+	axs[0].plot(data[:, 2], color = 'royalblue', label = "1.0 Kpc")
+	
+	
+	data = TwoDdensity("Bar_Data/Sormani_Ratio/Kalnajs_consistent_density_Small.csv")
+	r, a, _ = data.fourierCoeffT(2, 5, 10)
+	axs[1].plot(r*0.27,a, color = 'royalblue', label = "1.0 Kpc")
+	
+	
+
+	data = readingInRealCSV("Bar_Data/Sormani_Ratio/Kalnajs_consistent_Medium.csv")
+	axs[0].plot(data[:, 2], color = 'cornflowerblue', label = "1.5 Kpc")
+	
+	
+	data = TwoDdensity("Bar_Data/Sormani_Ratio/Kalnajs_consistent_density_Medium.csv")
+	r, a, _ = data.fourierCoeffT(2, 5, 10)
+	axs[1].plot(r*0.18,a, color = 'cornflowerblue', label = "1.5 Kpc")
+	
+
+
+	data = readingInRealCSV("Bar_Data/Sormani_Ratio/Kalnajs_consistent_Large.csv")
+	axs[0].plot(data[:, 2], color = 'firebrick', label = "2.0 Kpc")
+	
+	
+	data = TwoDdensity("Bar_Data/Sormani_Ratio/Kalnajs_consistent_density_Large.csv")
+	r, a, _ = data.fourierCoeffT(2, 5, 10)
+	axs[1].plot(r*0.135,a,color = 'firebrick', label = "2.0 Kpc")
+	
+
+	axs[0].set_xlim([0,100])
+	axs[0].set_ylabel(r"$\tau/\epsilon^{2}$", fontsize = 15)
+	axs[0].set_xlabel(r"Time", fontsize = 15)
+
+	xlabelPositions, xlabels = [2*pi*i for i in range(0,16, 3)], [0] + [str(i) + r"$\times2\pi$" for i in range(3,16, 3)]
+	axs[0].set_xticks(xlabelPositions)
+	axs[0].set_xticklabels(xlabels)
+	axs[1].legend(title = r"$R_{q}$", title_fontsize = 15, fontsize = 15, loc = 'upper right') # This might want to go on the other set of axis
+
+	axs[1].set_xlim([0,1])
+	axs[1].set_ylabel(r"$\rho(R)/\epsilon$", fontsize = 15)
+	axs[1].set_xlabel(r"$R/R_{CR}$", fontsize = 15)
+
+	plt.show()
+
+def sormaniRatioDensity():
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
+	fig, (axs, cbax) = plt.subplots(nrows = 2, ncols = 3, gridspec_kw={"height_ratios":[1, 0.03]})
+	ILR = 1 - 0.5 *sqrt(2)
+	
+
+	data = TwoDdensity("Bar_Data/Sormani_Ratio/Kalnajs_consistent_density_Small.csv")
+	XX, YY = data.meshgrid(5)
+	m = np.amax(data[5])
+	print(m)
+	axs[0].contour(XX, YY, data[5], levels = [m*0.3, m *0.9], colors = 'black')
+	im = axs[0].contourf(XX, YY, data[5], levels = 100)
+	axs[0].plot([3.7 * ILR * cos(t) for t in np.linspace(0,2*pi)], [3.7 * ILR * sin(t) for t in np.linspace(0,2*pi)], color = 'firebrick', linestyle = '--')
+	axs[0].set(aspect = 1)
+	axs[0].set_xlim([-5,5])
+	axs[0].set_ylim([-5,5])
+	axs[0].plot(sqrt(2)*5 *np.linspace(-1,1) * cos(2 * 10 * 100 * 0.27), sqrt(2)*5 *np.linspace(-1,1) * sin(2 * 10 * 100 * 0.27), color = 'firebrick', linestyle = ':')
+	axs[0].set_title(r"$R_{q} = 1.0$", fontsize = 15)
+	cb = fig.colorbar(im, cax=cbax[0], orientation="horizontal")
+	cb.set_ticks([-6.0, -3.0, 0, 3, 6])
+	cbax[0].set_xlabel(r"$\psi(R,\phi)/\epsilon$", fontsize = 15)
+	
+	data = TwoDdensity("Bar_Data/Sormani_Ratio/Kalnajs_consistent_density_Medium.csv")
+	XX, YY = data.meshgrid(5)
+	m = np.amax(data[5])
+	print(m)
+	axs[1].contour(XX, YY, data[5], levels = [m*0.3, m *0.9], colors = 'black')
+	im = axs[1].contourf(XX, YY, data[5], levels = 100)
+	axs[1].plot([5.5 * ILR * cos(t) for t in np.linspace(0,2*pi)], [5.5 * ILR * sin(t) for t in np.linspace(0,2*pi)], color = 'firebrick', linestyle = '--')
+	axs[1].set(aspect = 1)
+	axs[1].set_xlim([-5,5])
+	axs[1].set_ylim([-5,5])
+	axs[1].plot(sqrt(2)*5 *np.linspace(-1,1) * cos(2 * 10 * 100 * 0.18), sqrt(2)*5 *np.linspace(-1,1) * sin(2 * 10 * 100 * 0.18), color = 'firebrick', linestyle = ':')
+	axs[1].set_title(r"$R_{q} = 1.5$", fontsize = 15)
+	cb = fig.colorbar(im, cax=cbax[1], orientation="horizontal")
+	cb.set_ticks([-6.0, -3.0, 0, 3, 6])
+	cbax[1].set_xlabel(r"$\psi(R,\phi)/\epsilon$", fontsize = 15)
+
+
+	data = TwoDdensity("Bar_Data/Sormani_Ratio/Kalnajs_consistent_density_Large.csv")
+	XX, YY = data.meshgrid(5)
+	m = np.amax(data[5])
+	print(m)
+	axs[2].contour(XX, YY, data[5], levels = [m*0.3, m *0.9], colors = 'black')
+	im = axs[2].contourf(XX, YY, data[5], levels = 100)
+	axs[2].plot([7.4 * ILR * cos(t) for t in np.linspace(0,2*pi)], [7.4 * ILR * sin(t) for t in np.linspace(0,2*pi)], color = 'firebrick', linestyle = '--')
+	axs[2].plot(5*sqrt(2))
+	axs[2].set(aspect = 1)
+	axs[2].set_xlim([-5,5])
+	axs[2].set_ylim([-5,5])
+	axs[2].plot(sqrt(2)*5 *np.linspace(-1,1) * cos(2 * 10 * 100 * 0.135), sqrt(2)*5 *np.linspace(-1,1) * sin(2 * 10 * 100 * 0.135), color = 'firebrick', linestyle = ':')
+	axs[2].set_title(r"$R_{q} = 2.0$", fontsize = 15)
+	cb = fig.colorbar(im, cax=cbax[2], orientation="horizontal")
+	cb.set_ticks([-6.0, -3.0, 0, 3, 6])
+	cbax[2].set_xlabel(r"$\psi(R,\phi)/\epsilon$", fontsize = 15)
+
 	plt.show()
 
 
 
 
+#densityWakeDiffTemp()
 kalnajsNbodyTorque()
+#torquePlots()
+#sormaniFits()
+#sormaniTorque()
+#sormaniShape()
+#sormaniRatioDensity()
 
+#sormaniSpeed()

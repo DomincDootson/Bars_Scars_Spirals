@@ -72,7 +72,7 @@ def splitting_waves():
 	waves = np.zeros((np.shape(t)[0], np.shape(x)[0]))
 
 	for i, time in enumerate(t):
-		waves[i, :] = exp(0.2*time)*(wave_packet(c * time-5, x) + wave_packet(-c * time+4, x))#wave_packet(-4+c*time, x) + wave_packet(+4-c*time , x)
+		waves[i, :] = (wave_packet(c * time-5, x) + wave_packet(-c * time+4, x))#wave_packet(-4+c*time, x) + wave_packet(+4-c*time , x)
 
 
 	left, right = inverting_waves(*splitting_freq(fft(waves)))

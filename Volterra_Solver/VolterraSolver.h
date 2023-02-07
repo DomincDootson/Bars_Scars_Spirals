@@ -85,11 +85,19 @@ public:
 	template <class Tbf> 
 	void density1dEvolution(const std::string & outFilename, const Tbf & bf, const int skip = 1) const {m_responseCoef.writeDensity2File(outFilename, bf, skip);}
 	template <class Tbf>
-	void density2dEvolution(const std::string & outFilename, const Tbf & bf, const int skip = 1) const {m_responseCoef.write2dDensity2File(outFilename, bf, skip, 10);}
+	void density1dCorotating(const std::string & outFilename, const Tbf & bf, const double omegaP, const double innerR = 0, const double outerR = 15, const int skip = 1) const; 
+	template <class Tbf>
+	void density2dEvolution(const std::string & outFilename, const Tbf & bf, const int skip = 1, const double rMax = 10) const {m_responseCoef.write2dDensity2File(outFilename, bf, skip, rMax);}
+
+
+
 	template <class Tbf>
 	void density2dEvolution(const int timeIndex, const std::string & outFilename, const Tbf & bf, const double rMax, const int nStep) const {m_responseCoef.write2dDensity2File(timeIndex,outFilename, bf, rMax,nStep);}
 	template <class Tbf>
-	void potential2dEvolution(const std::string & outFilename, const Tbf & bf, const int skip = 1) const {m_responseCoef.write2dPotential2File(outFilename, bf, skip);}
+	void potential2dEvolution(const std::string & outFilename, const Tbf & bf, const int skip = 1, const double rMax = 10) const {m_responseCoef.write2dPotential2File(outFilename, bf, skip, rMax);}
+
+	template<class Tbf> 
+	double maxDensity(const Tbf & bf, const double rMax =15, const int nGrid=201) const  {return m_responseCoef.maxDensity(bf, rMax, nGrid);}
 
 	
 	void saveResponseCoeff(const std::string & filename) const {m_responseCoef.write2File(filename, 1);}
@@ -100,6 +108,7 @@ public:
 	/* Bar Evolution */
 	/* ------------- */
 	void barRotation(Bar2D & bar, const std::string & outFilename, const std::string & evolutionFilename, const bool isSelfConsistent = true, const bool isFreelyRotating = true, const bool isEvolving = false); 
+	void barRotationUnsaving(Bar2D & bar, const bool isSelfConsistent = true, const bool isFreelyRotating = false, const bool isEvolving = true); 
 	void barRotation(Bar2D & bar, const bool isSelfConsistent);
 
 	/* Spiral */ 
@@ -222,6 +231,7 @@ void VolterraSolver::deltaPerturbationConsistent() {
 		for (int i = 1; i < (timeIndex); ++i){ integral += m_timeStep * m_kernels(timeIndex - i) * m_responseCoef(i); }
 		integral += m_responseCoef(timeIndex);	
 		m_responseCoef(timeIndex) =  ((identity - 0.5*m_kernels(timeIndex)).inverse()) * integral;  
+		std::cout << m_responseCoef(timeIndex).dot(m_responseCoef(timeIndex)) <<'\n';
 	}
 }
 
@@ -251,6 +261,26 @@ void VolterraSolver::barRotation(Bar2D & bar, const std::string & outFilename, c
 	bar.saveBarEvolution(evolutionFilename);
 }
 
+void VolterraSolver::barRotationUnsaving(Bar2D & bar, const bool isSelfConsistent, const bool isFreelyRotating, const bool isEvolving)
+{
+	Eigen::MatrixXcd identity{Eigen::MatrixXcd::Identity(m_maxRadialIndex+1, m_maxRadialIndex+1)};
+	double includeSelfConsistent{selfConsistentDouble(isSelfConsistent)}; double freelyRotating{freelyRotatingDouble(isFreelyRotating)};
+	if (isEvolving) {m_perturbationCoef(0) = bar.barCoeff(0);}
+	else {m_perturbationCoef(0) = bar.barCoeff();}
+	for (int timeIndex = 1; timeIndex < m_numbTimeSteps; ++timeIndex){
+		printTimeIndex(timeIndex);
+		bar.drift(m_timeStep, freelyRotating);
+
+		if (isEvolving) {m_perturbationCoef(timeIndex) = bar.barCoeff(timeIndex * m_timeStep);}
+		else {m_perturbationCoef(timeIndex) = bar.barCoeff();}
+		m_responseCoef(timeIndex) = m_responseCoef(0) + ((identity - includeSelfConsistent*0.5*m_kernels(timeIndex)).inverse()) 
+									* timeIntegration(timeIndex, includeSelfConsistent);
+
+		bar.kick(m_timeStep, m_responseCoef(timeIndex), freelyRotating, m_timeStep * timeIndex);
+
+	}
+}
+
 void VolterraSolver::barRotation(Bar2D & bar, const bool isSelfConsistent)
 {
 	for (int timeIndex = 0; timeIndex < m_numbTimeSteps; ++timeIndex) {
@@ -273,6 +303,44 @@ void VolterraSolver::spiralEvolution(T & spiral) {
 	spiral.resizeVector(m_numbTimeSteps);
 	transferCoeff(spiral);
 }
+
+
+/* Saving Functions */ 
+/* ---------------- */ 
+
+void saveVector(std::ofstream & out, const std::vector<double> & vec) {
+	for (auto i = vec.begin(); i != vec.end()-1; ++i){out << *i<< ','; }
+	out << vec.back() << '\n';
+}
+
+template <class Tbf>
+void VolterraSolver::density1dCorotating(const std::string & outFilename, const Tbf & bf, const double omegaP, const double innerR, const double outerR, const int skip) const 
+{
+	std::ofstream out(outFilename);
+	double spacing{(outerR-innerR)*0.005}; 
+	std::vector<double> radii; 
+	
+	for (double r = innerR; r <= outerR; r += spacing) {radii.emplace_back(r); }
+	saveVector(out, radii);
+	std::complex<double> unitComplex(0,1);
+
+	for (int t=0; t<m_numbTimeSteps; t += skip) 
+	{ 
+		std::vector<double> den; 
+		den.reserve(radii.size());
+		for (auto r : radii) {
+			double sum{0};
+			for (int n = 0; n<= bf.maxRadialIndex(); ++n) {sum += 2 * bf.density(r, n)
+				* (exp(unitComplex*(m_fourierHarmonic * omegaP * m_timeStep*t))* m_responseCoef(t)(n)).real();}
+			den.emplace_back(sum); 
+		}
+		saveVector(out, den);
+	}
+	out.close(); 
+
+} 
+
+
 
 #endif
 

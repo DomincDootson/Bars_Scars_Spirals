@@ -1,4 +1,4 @@
 #!/bin/bash
 ./general
-./scarred
+./bar
 

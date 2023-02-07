@@ -12,7 +12,7 @@
 class OrbitSections
 {
 public:
-	OrbitSections(const int nPtle = 20, const std::string & filename = "Bodies/particleSamplesSections.out") : m_nParticles{nPtle}, m_nPoints{250}, m_oldBarAngle{0},
+	OrbitSections(const int nPtle = 20, const std::string & filename = "Bodies/particleSamplesSections.out") : m_nParticles{nPtle}, m_nPoints{150}, m_oldBarAngle{0},
 	v_xValues(m_nParticles * m_nPoints), v_pxValues(m_nParticles * m_nPoints), v_indicies(m_nParticles),
 	m_ptle(filename, nPtle, 1),
 	m_oldXY(2*m_nParticles), m_oldVXVY(2*m_nParticles)
@@ -78,10 +78,11 @@ void OrbitSections::angularMomentumSections(double barAngle) {
 void OrbitSections::outputSections(const std::string & filename) {
 	std::ofstream out(filename);
 	for (int i = 0; i < v_xValues.size(); i++){
-		std::cout << i << '\n'; 
+		 
 		if ((i+1) % m_nParticles == 0) {out << v_xValues[i] << ',' << v_pxValues[i] << '\n';}
 		else {out << v_xValues[i] << ',' << v_pxValues[i] << ',' ;}
 	}
+	std::cout << "Sections saved to: " << filename << '\n'; 
 	out.close();
 }
 

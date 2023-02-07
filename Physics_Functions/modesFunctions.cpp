@@ -127,15 +127,16 @@ void uniformSearchMatrix(const std::string & filename, int nu, double eLower, do
 
 void unstableTimeEvolution(const std::string & stem) {
 
-	PotentialDensityPairContainer<KalnajsNBasis> PD("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat");
+	//PotentialDensityPairContainer<KalnajsNBasis> PD("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat");
 	std::vector<int> chi{4};//,6,8
-	auto filename = [&stem] (double X) {return "Plotting/Modes_Data/" + stem + std::to_string(int(X))+".csv";};
+	auto filename = [&stem] (double X) {return "Plotting/Modes_Data/" + stem + std::to_string(int(ceil(X)))+".csv";};
 
 		for (auto& X : chi)
 		{
-			VolterraSolver solver("Kernels/Kalnajs_"+std::to_string(X)+"_.out", 40, 2, 200, 0.5);
+			VolterraSolver solver("Kernels/Kalnajs_"+std::to_string(X)+"_.out", 40, 2, 400, 0.1);
 			//VolterraSolver solver("Kernels/KalnajsN.out", 48, 2, 400, 0.25);
 			solver.kernelTesting(filename(X), 0,true);
+
 			//solver.density2dEvolution(199, filename(X), PD, 5, 300);
 		}
 }
@@ -149,11 +150,11 @@ void uniformSearchKernel(const std::string & filename, int nu, double eLower, do
 }
 
 void uniformSearch(const std::string & filestem, const int taper) {
-	std::vector<double> xi {1, 0.95, 0.9, 0.85, 0.8};//{0.50, 0.45, 0.40, 0.35, 0.30, 0.25, 0.20, 0.15, 0.1}; //
-	
+std::vector<double> xi {};
+for (double x = 1; x >0.5; x -=0.02) {xi.push_back(x);}
 
 	//EvolutionKernels kernels("Kernels/kalnajs_" + std::to_string(taper) + "_Long.out", 1600);
-	EvolutionKernels kernels("Kernels/kalnajs_" + std::to_string(taper) + "_Long.out", 1600);
+	EvolutionKernels kernels("Kernels/kalnajs_" + std::to_string(taper) + "_.out", 400);
 	ResponseMatrixThread rmt(2);
 
 	for (const auto c : xi) { 
@@ -161,10 +162,10 @@ void uniformSearch(const std::string & filestem, const int taper) {
 		kernels.activeFraction(c);
 
 		auto file = [filestem, taper] (const double x)  {
-			return filestem + "Kernel_Mode_Searching_" + std::to_string(taper) +'_' +std::to_string(int (100 * x)) + ".csv";};
+			return filestem + "Kernel_Mode_Searching_" + std::to_string(taper) +'_' +std::to_string(int (ceil(100 * x))) + ".csv";};
 		//rmt.modeGridSearch(file(c), kernels, 0.015, 0.001, 40, 0.45, 0.65, 60); 
-		rmt.modeGridSearch(file(c), kernels, 0.14, 0.30, 40, 0.65, 0.95, 60); 
-		//rmt.modeGridSearch(file(c), kernels, -0.01, -0.001, 40, 0.60, 0.95, 60); 
+		rmt.modeGridSearch(file(c), kernels, 0.0, 0.20, 80, 0.2, 0.9, 120); 
+		//rmt.modeGridSearch(file(c), kernels, -0.1, -0.01, 40, 0.45, 0.95, 60); 
 		kernels.resetActiveFraction();
 	}
 }

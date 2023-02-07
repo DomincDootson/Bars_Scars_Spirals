@@ -5,10 +5,10 @@ from scipy.fft import fft2, ifft2, fftfreq
 
 class WaveFitter():
 	
-	def __init__(self, filename, timeEnd):
+	def __init__(self, filename, timeEnd, l = 2, rmax = 10): 
 	
 		self.density = TwoDdensity(filename)
-		self.rmax, self.l = 10, 2
+		self.rmax, self.l = rmax, l
 		self.time = np.linspace(0, timeEnd, self.density.nSteps)
 
 		self.radii, self.amp, self.phase = self.density.fouierEvolution(self.l, self.rmax)
@@ -26,7 +26,7 @@ class WaveFitter():
 		return [ 2*pi*(n-n_x//2)/x_max for n in range(n_x) if (n!=n_x//2)] # We can't have k = 0 
 
 	def forward_transform_k_time(self, k, timeIndex):
-		integrand = np.exp(-1j * self.radii * k)*np.sqrt(np.abs(k)*self.radii) * self.amp[timeIndex, :] * np.exp(1j * self.l * self.phase[timeIndex,:])
+		integrand = np.exp(-1j * self.radii * k)*np.sqrt(np.abs(k)*self.radii) * self.amp[timeIndex, :] * np.exp(1j * self.phase[timeIndex,:]) ## Why do we have that factor of l? 
 		return np.sum(integrand) * ((self.radii[1]-self.radii[0]))
 
 	def forward_transform(self):
@@ -70,7 +70,7 @@ class WaveFitter():
 		for time in range(self.n_time_step):
 			holding[time, :] = np.fromiter(map(self.backward_transfrom_R_time, self.radii, (toTransform[time, :] for _ in self.radii)), dtype = complex)
 		
-		return ifft2(holding, axes = (0))#
+		return ifft2(holding, axes = (0))
 
 	def backward_transform(self):
 		self.real_space_seperated = [self.backward_transform_split(each) for each in self.fTransformed_pos_l_split]
@@ -84,14 +84,45 @@ class WaveFitter():
 	def split_waves_singular_k(self, k_index : list):
 		self.forward_transform()
 		self.split_singular_k(k_index) 
-		# fig, axs = plt.subplots(ncols = 4)
-		# axs[0].imshow(np.abs(self.fTransformed_pos_l_split[0]))
-		# axs[1].imshow(np.abs(self.fTransformed_pos_l_split[1]))
-		# axs[2].imshow(np.abs(self.fTransformed_pos_l_split[2]))
-		# axs[3].imshow(np.abs(self.fTransformed_pos_l_split[3]))
-		# plt.show()
 		self.backward_transform() 
+
+
+	## Function to check that the K fitting is working ## 
+	## ----------------------------------------------- ##
+
+	def outgoing_T(self, time : int):
+		return self.real_space_seperated[1][time, :]+ self.real_space_seperated[2][time, :]
+
+	def  ingoing_T(self, time : int):
+		return self.real_space_seperated[0][time, :]+ self.real_space_seperated[3][time, :]
+
+	def total_T(self, time : int):
+		total = self.ingoing_T(time) + self.outgoing_T(time)
+		return np.absolute(total), np.angle(total)
+
+	def check_k_fitting(self, time : int):
+		plt.plot(self.radii, self.amp[time, :], color = 'firebrick', linestyle = "--")
+
+		self.split_waves()
+
+		outgoing = self.outgoing_T(time)
+		amp, phase = np.absolute(outgoing), np.angle(outgoing)
+		plt.plot(self.radii, amp)
+
+		ingoing = self.ingoing_T(time)
+		amp, phase = np.absolute(ingoing), np.angle(ingoing)
+		plt.plot(self.radii, amp)
+
+		total = ingoing + outgoing 
+		amp, phase = np.absolute(total), np.angle(total)
+		plt.plot(self.radii, amp)
+			#plt.plot(self.radii, amp[time, :]*np.cos(phase[time,:]), linestyle = '--')
+
+		plt.xlabel("Radius")
+
 		
+
+		plt.show()	
 		
 	## Animation Functions ##
 	## ------------------- ## 
@@ -99,13 +130,17 @@ class WaveFitter():
 	def phase_evolution(self, radius, filename = None):
 		index = int(radius/self.r_step)
 
-		fig, axs = plt.subplots(ncols = 2)
+		fig, axs = plt.subplots(ncols = 2, sharex = True)
 
-		for i, each in enumerate(self.real_space_seperated):
+		for i, each in enumerate(self.real_space_seperated[2:]):
 			axs[0].plot(self.time, np.angle(each[:, index]))
 			axs[1].plot(self.time, np.abs(each[:, index]))
 
-		plt.xlabel("Time")
+		axs[0].set_xlabel("Time")
+
+		axs[0].set_ylabel("Phase")
+		axs[1].set_ylabel("Amplitude")
+
 		plt.ylabel("Phase")
 		plt.title(f"Phase Evolution at $R = {radius}$")
 		if filename == None:
@@ -144,6 +179,7 @@ class WaveFitter():
 
 
 	## Density Reconstruction ##
+	## ---------------------- ## 
 
 	def component_index(self, is_clockwise, is_ingoing):
 		if is_clockwise ==True:
@@ -173,3 +209,28 @@ class WaveFitter():
 					array[i,j] = amp * cos(2 * phi + phase)
 
 		return array
+
+	## Recombination Testing ## 
+	## --------------------- ## 
+
+
+	def fitted_at_time(self, time : int):
+		return (self.real_space_seperated[2])[time, :], (self.real_space_seperated[3])[time, :]
+
+	def reconstruction_at_time(self, time : int):
+		a, b = self.fitted_at_time(time)
+		amp_1, amp_2, phase_1, phase_2 = np.absolute(a), np.absolute(b), np.angle(a), np.angle(b)
+
+		eq_1 = amp_1 * np.cos(phase_1) + amp_2 * np.cos(phase_2)
+		eq_2 = amp_1 * np.sin(phase_1) + amp_2 * np.sin(phase_2)
+
+		return np.sqrt(eq_1**2 + eq_2**2), np.arctan2(eq_2, eq_1)
+
+	
+
+	# Some function that does the reconsturction 
+	# Some function that plots this along side the orginal 
+
+
+
+

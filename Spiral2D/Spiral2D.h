@@ -11,7 +11,7 @@ class Spiral2D
 {
 public:
 	template <class Tbf>
-	Spiral2D(const Tbf & bf, double k = 1, double scale = 5, double maxDensity = .01, int taper = 6) : 
+	Spiral2D(const Tbf & bf, double k = 1, double scale = 5, double maxDensity = 1, int taper = 6) : 
 	m_k{k}, m_scale{scale}, m_maxDensity{maxDensity}, m_taper{taper},
 	m_responseCoef(1, bf.maxRadialIndex())
 	{m_responseCoef(0) = densityResolving(bf, 15);} // This number is the upper limit of the basis function

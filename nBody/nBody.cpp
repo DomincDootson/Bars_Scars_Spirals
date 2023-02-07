@@ -4,11 +4,22 @@
 #include <cmath>
 
 int main(){
-	//barEvolutionKalnajs("Evolution_Test_Cold", true, 0.35); 
-	//barEvolutionKalnajs("Evolution_Test_Warm", true, 0.45);
-	barEvolutionKalnajs("Large_Bar", true, 0.35);
+	//testingPhaseSpace();
+	//barEvolutionKalnajs("Evolution_Test_Cold", false, 0.35); 
+	//barEvolutionKalnajs("Evolution_Test_Warm", false, 0.45);
 
-	//orbitSection(); 
+	// barEvolutionKalnajs("Evolution_Consistent_Cold", true, 0.35); 
+	// barEvolutionKalnajs("Evolution_Consistent_Warm", true, 0.45);
+	
+	//somaniTrappedOrbits(0.35, "../Plotting/BO_Amp_realOmega_cold_large.csv");
+	//somaniTrappedOrbits(0.45, "../Plotting/BO_Amp_realOmega_warm_large.csv");
+	//sormaniBoxOrbit(41);
+	//barEvolutionKalnajs("Large_Bar", true, 0.35);
+
+	//orbitSection("Bodies/sormaniCR.out", "sormaniCRSections.csv");
+	// orbitSection("Bodies/sormaniNR.out", "sormaniNRSections.csv"); 
+	//orbitSection("Bodies/sormaniILR.out", "sormaniILRSections.csv");
+	
 	
 	//barEvolutionGaussian();
 	/* 
@@ -17,10 +28,15 @@ int main(){
 	
 	//spiralTesting();
 
+	varyingEpsilon();
 
 	return 0;
 } 
+/*
 
-// Things that need to be put right
-// 1) Make the code run the sampling script
-// 2) Outputting coef and not calculating jacobi
+4903
+5465
+5876
+7071
+8230
+*/

@@ -98,8 +98,17 @@ class TwoDdensity(object):
 		return 	[i/self.densityPower(0) for i in lst]
 
 
+	def meshgrid(self, rMax=10):
+		spacing = 2*rMax/(self.nCols-1)
+		centre = (self.nCols-1)*0.5
 
-	def densityAnimation(self, rMax=10, filename = None, lines = []):
+		x = np.arange(-rMax,rMax+spacing, spacing)
+		y = np.arange(-rMax,rMax+spacing, spacing)
+		return np.meshgrid(x, y)
+
+	def densityAnimation(self, rMax=10, filename = None, lines = [], upper_limit = -1):
+		if upper_limit == -1:
+			upper_limit = self.nSteps
 		#plt.rc('text', usetex=True)
 		#plt.rc('font', family='serif')
 		
@@ -117,7 +126,7 @@ class TwoDdensity(object):
 		XX, YY = np.meshgrid(x, y)
 
 		maxRho, minRho, R = self.maxDensity(), self.minDensity(), self.maxDensityAtTime(0,rMax)
-		for time in range(len(self.density2D)):
+		for time in range(upper_limit):
 			#contourFilled = axs.imshow(self.densityAtTime(time), vmax = maxRho, vmin = minRho, extent = (-rMax,rMax,-rMax,rMax,))
 			contourFilled = axs.imshow(self.densityAtTime(time), extent = (-rMax,rMax,-rMax,rMax,))
 			#point = axs.scatter(R * cos(time*0.25/R), R * sin(time*0.25/R), color = 'firebrick')
@@ -313,7 +322,7 @@ class TwoDdensity(object):
 				sinI += sin(angHarmonic * theta) * (dtheta / pi) * self.densityPolar(time, radius, theta, radii[-1]) # Factor of pi 
 				cosI += cos(angHarmonic * theta) * (dtheta / pi) * self.densityPolar(time, radius, theta, radii[-1]) # to normalise the integrals 
 		
-			phase.append(atan(-sinI/cosI))
+			phase.append(atan2(sinI, cosI)) # Where does the minus sign come from  
 			if isnan(phase[-1]): # For the case when the amplitude is zero everywhere at the start
 				phase[-1] = 0
 			magnitude.append(sqrt(sinI**2  + cosI**2))
@@ -337,6 +346,35 @@ class TwoDdensity(object):
 			title = fig.text(.4,.9,(r"Time: " +str(0.5*time)))
 			
 			ims.append([magnitude, title])
+
+
+		ani = animation.ArtistAnimation(fig, ims, interval=30)
+		if (filename):
+			ani.save(filename, writer = writer)
+			print("Animation save to:" + filename)
+		else:
+			plt.show()
+
+	def phaseAnimation(self, angHarmonic, filename = None, tEnd =-1, rMax = 15):
+		if tEnd ==-1:
+			tEnd = self.nSteps
+		
+		Writer = animation.writers['ffmpeg']
+		writer = Writer(fps=5, metadata=dict(artist='Me'))
+
+		fig, axs1 = plt.subplots(1,1)
+		
+		ims = []
+
+		for time in range(tEnd):
+			radii, mag, ph = self.fourierCoeffT(angHarmonic, time, rMax)
+
+			
+
+			phase, = axs1.plot(radii, ph, color = 'firebrick', label = "Magnitude") 
+			title = fig.text(.4,.9,(r"Time: {time}"))
+			
+			ims.append([phase, title])
 
 
 		ani = animation.ArtistAnimation(fig, ims, interval=30)

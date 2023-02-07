@@ -5,6 +5,7 @@
 void freqCheck();
 void savingKalnajsFunctions(const std::string & filename); 
 void generatingKalnajsBF(int m2);
+void multipleKalnajsBF(); 
 void generatingKalnajsKernelsAxisymmetric(const std::string & filename);
 void generatingSpiralBF(int m2);
 void getSpiralParam();
@@ -36,4 +37,7 @@ void energyTapping(int nMax, int rInner);
 void waveTesting();
 
 void savingDensity(const std::string & filename);
+void monariBarTesting();
+
+void checkMass();
 #endif

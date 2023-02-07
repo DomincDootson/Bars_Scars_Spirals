@@ -6,6 +6,8 @@ from ModeFinder import *
 from scipy.stats import linregress
 import csv
 
+import matplotlib.animation as animation
+
 
 def resonance(omega, m1, m2):
 	resRadius = (m2 + sqrt(2)*m1) /omega # assume vc = 1
@@ -133,11 +135,11 @@ def modesVaryingChi(step = 0.05): # save the files here
 	colors = ["royalblue", "darkviolet", "firebrick"]
 	axs.tick_params(size = 12)
 	
-	for nu, color in zip([6], colors):
+	for nu, color in zip([4,6,8], colors):
 		chi, omega0, eta = calculatingOmega0Eta(f"Modes_Data/Chi_Search/Chi_SearchKernel_Mode_Searching_{nu}_" , step)
 		for c, o, e in zip(chi, omega0, eta):
 			print(f"{o}, {e}, {c}")
-		axs.plot(chi, omega0, label = str(nu), color = color)
+		axs.plot(chi, eta, label = str(nu), color = color)
 	
 
 	plt.rcParams['legend.title_fontsize'] = 15
@@ -251,6 +253,42 @@ def modeEvolutionComplexComponents(filestem):
 	pr, pi, nr, ni = TwoDdensity(filestem + "/pos_real.csv"), TwoDdensity(filestem + "/pos_imag.csv"), TwoDdensity(filestem + "/neg_real.csv"), TwoDdensity(filestem + "/neg_imag.csv")
 	nr.fourierAnimations(2,rMax = 5)
 
+def modeAnimationVaryingChi(filestem, to_add, filename = None):
+	Writer = animation.writers['ffmpeg']
+	writer = Writer(fps=1, metadata=dict(artist='Me'))
+
+	
+
+	fig, axs = plt.subplots(1,1)
+
+	ims = []
+
+
+
+
+
+	for xi in to_add:
+		modes = ModeFinder(filestem + str(int(100*xi)) +".csv")
+		XX, YY, logDet = np.real(modes.omegas), np.imag(modes.omegas), np.log(np.absolute(modes.det))
+		xMin, xMax = XX[0,0], XX[-1,-1]
+		yMin, yMax = YY[0,0], YY[-1,-1]
+		#contourFilled = axs.contourf(XX, YY, logDet, levels = 100, animated = True)
+		contourFilled = axs.imshow(logDet,origin = 'lower', extent = [xMin, xMax, yMin, yMax])
+
+
+		title = fig.text(.4,.9,(f"Active Fraction: {xi}"))
+		
+		ims.append([contourFilled, title])
+
+
+	ani = animation.ArtistAnimation(fig, ims, interval=30)
+	if (filename):
+		print("Animation saved to: " + filename)
+		ani.save(filename, writer = writer)
+	else:
+		plt.show()
+	
+
 #eigenModeComparison(["Modes_Data/JB_mode.csv", "Modes_Data/JB_mode_Time.csv"], 0.88)
 
 #Modes_Data/JB_mode_Coeff.csv
@@ -265,6 +303,8 @@ def modeEvolutionComplexComponents(filestem):
 
 
 #modesVaryingChi()
+#modes = ModeFinder("Modes_Data/Chi_Search/Chi_SearchKernel_Mode_Searching_4_100.csv")
+#modes.contourPlotShow()
 
 #varyingScarPosition()
 #modesVaryingChi()
@@ -278,6 +318,8 @@ def modeEvolutionComplexComponents(filestem):
 #scarredModesDensityRadii([f"Modes_Data/Scarred_Density/SD_{r}_25_-95.csv" for r in ['12','18','20']], [1.2, 1.8, 2.0], [0.564, 0.428814, 0.394915])
 
 
-modeEvolutionComplexComponents("Modes_Data/Real_Imag_Modes")
+#modeEvolutionComplexComponents("Modes_Data/Real_Imag_Modes")
 
-
+#modes = ModeFinder("Modes_Data/Chi_Search/VideoKernel_Mode_Searching_4_100.csv")
+#modes.contourPlotShow()
+modeAnimationVaryingChi("Modes_Data/Chi_Search/VideoKernel_Mode_Searching_4_", [0.92, 0.94, 0.96, 0.98, 1])

@@ -30,8 +30,8 @@ class OneDdensity(object):
 		fig, axs = plt.subplots(1,1)
 		ims = []
 
-		for time in range(20, self.nStep):		
-			title = fig.text(.4,.9,(r"Time: " +str(0.02*time)))
+		for time in range(self.nStep):		
+			title = fig.text(.4,.9,(r"Time: " +str(time)))
 			if remove_ic:
 				line, = plt.plot(self.radii, self.density(time) - self.density(20), animated = True, color = 'navy')
 			else:

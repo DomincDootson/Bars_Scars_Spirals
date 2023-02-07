@@ -50,7 +50,10 @@ class WKB_Disc():
 
 	def OLR(self, omega, m =2):
 		return self.CR(omega, m) * (2+sqrt(2))*0.5
-	
+
+
+	def set_sigma_with_Q(self, Q):
+		self.sigmaR = Q * self.activeFraction * (3.36/(sqrt(2)*2*pi))
 	## Tapered Density ## 
 	## --------------- ##
 
@@ -184,14 +187,14 @@ class WKB_Disc():
 	    
 	    return r_plot, k_plot
 
-	def plotting_k_vs_r(self, omega0, scars = []):
-		fr = self.forbidden_radius(omega0, 500)
+	def plotting_k_vs_r(self, omega0 = 1, scars = []):
+		fr, CR = self.forbidden_radius(omega0, 500), self.CR(omega0)
 		r, k = self.k_func_r(omega0, fr)
-		plt.scatter([i for i in r], [k[i]/self.k_crit(r[i]) for i in range(len(r))], s =1)
+		plt.scatter([i/CR for i in r], [k[i]/self.k_crit(r[i]) for i in range(len(r))], s =1)
 
 		for scar in scars:
 			plt.axvline(scar/self.CR(omega0), linestyle = '--', color = 'firebrick')
-		plt.axvline(fr, linestyle = '--', color = 'firebrick')
+		plt.axvline(self.ILR(omega0)/CR, linestyle = '--', color = 'firebrick')
 
 		plt.title(f"{omega0}")
 		plt.xlabel(r"$R/R_{crit}$")
@@ -326,8 +329,8 @@ class WKB_Disc():
 		plt.rc('font', family='serif')			
 		fig, axs = plt.subplots()
 		for i in range(np.shape(time)[0]-1):
-			axs.plot([k[i]/self.k_crit(radius[i]) for i in [i,i+1]], [radius[i]/self.CR(omega0) for i in [i, i+1]], color = cmap.to_rgba(time)[i])
-			axs.plot([k[i]/self.k_crit(radius[i]) for i in [i,i+1]], [2-(radius[i])/self.CR(omega0) for i in [i, i+1]], color = cmap.to_rgba(time)[i])
+			axs.plot([k[i]/self.k_crit(radius[i]) for i in [i,i+1]], [radius[i]/self.CR(omega0) for i in [i, i+1]], color = cmap.to_rgba(time * omega0/(2*pi))[i])
+			axs.plot([k[i]/self.k_crit(radius[i]) for i in [i,i+1]], [2-(radius[i])/self.CR(omega0) for i in [i, i+1]], color = cmap.to_rgba(time * omega0/(2*pi))[i])
 
 		axs.axhline(fr, linestyle = ':',  color = 'navy')
 		axs.axhline(2-fr, linestyle = ':', color = 'navy')
@@ -337,8 +340,8 @@ class WKB_Disc():
 		axs.axhline(1, color = 'firebrick', linestyle = '--')
 		axs.axhline(self.OLR(omega0)/self.CR(omega0), color = 'firebrick', linestyle = '--')
 
-		axs.set_ylabel(r"$R/R_{CR}$", fontsize = 12)
-		axs.set_xlabel(r"$k/k_{crit}$", fontsize = 12)
+		axs.set_ylabel(r"$R/R_{CR}$", fontsize = 15)
+		axs.set_xlabel(r"$k/k_{crit}$", fontsize = 15)
 
 		axs.text(-7.5, 0.35, "A", fontsize = 12)
 		axs.text(-1.80, 0.84, "B", fontsize = 12)
@@ -346,12 +349,14 @@ class WKB_Disc():
 		axs.text(1.66, 0.84, "D", fontsize = 12)
 		axs.text(7.5, 0.35, "E", fontsize = 12)
 
-		fig.colorbar(cmap, ax=axs, label = "Time").set_label(label = "Time", fontsize = 12)
+		fig.colorbar(cmap, ax=axs, label = r"$t/(2\pi/\omega_{0})$").set_label(label = r"$t/(2\pi/\omega_{0})$", fontsize = 15)
 		plt.show()
 
 
-disc = WKB_Disc(0.366, epsilon = 0)
-print(disc.forbidden_radius(0.4) * disc.CR(0.4))
+# disc = WKB_Disc(0.366, epsilon = 0)
+# disc.set_sigma_with_Q(1.2)
+# print(disc.sigmaR, disc.CR(1))
+# disc.plotting_k_vs_r(1)
 
 
 

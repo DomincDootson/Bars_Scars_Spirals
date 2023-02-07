@@ -41,7 +41,7 @@ public:
 	double density(const double radius) const;
 	double maxDensityRadius() const; 
 	void cumulativeDensity(const std::string fileName) const;
-	double diskMass() const; 
+	double diskMass(double upperRadius = 100) const; 
 
 	void savingDensity(const std::string fileName, const double spacing = 0.03, const int nSteps = 1000);
 	void densityVector(const int nSteps, const double spacing);
@@ -282,7 +282,7 @@ void DFClass::cumulativeDensity(const std::string fileName) const
 		n += 1;
 		//std::cout << n * spacing << " " << densityArray.back() << '\n';
 		if ( (n * spacing) ==static_cast<int>(n * spacing)) {std::cout << "Finding cumulative density for point: " << n*spacing << " Density: " <<  cumulative.back()<< '\n';}
-	} while (n*spacing < 10 || n*spacing <20); //|| (densityArray.back()/cumulative.back() > .001)
+	} while (n*spacing <15); //|| (densityArray.back()/cumulative.back() > .001)
 
 
 	std::ofstream out(fileName);
@@ -291,9 +291,9 @@ void DFClass::cumulativeDensity(const std::string fileName) const
 	out.close();
 }
 
-double DFClass::diskMass() const {
+double DFClass::diskMass(double upperRadius) const {
 	double mass{0}, spacing{0.1}; std::cout << "Calculating Disk Mass\n";
-	for (double r = spacing; r < 25; r += spacing) {mass += 2*M_PI * (r) * density(r) * spacing;}
+	for (double r = spacing; r < upperRadius; r += spacing) {mass += 2*M_PI * (r) * density(r) * spacing;}
 	return mass; 
 }
 

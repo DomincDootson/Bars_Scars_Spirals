@@ -73,14 +73,15 @@ void densityEvolution(double k) {
 /* ---------------------- */
 
 void spiralEvolution() {
-	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat");
-	Spiral2D spiral(pd, -1, 5, 0.01);
+	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat", 40);
+	Spiral2D spiral(pd, 1, 5, 1);
 
-	VolterraSolver solver("Kernels/kalnajsN.out", 48, 2, 250, 0.25);
-	solver.activeFraction(.4);
+	VolterraSolver solver("Kernels/Swing_Kernels/SW_Ker_2.csv", 40, 2, 500, 0.3);
+	solver.activeFraction(.5);
 
 	solver.spiralEvolution(spiral); 
-	spiral.saveEvolutionCoeff("Plotting/SpiralCoef.csv");
+	solver.density2dEvolution("Plotting/test_spiral.csv", pd, 1, 15);
+	
 }
 
 

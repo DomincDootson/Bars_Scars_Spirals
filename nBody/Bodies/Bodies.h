@@ -45,7 +45,11 @@ public:
 
   // some public functions that do the outputting of the coefficents
   std::valarray<double> angularMomentum() const;
+  std::valarray<double> angularMomentumCorotating(double omegaP) const {return angularMomentum() - omegaP * radius();} 
+  
   std::valarray<double> energy() const;
+  std::valarray<double> energy(const std::valarray<double> & pot) const {return energy() + pot;} 
+
   std::valarray<double> jacobiIntegral(const std::valarray<double> & pot, const double omegaP) const {return (energy() + pot - angularMomentum()* omegaP);} 
   std::valarray<double> jacobiIntegral(const double omegaP) const {return (energy() - angularMomentum()* omegaP);} 
 
@@ -63,6 +67,8 @@ public:
   
   std::valarray<double>  apocentre() const;
   std::valarray<double> pericentre() const;
+
+  void savePhaseSpace(const std::string & filename, const std::valarray<double> & pot, const double omegaP) const;
 
 private:
   double  apocentre(const double energy, const double angularMomentum) const;
@@ -104,10 +110,10 @@ Eigen::VectorXcd Bodies::responseCoefficents(const Tbf & bf) const {
 
   for (int i = 0; i < n; ++i){
     for (int j = 0; j < coef.size(); ++j){
-      coef[j] += m[i] * exp(-unitComplex*(ang[i]*(bf.fourierHarmonic())))*bf.potential(rad[i], j);
+      coef[j] += 2*m[i] * exp(-unitComplex*(ang[i]*(bf.fourierHarmonic())))*bf.potential(rad[i], j);
     }
   }
-  return - (bf.scriptE()).inverse() * coef;
+  return -coef;
 }
 
 
@@ -181,6 +187,16 @@ std::valarray<double> Bodies::pericentre() const {
   return peri;
 }
 
+/* Saving Phase Space */
+/* ------------------ */
+
+void Bodies::savePhaseSpace(const std::string & filename, const std::valarray<double> & pot, const double omegaP) const {
+  std::ofstream out(filename);
+  std::valarray<double> en{energy(pot)}, angMom{angularMomentum()}, jac{jacobiIntegral(pot, omegaP)}, angMomCo{angularMomentumCorotating(omegaP)}; 
+  for (int i = 0; i < n; ++i) {out << en[i] << ',' << angMom[i] << ',' << jac[i] << ',' << angMomCo[i] << '\n';}
+  out.close();
+}
+
 
 
 double Bodies::apocentre(const double energy, const double angularMomentum) const {
@@ -208,37 +224,5 @@ double Bodies::pericentre(const double energy, const double angularMomentum) con
     }
   return x2;
 }
-
-/*
-
-double periCentre(int root,double E, double J, double vc, int nstep) // Finds apo/peri
-{
-
-
-  else // Gives pericentre
-  {
-    double x1{0};
-    double x2{pow(e, E-0.5)};
-    double holding{};
-
-    for (int i = 0; i < nstep; ++i)
-    {
-      holding = x1 + 0.5 * (x2 -x1);
-      if (radialMometum(holding, E,  J,  vc) < 0)
-      {
-        x1 = holding;
-      }
-      else
-      {
-        x2 = holding;
-      }
-
-    }
-  return x2; //x1 + 0.5 * (x2 -x1);
-  }
-}
-  
-*/ 
-
 
 #endif 

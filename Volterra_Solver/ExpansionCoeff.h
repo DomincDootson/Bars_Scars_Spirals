@@ -2,6 +2,7 @@
 #define EXPANSIONCOEFF 
 
 #include <vector>
+#include <algorithm>
 #include <cmath>
 
 #include "../Potential_Density_Pair_Classes/PotentialDensityPairContainer.h"
@@ -50,8 +51,11 @@ public:
 	void write2dDensity2File(const std::string & outFilename, const Tbf & bf, const int skip, const double rMax=5, const int nStep=201) const; 
 	template <class Tbf>
 	void write2dDensity2File(int timeIndex, const std::string & outFilename, const Tbf & bf, const double rMax=5, const int nStep=201) const; 
+	template <class Tbf> 
+	double maxDensity(const Tbf & bf, const double rMax =15, const int nGrid=201) const ;
+
 	template <class Tbf>
-	void write2dPotential2File(const std::string & outFilename, const Tbf & bf, const int skip) const;
+	void write2dPotential2File(const std::string & outFilename, const Tbf & bf, const int skip, const double rMax = 10) const;
 
 
 	int nTimeStep() const {return m_coeff.size();}
@@ -193,7 +197,7 @@ void ExpansionCoeff::writeDensity2File(const std::string & outFilename, const Tb
 	// std::vector<double> radii = radiiVector(15, 300);
 	
 	std::vector<double> radii(400);
-	std::iota(radii.begin(), radii.end(), 0); 
+	//std::iota(radii.begin(), radii.end(), 0); 
 	std::for_each(radii.begin(), radii.end(), [] (double & n){n =(0.02*n)+4;});
 	outputVector(out, radii);
 
@@ -209,7 +213,7 @@ template <class Tbf>
 void ExpansionCoeff::write2dDensity2File(const std::string & outFilename, const Tbf & bf, const int skip, const double rMax, const int nStep) const
 {
 	std::ofstream out(outFilename);
-	for (int time = 0; time < m_coeff.size(); time += skip){ 
+	for (int time = 0; time < 130; time += skip){  // m_coeff.size() PUTBACK
 		if (time % (skip*10) == 0) {std::cout << "Outputting density for: " << time << '\n';}
 		Eigen::ArrayXXd density = bf.densityArrayReal(m_coeff[time], nStep, rMax); // I suppose this could always be make quicker by saving the individual arrays for each bf
 		outputArray(out, density);
@@ -228,15 +232,36 @@ void ExpansionCoeff::write2dDensity2File(int timeIndex, const std::string & outF
 	std::cout << "Density saved to: " << outFilename << '\n'; 
 }
 
+double maxValueArray(const Eigen::ArrayXXd & array) {
+	double max_val = abs(array(0,0));  
+	for (int i =0; i < array.cols(); ++i) {
+		for (int j =0; j < array.rows(); ++j)
+			if (abs(array(i,j)) > max_val) {max_val = abs(array(i,j));} 
+	}
+	return max_val; 
+}
 
+template <class Tbf> 
+double ExpansionCoeff::maxDensity(const Tbf & bf, const double rMax, const int nStep) const
+{
+	double maxValue{0};
+	for (int time = 0; time < m_coeff.size(); ++time){ 
+		
+		if (time % (50) == 0) {std::cout << "Outputting density for: " << time << '\n';}
+		double test = maxValueArray(bf.densityArrayReal(m_coeff[time], nStep, rMax));
+		if (test>maxValue) {maxValue = test; std::cout << time << " "<< m_coeff[time].dot(m_coeff[time]) << " " << maxValue <<'\n';}
+	}
+	std::cout << (m_coeff.back()).dot(m_coeff.back()) << " " << maxValue <<'\n';
+	return maxValue;
+}
 
 template <class Tbf>
-void ExpansionCoeff::write2dPotential2File(const std::string & outFilename, const Tbf & bf, const int skip) const
+void ExpansionCoeff::write2dPotential2File(const std::string & outFilename, const Tbf & bf, const int skip, const double rMax) const
 {
 	std::ofstream out(outFilename);
 	for (int time = 0; time < m_coeff.size(); time += skip){ 
 		if (time % (skip*10) == 0) {std::cout << "Outputting potential for: " << time << '\n';}
-		Eigen::ArrayXXd density = bf.potentialArrayReal(m_coeff[time], 201, 10); // I suppose this could always be make quicker by saving the individual arrays for each bf
+		Eigen::ArrayXXd density = bf.potentialArrayReal(m_coeff[time], 201, rMax); // I suppose this could always be make quicker by saving the individual arrays for each bf
 		outputArray(out, density);
 	}
 	out.close();

@@ -24,7 +24,7 @@ def greensFunctionEvolution(filename = "../Disk_Kicking/littleSigma_35/Density2D
 	x = np.arange(-5,5+spacing, spacing)
 	y = np.arange(-5,5+spacing, spacing)
 	XX, YY = np.meshgrid(x, y)
-	time = [4, 24, 44, 64]
+	time = [1, 24, 44, 64]
 
 	xCir, yCir = circle(1.95)
 	absMaxValue = density2D.maxDensityEvolution()[5]
@@ -37,7 +37,10 @@ def greensFunctionEvolution(filename = "../Disk_Kicking/littleSigma_35/Density2D
 			contourFilled = axs[j].contourf(XX, YY, density2D.densityAtTime(time[j]), levels = 100, vmin = -absMaxValue, vmax = absMaxValue)
 		axs[j].contourf(XX, YY, density2D.densityAtTime(time[j]), levels = 100, vmin = -absMaxValue, vmax = absMaxValue)
 		axs[j].set(aspect = 1)
-		axs[j].set_title(r"$t=$ " + str(time[j] *0.25) + r"$\times 2\pi$")
+		if j==0:
+			axs[j].set_title(r"$t=0$")
+		else:
+			axs[j].set_title(r"$t=$ " + str(time[j] *0.25) + r"$\times 2\pi$")
 	
 	axs[0].plot(xCir, yCir, color = 'firebrick', alpha = 0.8, linestyle = '--')
 			

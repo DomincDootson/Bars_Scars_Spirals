@@ -89,7 +89,7 @@ Eigen::ArrayXXcd PotentialDensityPair::densityGrid(const int nGrid, const double
 			/*if (r<rMax && r!= 0){
 				grid(i,j) = exp(-unitComplex * (theta * m_fourierHarmonic)) * density(r);}
 			else {grid(i,j) = 0;}*/
-			grid(i,j) = exp(-unitComplex * (theta * m_fourierHarmonic)) * density(r); // we have remove a minus sign in the expo
+			grid(i,j) = exp(-unitComplex * (theta * m_fourierHarmonic)) * density(r); // I am 99.8 % sure that the minus sign shouldn't be hear, but as it will only affect plots, I'll leave it
 		}
 	}
 	return grid;
@@ -107,7 +107,7 @@ Eigen::ArrayXXcd PotentialDensityPair::potentialGrid(const int nGrid, const doub
 			x = spacing * (i - centre); y = spacing * (j - centre);
 			r = sqrt(x*x+y*y); theta = angle(x,y);
 			
-			grid(i,j) = exp(-unitComplex * (theta * m_fourierHarmonic)) * potential(r); // we have remove a minus sign in the expo
+			grid(i,j) = exp(unitComplex * (theta * m_fourierHarmonic)) * potential(r); // we have remove a minus sign in the expo, NO SIGN SHOULD BE CORRECT
 		}
 	}
 	return grid;

@@ -18,67 +18,62 @@ def updateResonant(data, i):
 def isTrapped(rapo): 
 	rapo = rapo / pi 
 
-	if (abs(rapo[0]) < 0.5):
+	if (rapo[0] < 0):
 		whichRegion = 0
 	else:
 		whichRegion = 1
 
-	for i in range(1, np.shape(rapo)[0]):
-		if (abs(rapo[i]) < 0.5):
+	for r_a in rapo:
+		if (r_a < 0.0):
 			checkregion = 0
 		else:
 			checkregion = 1
 
 		if (checkregion != whichRegion):
 			return False
-		whichRegion = checkregion
+
 
 	return True
 	 
 
 	
 
-def sectionPlot(filename, nPlot = 6):
+def sectionPlot(filename = "Orbit_Sections/ResonantSections.csv", nPlot = 6):
 	plt.rc('text', usetex=True)
 	plt.rc('font', family='serif')
 	fig, axs = plt.subplots(1, 1, sharey = False, sharex = False)	
 
-	nplot = [9]
-	#nplot = [0]
-	#nplot = [0,2]
-	nplot = [0,2,4,6] + [i for i in range(8,28)] + [28, 30, 31]
-
-	n = 24
 	data = readingInRealCSV(filename)
 
 
-	n, count = 25, 0
+	n, count = 10, 0
 	
-	for i in nplot:
+	for i in range(0,48,2):
 		
 		if isTrapped(data[n:,2*i]):
+			
 			axs.scatter(data[n:,2*i]/pi, data[n:,2*i+1], s = .1, color = 'navy')
+			axs.scatter(-data[n:,2*i]/pi, data[n:,2*i+1], s = .1, color = 'navy')
 			count += 1
 		else:
 			axs.scatter(data[n:,2*i]/pi, data[n:,2*i+1], s = .1, color = 'firebrick')
 
 
-	axs.text(-.1,2.12,"Area 1", fontsize = 20)
-	axs.text(-.85,2.12,"Area 2", fontsize = 20)
-	axs.text(.65,2.12,"Area 2", fontsize = 20)
+
 
 	
-	axs.set_ylim([1.79, 2.11])	
+	
+
 	axs.set_xlim([-1, 1])	
 
-	axs.axvline(-0.5, color = 'k', linestyle = '--')
-	axs.axvline(0.5, color = 'k', linestyle = '--')
+	axs.axvline(0, color = 'k', linestyle = '--')
+	
 
 
-	axs.set_xlabel(r"$\phi_{apo}/\pi$", fontsize = 20)
-	axs.set_ylabel(r"$L_{z}$", fontsize = 20)
+	axs.set_xlabel(r"$\phi_{apo}/\pi$", fontsize = 15)
+	axs.set_ylabel(r"$L_{z}$", fontsize = 15)
 	#axs.legend()
-	print(count)
+	
 	plt.show()
 
 def ptleChangeInAngMom():
@@ -110,7 +105,9 @@ def ptleChangeInAngMom():
 
 
 
-filenames = ["Orbit_Sections/SectionFastSmall.csv", "Orbit_Sections/SectionSlowSmall.csv", "Orbit_Sections/SectionFastLarge.csv", "Orbit_Sections/SectionSlowLarge.csv"]
+
 
 #ptleChangeInAngMom()
-sectionPlot("Orbit_Sections/ResonantSections.csv")
+#sectionPlot("Orbit_Sections/ResonantSections.csv")
+
+sectionPlot("../nBody/sormaniILRSections.csv") # Bar_Data/Sections/

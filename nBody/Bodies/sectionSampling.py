@@ -68,16 +68,16 @@ def angMomFuncRad(rApo, rPer):
 	return sqrt(2*(potential(rApo) - potential(rPer))/ (1/(rPer*rPer) - 1/(rApo*rApo)))
 
 
-def lstEnergies(rCirc, patternSpeed):
+def lstEnergies(rCirc, patternSpeed, filename = "particleSamplesSections.out", jacobiFrac = 1.1):
 	jCirc, eCirc = circularOrbitParams(rCirc)
-	jacobi = 1.2*(eCirc - jCirc*patternSpeed)
+	jacobi = jacobiFrac*(eCirc - jCirc*patternSpeed)
 	print("The jacobi Integral is: ", jacobi)
 
-	print(jCirc, eCirc, jacobi)
-	step, nOrbits = 0.02, 24
+
+	step, nOrbits = 0.05, 24
 	j = [jCirc-(i)*step for i in range(nOrbits)]
 
-	f = open("particleSamplesSections.out", "w+")
+	f = open(filename, "w+")
 	f.write(str(2*nOrbits))
 	x, y = [], []
 	for i in range(nOrbits):
@@ -90,15 +90,17 @@ def lstEnergies(rCirc, patternSpeed):
 		e = energy(vRadial, j[i], rCirc)
 		y.append(jacobiIntegral(e, j[i], patternSpeed))
 		x.append(j[i])
-		print(rMin(jacobi + j[i]*patternSpeed, j[i]), rMax(jacobi + j[i]*patternSpeed, j[i]))
+
 
 
 	f.close()
-	plt.plot(x, y)
+	plt.plot(x, y) # Should be a vlat line 
 	plt.xlabel("Ang Mom")
 	plt.ylabel("Jacobi Integral")
 
 	plt.show()
 
 
-lstEnergies(2.1, 0.5)
+#lstEnergies(5.56, 0.18, "sormaniCR.out")
+lstEnergies((1/0.18), 0.18, "sormaniCR.out")
+#lstEnergies(3.50, 0.18, "sormaniNR.out")

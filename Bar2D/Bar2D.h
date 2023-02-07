@@ -13,21 +13,32 @@
 class Bar2D
 {
 public: 
-	Bar2D(const Eigen::VectorXcd expansionCoeff, const double omega0) : // Note that omega0 is the pattern speed! 
+	Bar2D(const Eigen::VectorXcd expansionCoeff, const double omega0, const int harmonic = 2) : // Note that omega0 is the pattern speed! 
 	m_expansionCoeff{expansionCoeff},
 	m_momentOfInertia{1},
-	m_fourierHarmonic{2},
+	m_fourierHarmonic{harmonic},
 	m_scriptE{Eigen::MatrixXd::Identity(m_expansionCoeff.size(), m_expansionCoeff.size())}
 	{v_theta.push_back(0); v_omega.push_back(omega0); v_alpha.push_back(0);
 		std::cout << "Please note the bar is not evolving (Might cause seg fault).\n\n";}
 
-	Bar2D(const Eigen::VectorXcd expansionCoeff, const double omega0, const std::string growthFilename) :
+	Bar2D(const Eigen::VectorXcd expansionCoeff, const double omega0, const std::string growthFilename, const int harmonic = 2) :
 	m_expansionCoeff{expansionCoeff},
+	m_momentOfInertia{1},
+	m_fourierHarmonic{harmonic},
+	m_scriptE{Eigen::MatrixXd::Identity(m_expansionCoeff.size(), m_expansionCoeff.size())}
+	{v_theta.push_back(0); v_omega.push_back(omega0); v_alpha.push_back(0); readInSize(growthFilename);}
+
+	Bar2D(const double omega0, const std::string growthFilename) : 
 	m_momentOfInertia{1},
 	m_fourierHarmonic{2},
 	m_scriptE{Eigen::MatrixXd::Identity(m_expansionCoeff.size(), m_expansionCoeff.size())}
 	{v_theta.push_back(0); v_omega.push_back(omega0); v_alpha.push_back(0); readInSize(growthFilename);}
 
+	Bar2D(const double omega0) : 
+	m_momentOfInertia{1},
+	m_fourierHarmonic{2},
+	m_scriptE{Eigen::MatrixXd::Identity(m_expansionCoeff.size(), m_expansionCoeff.size())}
+	{v_theta.push_back(0); v_omega.push_back(omega0); v_alpha.push_back(0);}
 
 
 	~Bar2D() {} 
@@ -43,13 +54,19 @@ public:
 
 	void saveBarEvolution(const std::string & evolutionFilename, const int skip = 1) const;
 	void readInSize(const std::string & filename);
+
+	template <class Tbf>
+	void sormaniBar(const Tbf & bf, const double size = 1, const std::string & filename = "Bar2D/Bar_Potentials/Sormani_Medium.out"); 
+	double sormaniPotential(const double rad, const double time) const;
 	
-	
+	double barSize(const double time) const;
 private: 
 	Eigen::VectorXcd m_expansionCoeff;
 
 	std::vector<double> v_theta, v_omega, v_alpha; // We use these to keep track of the evolution of the bar
 	std::vector<double> v_times, v_size; // Use these vectors to set the relative size of the bar 
+
+	std::vector<double> v_sormaniRadii, v_sormaniPotential; 
 
 
 	const double m_momentOfInertia;  
@@ -59,9 +76,9 @@ private:
 	
 
 	int findTimeIndex(const double time) const;
-	double barSize(const double time) const;
 	
 };
+
 
 void Bar2D::saveBarEvolution(const std::string & evolutionFilename, const int skip) const {
 	std::ofstream out(evolutionFilename);
@@ -74,10 +91,11 @@ void Bar2D::saveBarEvolution(const std::string & evolutionFilename, const int sk
 
 double Bar2D::torque(const Eigen::VectorXcd &diskCoeff, const double time) const // Torque = il * (A.scriptE.conj(B) - b.scriptE.conj(A))
 {
-	std::complex<double>    firstTerm{ m_expansionCoeff.dot(m_scriptE *  diskCoeff) }; // So the dot product of complex vectors
-	std::complex<double> secondTerm{ diskCoeff.dot(m_scriptE *  m_expansionCoeff) };   // has the conjugation built in
+	std::complex<double>    firstTerm{ m_expansionCoeff.dot(diskCoeff) }; // So the dot product of complex vectors
+	std::complex<double> secondTerm{ diskCoeff.dot(m_expansionCoeff) };   // has the conjugation built in
 	std::complex<double> unitComplex(0,1);
 	double l{ (double) m_fourierHarmonic};
+	//std::cout << "torque: " << barSize(time) * std::real(unitComplex * ((firstTerm - secondTerm) * l))<<'\n';
 	return -barSize(time) * std::real(unitComplex * ((firstTerm - secondTerm) * l)); // The negative sign comes from force  = - grad(phi)
 
 }
@@ -128,6 +146,40 @@ void Bar2D::readInSize(const std::string & filename){
 	}
 	inFile.close();
 }
+
+/* Sormani Stuff */ 
+/* ------------- */ 
+
+template <class Tbf>
+void Bar2D::sormaniBar(const Tbf & bf, const double size, const std::string & filename) {
+	std::ifstream inFile; inFile.open(filename);
+	if (!inFile.good()) {std::cout << "Bar size file doesn't exist.\n"; exit(0);}
+	int n; double step, rad{}, pot{}; 
+	inFile >> n >> step;
+
+	Eigen::VectorXcd integration = Eigen::VectorXcd::Zero(bf.maxRadialIndex()+1);
+	m_expansionCoeff *= 0;
+	
+	for (int r = 0; r < n; ++r) {
+		inFile >> rad >> pot;
+		v_sormaniRadii.push_back(rad);
+		v_sormaniPotential.push_back(size*pot); 
+		for (int i = 0; i < m_expansionCoeff.size(); ++i) {
+			m_expansionCoeff(i) += - size*step * (2*M_PI*rad)*bf.density(rad, i) * pot; 
+		}
+	}  
+	//std::cout << m_expansionCoeff() << '\n'; 
+	inFile.close();
+}
+
+
+double Bar2D::sormaniPotential(const double rad, const double time) const {
+	double step{v_sormaniRadii[1]-v_sormaniRadii[0]}; 
+	double index = (rad - v_sormaniRadii.front())/step;  
+	if ((index < 0) || (index >= v_sormaniPotential.size()-2)) {return 0;}
+	return  (ceil(index) - index) * (v_sormaniPotential[(int) floor(index)])+(index - floor(index)) * (v_sormaniPotential[(int) ceil(index)]) * barSize(time);
+}
+
 
 
 #endif

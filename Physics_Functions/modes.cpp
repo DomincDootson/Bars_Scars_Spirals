@@ -26,13 +26,13 @@ int main() {
 
 	// generatingEigenMode("Response_Matrix/RM/RM_Xi_8_Nu_6.out", "Plotting/Modes_Data/Xi_Modes/RM_Xi_8_Nu_6.out");
 
-	//uniformSearch("Plotting/Modes_Data/Chi_Search", 4);
+	uniformSearch("Plotting/Modes_Data/Chi_Search/Video/", 4);
 	//uniformSearch("Plotting/Modes_Data/Chi_Search", 8);
 
 	//uniformSearchScarredDensity("10", "25", "-95_G", false);
 
 	//uniformSearchScarredDensity("20", "20", "-95_G_inner", false);
-	eigenModeEvolution("Response_Matrix/RM/RM_Xi_5_Nu_6.out", 0.88, 0.22, "Plotting/Modes_Data/Real_Imag_Modes");
+	//eigenModeEvolution("Response_Matrix/RM/RM_Xi_5_Nu_6.out", 0.88, 0.22, "Plotting/Modes_Data/Real_Imag_Modes");
 
 	return 0; 
 

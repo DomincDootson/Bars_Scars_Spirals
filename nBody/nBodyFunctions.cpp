@@ -16,9 +16,8 @@
 
 #include <cmath>
 
-
-const int NUMBPARTICLES{500000};
-const int NSTEPS{30000};   //300000
+const int NUMBPARTICLES{100000}; //1000000
+const int NSTEPS{10000};   //300000
 const double TIMESTEP{0.01};
 
 
@@ -40,15 +39,15 @@ std::string coefficentFilenameGaussian(int runNumber) {
 
 
 std::string evolutionFilenameKalnajs(int runNumber) {
-	return "../Plotting/KalnajsTorque/Evolution_" + std::to_string(runNumber) + ".csv";
+	return "../Plotting/KalnajsTorque/Sormani_Bar/Evolution_" + std::to_string(runNumber) + ".csv";
 } 
 
 std::string coefficentFilenameKalnajs(int runNumber) {
-	return "../Plotting/KalnajsTorque/Coefficent_" + std::to_string(runNumber) + ".csv";
+	return "../Plotting/KalnajsTorque/Sormani_Bar/Coefficent_" + std::to_string(runNumber) + ".csv";
 } 
 
 std::string stemFilename(const std::string & stem, const int runNumber) {
-	return "../Plotting/KalnajsTorque/" + stem + "_" + std::to_string(runNumber) + ".csv";
+	return "../Plotting/KalnajsTorque/Sormani_Bar/" + stem + "_" + std::to_string(runNumber) + ".csv";
 }
 
 
@@ -74,76 +73,126 @@ void barEvolutionGaussian()
 	}
 }
 
-void barEvolutionKalnajs(const std::string & stem, const bool isSelfConsistent, const double littleSigma)
+void barEvolutionKalnajs(double ep, double omegaP, const std::string & evolutionFile, const bool isSelfConsistent, const double littleSigma)
 {
-	std::vector<double> params{4, 20};
- 	PotentialDensityPairContainer<KalnajsNBasis> pd("../Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_20_2.dat");
+ 	std::cout << evolutionFile <<'\n'; 
 
-	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(48+1);
-	coeff(0) = 0.2;
+ 	PotentialDensityPairContainer<KalnajsNBasis> pd("../Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat", 70);
+	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(70+1); coeff(0) = 0.01; 
+	Bar2D bar(coeff, ep, "../Bar2D/barSize.out"); // I think we are running this of 0.1 
+	bar.sormaniBar(pd, omegaP, "../Bar2D/Bar_Potentials/Sormani_Large.out");
+
+	NBodyBar nbodyBar(100000, 10000, 0.01, pd, bar, littleSigma, 0.5);  
+	if (isSelfConsistent) {nbodyBar.nBodyEvolution("Coeff.csv", evolutionFile, 0);}
+	else {nbodyBar.testParticleEvolution("Coeff.csv", evolutionFile, 0);} 
 	
-
-	for (int i =0; i < 1; ++i){
-		std::cout << '\n' << '\n' << "Realisation: " << i << '\n';
-
-		Bar2D bar(coeff, 0.05, "../Bar2D/barSize.out");
-
-		NBodyBar nbodyBar(NUMBPARTICLES, NSTEPS, TIMESTEP, pd, bar, littleSigma);  
-		if (isSelfConsistent) {nbodyBar.nBodyEvolution(coefficentFilenameKalnajs(i), stemFilename(stem, i), 0);}
-		else {nbodyBar.testParticleEvolution(coefficentFilenameKalnajs(i), stemFilename(stem, i), 0);} 
-
-	}
 }
 
-void orbitSection() 
+void somaniTrappedOrbits(const double littleSigma, const std::string & outFilename)
 {
-	std::vector<double> params{24, .15, 15};
- 	PotentialDensityPairContainer<GaussianLogBasis> pd(params, 24, 2);	
+ 	int nReal{1}; 
+ 	PotentialDensityPairContainer<KalnajsNBasis> pd("../Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat", 70);
+	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(70+1); coeff(0) = 0.01; 
 
-	std::vector<double> omega{0.5, .1, .5}, strength{1, 1, 0};
-	std::vector<std::string> filenames{"../Plotting/Orbit_Sections/ResonantSections.csv", "../Plotting/Orbit_Sections/NonResonantSections.csv", "../Plotting/Orbit_Sections/NoPerturbationSections.csv"};
-
-	for (int i = 0; i < 1; ++i) {
-		Eigen::VectorXcd coeff = strength[i]*gaussianBar(pd);	
-		Bar2D bar(coeff, omega[i]);
-		NBodyBar nbodyBar(1, 200, 0.0005, pd, bar);  
-		//nbodyBar.barOrbitSections(filenames[i], false);
-
-
-		nbodyBar.angularMomentumSections(filenames[i], false);
-		//nbodyBar.countTrappedOrbits(); 
-		exit(0);
-		std::cout << "Finished the funciton: " << i << '\n';
-	}
+	std::vector<double> omegaP(10);
+	for (int i = 0; i < omegaP.size(); ++i) {omegaP[i] = i * 0.01;}
+	std::ofstream out(outFilename); 
+	for (auto op : omegaP)
+		{
+			out<< op <<','; 
+			for (int n = 0; n < nReal; ++n) {
+				std::cout << op << " " << n <<'\n';
+				Bar2D bar(coeff, 0.03, "../Bar2D/barSize.out"); 
+				bar.sormaniBar(pd, op, "../Bar2D/Bar_Potentials/Sormani_Medium.out");
+			
+				NBodyBar nbodyBar(NUMBPARTICLES, NSTEPS, TIMESTEP, pd, bar, littleSigma);  
+				if (n < nReal-1) {out << nbodyBar.countChangedOrbits() <<',';}
+				else {out<< nbodyBar.countChangedOrbits() <<'\n';}
+			}
+		}
+		out.close(); 
 }
 
-
-void kalanajTest()
+void orbitSection(const std::string & sectionBodies, const std::string & outFile) // Orbit sections 
 {
-	std::vector<double> params{4, 20};
- 	PotentialDensityPairContainer<KalnajsBasis> pd(params, 10, 2);
+	PotentialDensityPairContainer<KalnajsNBasis> pd("../Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat", 70);
+	
+	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(70+1);
+	Bar2D bar(coeff, 0.18, "../Bar2D/barSize.out"); 
+	bar.sormaniBar(pd, 0.01, "../Bar2D/Bar_Potentials/Sormani_Large.out");
 
-
- 	 NBodyPerturbation nbody(NUMBPARTICLES, NSTEPS, TIMESTEP, pd);
- 	 nbody.nBodyEvolution("../Plotting/Evolution.csv");
-
+	NBodyBar nbodyBar(1, 200, 0.001, pd, bar);
+		
+	nbodyBar.angularMomentumSections(outFile, sectionBodies);
 }
 
+void sormaniBoxOrbit(int particleIndex) {
+ 	PotentialDensityPairContainer<KalnajsNBasis> pd("../Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat", 70);
+	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(70+1); coeff(0) = 0.01; 	
+	
+	Bar2D bar(coeff, 0.18, "../Bar2D/barSize.out"); 
+	bar.sormaniBar(pd, 0.09, "../Bar2D/Bar_Potentials/Sormani_Medium.out");
 
-void spiralTesting() {
- 	PotentialDensityPairContainer<KalnajsNBasis> pd("../Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat");
-
- 	Spiral2D spiral(pd, -1, 5, 0.001);
-
- 	NBodySpiral nbody(500000, 100000*0.5, TIMESTEP, pd, spiral);
- 	nbody.nBodyEvolution("../Plotting/Spiral_Data/nBodyEvolution.csv");
+	NBodyBar nbodyBar(particleIndex+1, NSTEPS, TIMESTEP, pd, bar, 0.35);  
+	nbodyBar.outputOrbit(particleIndex, "../Plotting/BoxOrbit_1.csv");
+	
 }
+
 
 void calculateDiscAM() {
 	std::vector<double> params{4, 20};
  	PotentialDensityPairContainer<KalnajsBasis> pd(params, 10, 2);
-
-
  	 NBodyPerturbation nbody(NUMBPARTICLES, NSTEPS, TIMESTEP, pd);
  	 std::cout << "Total angular momentum: " << nbody.totalAngularMomentum() << '\n';
 }
+
+
+/* Outputting Phase Space info */ 
+/* --------------------------- */
+
+// Some function that does indidual Run 
+
+void phaseSpaceInfo (const std::string & filename, double ep, double patternSpeed, bool isPerturbed = true) {
+	PotentialDensityPairContainer<KalnajsNBasis> pd("../Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat", 70);
+	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(70+1); coeff(0) = 0.01; 
+
+	Bar2D bar(coeff, patternSpeed, "../Bar2D/barSize.out"); 
+	bar.sormaniBar(pd, ep, "../Bar2D/Bar_Potentials/Sormani_Medium.out");		
+	NBodyBar nbodyBar(NUMBPARTICLES, NSTEPS, TIMESTEP, pd, bar, 0.35);  
+	nbodyBar.testParticleEvolution("doesntmatter0.csv", "doesntmatter1.csv", 0);
+
+	nbodyBar.savePhaseSpace(filename, isPerturbed); 
+}
+
+
+void testingPhaseSpace() {
+	phaseSpaceInfo("Phase_Space_Sormani_0_03_New.csv", 0, 0.03, true);
+	phaseSpaceInfo("Phase_Space_Sormani_05_03_New.csv", 0.05, 0.03, true);
+	phaseSpaceInfo("Phase_Space_Sormani_05_0_New.csv", 0.05, 0.00, true);
+}
+
+
+/* Some Evolution Functions */ 
+/* ------------------------ */ 
+
+
+
+
+void varyingEpsilon() {
+	barEvolutionKalnajs(0.005, 0.18, "evolution_005_18_0.csv", false, 0.35);
+	barEvolutionKalnajs(0.005, 0.18, "evolution_005_18_1.csv", false, 0.35);
+	barEvolutionKalnajs(0.005, 0.18, "evolution_005_18_2.csv", false, 0.35);
+
+	barEvolutionKalnajs(0.05, 0.18, "evolution_05_18_0.csv", false, 0.35);
+	barEvolutionKalnajs(0.05, 0.18, "evolution_05_18_1.csv", false, 0.35);
+	barEvolutionKalnajs(0.05, 0.18, "evolution_05_18_2.csv", false, 0.35);
+
+	barEvolutionKalnajs(0.01, 0.18, "evolution_01_18_0.csv", false, 0.35);
+	barEvolutionKalnajs(0.01, 0.18, "evolution_01_18_1.csv", false, 0.35);
+	barEvolutionKalnajs(0.01, 0.18, "evolution_01_18_2.csv", false, 0.35);
+
+	barEvolutionKalnajs(0.1, 0.18, "evolution_1_18_0.csv", false, 0.35);
+	barEvolutionKalnajs(0.1, 0.18, "evolution_1_18_1.csv", false, 0.35);
+	barEvolutionKalnajs(0.1, 0.18, "evolution_1_18_2.csv", false, 0.35);
+}
+

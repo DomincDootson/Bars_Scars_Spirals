@@ -95,6 +95,9 @@ def fmt(x, pos):
     	return "0"
     return r'${} \times 10^{{{}}}$'.format(a, b)
 
+def mean_square(array1, array2):
+	return np.sum(np.square(array1)-np.square(array2))/np.sum(np.square(array2))
+
 def densityComparison(filenames): 
 	plt.rc('text', usetex=True)
 	plt.rc('font', family='serif')
@@ -217,6 +220,9 @@ def densityComparison(filenames):
 	XX, YY = np.meshgrid(x, y)
 
 	for i in range(len(times)):
+		#sq1, sq2, sq3, sq4 = mean_square(kalnajsK.densityAtTime(times[i])), mean_square(gaussianK.densityAtTime(times[i])), mean_square(kalnajsG.densityAtTime(times[i])), mean_square(gaussianG.densityAtTime(times[i]))
+
+		print(sqrt(abs(mean_square(kalnajsG.densityAtTime(times[i]), gaussianG.densityAtTime(times[i])))))
 		axs[i, 0].set(aspect = 1)
 		axs[i, 1].set(aspect = 1)
 		axs[i, 2].set(aspect = 1)

@@ -1,8 +1,8 @@
-from ShearingSheet import * 
+from math import *
+import numpy as np
 
 import matplotlib.animation as animation
-
-class SheetEvolution():
+class AxisymmetricSheet():
 
 	def __init__(self, Q = 1.2, omega = 0.125, kappa = sqrt(2), xi = 0.5, time_begin = 0, time_end = 1):
 		self.omega, self.kappa, self.sigma_0 = omega, omega * kappa, xi * omega /(2*pi)  
@@ -111,15 +111,4 @@ class SheetEvolution():
 
 
 
-sheet  = SheetEvolution()
-sheet.print_time_coeff()
-# sheet.density_animation()
-x_array = np.linspace(-4, 4, 300)
-delta = 1
-sheet.guassian_delta_evolution(delta, x_array)
-'''plt.plot(x_array+8, np.real(sheet.density_test_ptle[1,:]))
-plt.plot(x_array+8, np.real(sheet.density_test_ptle[2,:]))
-plt.show()
-'''
 
-sheet.save_2_file("../Plotting/sheet_consistant.csv", x_array, test = False)

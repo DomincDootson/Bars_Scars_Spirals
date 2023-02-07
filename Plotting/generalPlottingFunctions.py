@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
-
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import Normalize
 from math import *
 
 from matplotlib.colors import * 
