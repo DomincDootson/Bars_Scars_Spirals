@@ -22,8 +22,8 @@ int main()
 	//comparisonDensityEvolution();
 
 	//density2DGaussian(0.35, 2, 2);
-	//greensFunctions();
-	densityTest();
+	greensFunctions();
+	//densityTest();
 
 
 

@@ -36,8 +36,12 @@ void energyTapping(int nMax, int rInner);
 
 void waveTesting();
 
+void softeningKernel(const std::string & filename, int nMax = 48);
+
 void savingDensity(const std::string & filename);
 void monariBarTesting();
 
 void checkMass();
+void guassianNTest();
 #endif
+

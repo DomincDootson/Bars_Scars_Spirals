@@ -68,7 +68,7 @@ def angMomFuncRad(rApo, rPer):
 	return sqrt(2*(potential(rApo) - potential(rPer))/ (1/(rPer*rPer) - 1/(rApo*rApo)))
 
 
-def lstEnergies(rCirc, patternSpeed, filename = "particleSamplesSections.out", jacobiFrac = 1.1):
+def lstEnergies(rCirc, patternSpeed, filename = "particleSamplesSections.out", jacobiFrac = 1.):
 	jCirc, eCirc = circularOrbitParams(rCirc)
 	jacobi = jacobiFrac*(eCirc - jCirc*patternSpeed)
 	print("The jacobi Integral is: ", jacobi)
@@ -78,14 +78,16 @@ def lstEnergies(rCirc, patternSpeed, filename = "particleSamplesSections.out", j
 	j = [jCirc-(i)*step for i in range(nOrbits)]
 
 	f = open(filename, "w+")
-	f.write(str(2*nOrbits))
+	f.write(str(4*nOrbits))
 	x, y = [], []
 	for i in range(nOrbits):
 		f.flush()
 		vRadial = vR(rCirc, jacobi + j[i]*patternSpeed, j[i])
 
 		f.write('\n' +"9.82208e-05" + " " + str(rCirc) + " " + str(0) + " " +  str(vRadial) + " " + str(j[i]/rCirc))
-		f.write('\n' +"9.82208e-05" + " " + str(-rCirc) + " " + str(0) + " " +  str(vRadial) + " " + str(-j[i]/rCirc))
+		f.write('\n' +"9.82208e-05" + " " + str(0) + " " + str(rCirc) + " " +   str(-j[i]/rCirc)+ " " + str(vRadial))
+		f.write('\n' +"9.82208e-05" + " " + str(-rCirc) + " " + str(0) + " " +  str(-vRadial) + " " + str(-j[i]/rCirc))
+		f.write('\n' +"9.82208e-05" + " " + str(0) + " " + str(-rCirc) + " " +   str(j[i]/rCirc)+ " " + str(-vRadial))
 
 		e = energy(vRadial, j[i], rCirc)
 		y.append(jacobiIntegral(e, j[i], patternSpeed))
@@ -101,6 +103,9 @@ def lstEnergies(rCirc, patternSpeed, filename = "particleSamplesSections.out", j
 	plt.show()
 
 
-#lstEnergies(5.56, 0.18, "sormaniCR.out")
-lstEnergies((1/0.18), 0.18, "sormaniCR.out")
-#lstEnergies(3.50, 0.18, "sormaniNR.out")
+#lstEnergies(1/0.18, 0.18, "sormaniCR.out")
+#lstEnergies((1/0.18), 0.18, "sormaniCR.out")
+lstEnergies(0.3*(1/0.18), 0.18, "sormaniILR.out")
+
+# lstEnergies((1/0.18) * (1-0.5*sqrt(2)), 0.18, "test.csv", jacobiFrac = 1  )
+# lstEnergies((1/0.18), 0.18, "test.csv", jacobiFrac = 1  )

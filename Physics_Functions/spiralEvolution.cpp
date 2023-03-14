@@ -10,9 +10,11 @@ int main() {
 	//varyingKEvolution();
 	//densityEvolution(1);
 	//varyingSigmaEvolution();
-	spiralEvolution(); 
+	//spiralEvolution(); 
 	//smallSpiral(); 
 	//varyingNumberBasisFunctions();
+
+	spiralGaussianTest(); 
 
 	return 0;  
 }

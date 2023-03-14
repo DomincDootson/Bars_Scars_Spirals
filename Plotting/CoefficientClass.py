@@ -5,10 +5,10 @@ from scipy.stats import linregress
 
 class CoefficientClass(object):
 
-	def __init__(self, filename):
-	
+	def __init__(self, filename, endTime = 1):
 		self.coeff = readingInComplexCSV(filename)
 		self.nTime, self.nMax = np.shape(self.coeff)
+		self.time = np.linspace(0, endTime, self.nTime)
 
 	def __getitem__(self, index):
 		return self.coeff[index, time]
@@ -51,7 +51,6 @@ class CoefficientClass(object):
 		return sum(omega4index)/len(omega4index)
 		
 
-
 	def powerEvolutions(self, filename = None, index2Normalise = -1):
 		modePower = self.modePower()
 
@@ -71,8 +70,6 @@ class CoefficientClass(object):
 			axs.bar(bins, modePower[time, :], color = colors)
 			return axs
 
-		
-
 		ani = animation.FuncAnimation(fig, animate, frames = 250)
 		if (filename):
 			ani.save(filename, writer = writer)
@@ -80,7 +77,30 @@ class CoefficientClass(object):
 		else:
 			plt.show()
 
+	## Fitting Modes ##
+	## ------------- ##
 
+	def fittingGrowthIndex(self, index):
+		timeFit, logMagnitude = self.time[self.nTime//2:], np.log(np.absolute(self.coeff[self.nTime//2:, index]))
+		fit = linregress(timeFit, logMagnitude)
+		return fit.slope
+
+	def fitGrowth(self):
+		etas = [self.fittingGrowthIndex(i) for i in range(self.nMax)]
+		return sum(etas)/len(etas)
+
+	def fitFreqIndex(self, index):
+		timeFit, phase = self.time[self.nTime//2:], np.angle(self.coeff[self.nTime//2:, index])
+		_ , gradient = getGradient(timeFit, phase, multiple = 8, includeMinus = 1)
+
+		return sum(gradient)/len(gradient)
+
+	def fitFreq(self):
+		omega_0s = [self.fitFreqIndex(i) for i in range(self.nMax)]
+		return -sum(omega_0s)/len(omega_0s)
+
+	def fitUnstableMode(self):
+		return self.fitFreq() + 1j * self.fitGrowth()
 
 '''
 coeff = CoefficientClass("Waves_Data/Coefficent_SelfConsistent_10.out")
@@ -91,3 +111,4 @@ coeff.powerEvolutions("Waves_Plots/Waves_Videos/SelfConsistent_20.mp4", 20)
 
 coeff = CoefficientClass("Waves_Data/Coefficent_SelfConsistent_30.out")
 coeff.powerEvolutions("Waves_Plots/Waves_Videos/SelfConsistent_30.mp4", 30)'''
+

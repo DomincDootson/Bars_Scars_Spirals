@@ -24,7 +24,7 @@ public:
 	void density2dEvolution(const Tbf & bf, const std::string & filename, const int skip, const double rMax =10) const {m_responseCoef.write2dDensity2File(filename, bf, skip, rMax);}
 
 	template <class Tbf>
-	void density2dEvolution(int timeIndex, const Tbf & bf, const std::string & filename, const double rMax =10) const {m_responseCoef.write2dDensity2File(timeIndex, filename, bf, rMax);}
+	void density2dEvolution(int timeIndex, const Tbf & bf, const std::string & filename, const double rMax = 10) const {m_responseCoef.write2dDensity2File(timeIndex, filename, bf, rMax);}
 	void saveEvolutionCoeff(const std::string & filename) const {m_responseCoef.write2File(filename);}
 
 	Eigen::VectorXcd operator()(int timeIndex) const {return m_responseCoef(timeIndex);}

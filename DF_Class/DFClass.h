@@ -41,7 +41,7 @@ public:
 	double density(const double radius) const;
 	double maxDensityRadius() const; 
 	void cumulativeDensity(const std::string fileName) const;
-	double diskMass(double upperRadius = 100) const; 
+	double diskMass(double upperRadius = 30) const; 
 
 	void savingDensity(const std::string fileName, const double spacing = 0.03, const int nSteps = 1000);
 	void densityVector(const int nSteps, const double spacing);
@@ -282,8 +282,8 @@ void DFClass::cumulativeDensity(const std::string fileName) const
 		n += 1;
 		//std::cout << n * spacing << " " << densityArray.back() << '\n';
 		if ( (n * spacing) ==static_cast<int>(n * spacing)) {std::cout << "Finding cumulative density for point: " << n*spacing << " Density: " <<  cumulative.back()<< '\n';}
-	} while (n*spacing <15); //|| (densityArray.back()/cumulative.back() > .001)
-
+	} while (n*spacing <20); //|| (densityArray.back()/cumulative.back() > .001)
+	// move 15 to 20 
 
 	std::ofstream out(fileName);
 	out << n << " " << spacing << " " << cumulative.back() <<'\n';

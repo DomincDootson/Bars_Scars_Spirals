@@ -6,6 +6,7 @@ from matplotlib.colors import Normalize
 from math import *
 
 from matplotlib.colors import * 
+from statistics import median
 
 def readingInRealCSV(filename): # Reads in the basis functions
 	with open(filename) as csv_file:
@@ -42,7 +43,32 @@ def readingInRealOUT(filename):
 	del data[0] 
 	return np.asarray(data)
 
+def torqueMeanAndStd(stem, upperIndex = 1, file = "KalnajsTorque/"):
+	filenames = [file + stem + "_" + str(i) + ".csv" for i in range(0,upperIndex)]	
+	eachFile = [readingInRealCSV(file) for file in filenames]
 
+	data = np.zeros((np.shape(eachFile[0])[0], np.shape(eachFile[0])[1], len(filenames)))
+
+	for i in range(len(filenames)):
+		data[:,:, i] = eachFile[i]
+
+	return np.mean(data, 2), np.std(data, 2)
+
+def getGradient(radius, phase, multiple = 8, includeMinus = -1):
+	rad, grad = [r1 for r1 in radius[1:]], [(ph1-ph0)/(r1-r0) for ph1, ph0, r1, r0 in zip(phase[1:], phase, radius[1:], radius)]
+	r_o, g_o =[], []
+	med = abs(median(grad))
+	
+	for r, g in zip(rad, grad):
+		# if abs(abs(g) - med)/med < multiple:
+		# 	r_o.append(r)
+		# 	g_o.append(includeMinus* g)
+		if abs(g) < multiple:
+			r_o.append(r)
+			g_o.append(includeMinus* g)
+
+
+	return r_o, g_o
 
 ENERGY_DIR = "../Disk_Kicking/Energy_Evolution/"
 
@@ -113,3 +139,5 @@ class EnergyEvolutionData(): # This holds the data output by the C++ code
 
 	def time_Max_Energy_All_Radii(self, littleSigma, angHarmonic):
 		return [self.time_Max_Energy(littleSigma, angHarmonic, radius) for radius in self.radii()]
+
+	

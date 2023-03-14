@@ -46,7 +46,7 @@ class ResponseMatrix():
 		f = open(filename, "w")
 		f.write(str(np.shape(self.rm)[0]-1) + '\n')
 		for coeff in self.eigenMode:
-			f.write(f"{coeff.real} {coeff.imag}")
+			f.write(f"{coeff.real} {coeff.imag} ")
 
 		f.close() 
 				

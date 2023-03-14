@@ -170,68 +170,76 @@ def coeffDifferentGrowth():
 	plt.show()
 
 
-def torqueMeanAndStd(stem):
-	filenames = ["KalnajsTorque/" + stem + "_" + str(i) + ".csv" for i in range(0,1)]	
-	eachFile = [readingInRealCSV(file) for file in filenames]
-
-	data = np.zeros((np.shape(eachFile[0])[0], np.shape(eachFile[0])[1], len(filenames)))
-
-	for i in range(len(filenames)):
-		data[:,:, i] = eachFile[i]
-
-	return np.mean(data, 2), np.std(data, 2)
 
 
-
-def kalnajsNbodyTorque(stems = ["Monari_Bar/Evolution_Consistent_Cold", "Monari_Bar/Evolution_Test_Warm"], linear = ["KalnajsTorque/Sormani_Bar/evolution_Sormani_35.csv", "KalnajsTorque/Sormani_Bar/evolution_Sormani_45.csv", "KalnajsTorque/Sormani_Bar/evolutionTest_Sormani_35.csv", "KalnajsTorque/Sormani_Bar/evolutionTest_Sormani_45.csv"]):#["KalnajsTorque/DiffTemp/evolutionTest35.csv", "KalnajsTorque/DiffTemp/evolutionTest45.csv"]
+def kalnajsNbodyTorque(stems = ["Monari_Bar/Evolution_Consistent_Cold", "Monari_Bar/Evolution_Test_Warm"], linear = ["Nbody_Sormani_Data/Varying_Ep/Linear_Consistent_Particle.csv", "Nbody_Sormani_Data/Varying_Ep/Linear_Consistent_Particle_Warm.csv", "Nbody_Sormani_Data/Varying_Ep/Linear_Test_Particle.csv", "Nbody_Sormani_Data/Varying_Ep/Linear_Test_Particle_Warm.csv"]):#["KalnajsTorque/DiffTemp/evolutionTest35.csv", "KalnajsTorque/DiffTemp/evolutionTest45.csv"]
 	plt.rc('text', usetex=True)
 	plt.rc('font', family='serif')
-	fig, axs = plt.subplots(ncols = 2, nrows = 2)#,  sharey = True, sharex = True
+	fig, axs = plt.subplots(ncols = 2, nrows = 2, sharey = 'row', sharex = True)#,  sharey = True, sharex = True
 
 	# meanC, stdC = torqueMeanAndStd(stems[0])
 	# meanW, stdW = torqueMeanAndStd(stems[1])
 	
 	linear  = [readingInRealCSV(file) for file in linear]
-	timeL = np.linspace(0,100, np.shape(linear[2])[0])
+	#timeL = np.linspace(0,100, np.shape(linear[2])[0])
 
-	# axs[0,0].plot(timeL[:], linear[0][:,2], color = 'firebrick')
+	
 	# axs[0,1].plot(timeL[:], linear[1][:,2], color = 'firebrick')
-	axs[1,0].plot(timeL[:-1], linear[2][1:,2], color = 'firebrick', label = "Linear Response")
+	
 	# axs[1,1].plot(timeL[:], linear[3][:,2], color = 'firebrick')
-
-	# axs[0,0].axhline(-0.00013, linestyle = "--", color = "firebrick")
-	# axs[0,1].axhline(-0.00019, linestyle = "--", color = "firebrick")
+	ep2  = 0.005**2
+	axs[0,0].axhline(-0.000970/ep2, linestyle = "--", color = "firebrick")
+	axs[0,1].axhline(-0.000910/ep2, linestyle = "--", color = "firebrick")
+	axs[1,0].axhline(-0.000865/ep2, linestyle = "--", color = "firebrick")
+	axs[1,1].axhline(-0.000732/ep2, linestyle = "--", color = "firebrick")
 	# axs[1,0].axhline(-0.00200, linestyle = "--", color = "firebrick", label = r"Steady-state Torque")
 	# axs[1,1].axhline(-0.00195, linestyle = "--", color = "firebrick")
 
-	
-	mean, std = torqueMeanAndStd("Sormani_Bar/Evolution_Consistent_Cold")
+	## Cold Consistent ##
+	stem = "evolutionC_001_18"
+	mean, std = torqueMeanAndStd(stem, upperIndex = 3, file = "Nbody_Sormani_Data/Varying_Ep/")
 	time = np.linspace(0,100, np.shape(mean)[0])
-	axs[0,0].plot(time, mean[:,2], color = 'navy')
-	axs[0,0].fill_between(time, mean[:,2] - std[:,2], mean[:,2] + std[:,2], color = 'cornflowerblue')
+	axs[0,0].plot(time, mean[:,2]/(0.001**2), color = 'navy')
+	axs[0,0].fill_between(time, (mean[:,2] - std[:,2])/(0.001**2), (mean[:,2] + std[:,2])/(0.001**2), color = 'cornflowerblue')
+	timeL = np.linspace(0,125, np.shape(linear[0])[0])
+	axs[0,0].plot(timeL[:-2], 1.25*linear[0][2:,2]/ep2, color = 'firebrick')
 
 	# mean, std = torqueMeanAndStd("Sormani_Bar/Evolution_Consistent_Warm")
 	# time = np.linspace(0,100, np.shape(mean)[0])
 	# axs[0,1].plot(time, mean[:,2], color = 'navy')
 	# axs[0,1].fill_between(time, mean[:,2] - std[:,2], mean[:,2] + std[:,2], color = 'cornflowerblue')
 
-	mean, std = torqueMeanAndStd("Sormani_Bar/Evolution_Test_Cold")
+	## Cold Test ## 
+	stem = "evolution_005_18"
+	mean, std = torqueMeanAndStd(stem, upperIndex = 4, file = "Nbody_Sormani_Data/Varying_Ep/")
 	time = np.linspace(0,100, np.shape(mean)[0])
-	axs[1,0].plot(time, mean[:,2], color = 'navy')
-	axs[1,0].fill_between(time, mean[:,2] - std[:,2], mean[:,2] + std[:,2], color = 'cornflowerblue')
+	axs[1,0].plot(time, mean[:,2]/ep2, color = 'navy', label = r"$N$-body")
+	axs[1,0].fill_between(time, (mean[:,2] - std[:,2])/ep2, (mean[:,2] + std[:,2])/ep2, color = 'cornflowerblue')
+	timeL = np.linspace(0,100, np.shape(linear[2])[0])
+	axs[1,0].plot(timeL[:-1], linear[2][1:,2]/ep2, color = 'firebrick', label = "Linear Response")
+	axs[1,0].legend(fontsize = 12)
 
-	mean, std = torqueMeanAndStd("Sormani_Bar/Evolution_Test_Warm")
+	## Warm Consistent ## 
+	stem = "evolutionCW_001_18"
+	mean, std = torqueMeanAndStd(stem, upperIndex = 3, file = "Nbody_Sormani_Data/Varying_Ep/")
 	time = np.linspace(0,100, np.shape(mean)[0])
-	axs[1,1].plot(time, mean[:,2], color = 'navy')
-	axs[1,1].fill_between(time, mean[:,2] - std[:,2], mean[:,2] + std[:,2], color = 'cornflowerblue')
+	axs[0,1].plot(time, 0.95*0.8*mean[:,2]/(0.001**2), color = 'navy')
+	axs[0,1].fill_between(time, 0.95*0.8*(mean[:,2] - std[:,2])/(0.001**2), 0.95*0.8*(mean[:,2] + std[:,2])/(0.001**2), color = 'cornflowerblue')
+	timeL = np.linspace(0,370, np.shape(linear[1])[0])
+	axs[0,1].plot(timeL[:-2], linear[1][2:,2]/ep2, color = 'firebrick')
 
 
-	# axs[0].axhline(0.00187, linestyle = "--", color = "firebrick", label = "Linear Response")
+	## Warm Test ##
+	stem = "evolutionW_005_18"
+	mean, std = torqueMeanAndStd(stem, upperIndex = 4, file = "Nbody_Sormani_Data/Varying_Ep/")
+	time = np.linspace(0,100, np.shape(mean)[0])
+	axs[1,1].plot(time, mean[:,2]/ep2, color = 'navy')
+	axs[1,1].fill_between(time, (mean[:,2] - std[:,2])/ep2,(mean[:,2] + std[:,2])/ep2, color = 'cornflowerblue')
+	timeL = np.linspace(0,300, np.shape(linear[3])[0])
+	axs[1,1].plot(timeL[:-2], linear[3][2:,2]/ep2, color = 'firebrick')
 
 	
-	# #axs[1].plot(time, meanW[:,2], color = 'navy', label = r"$N$-body")
-	# #axs[1].fill_between(time, meanW[:,2] - 2*stdW[:,2], meanW[:,2] + 2*stdW[:,2], color = 'cornflowerblue')
-	# #axs[1].axhline(0.00366, linestyle = "--", color = "firebrick", label = r"Steady-state torque")
+
 
 
 	axs[0,0].set_xlim([0,100])
@@ -242,8 +250,8 @@ def kalnajsNbodyTorque(stems = ["Monari_Bar/Evolution_Consistent_Cold", "Monari_
 	axs[1,1].ticklabel_format(axis = 'y', style = 'sci', scilimits = (0,4))
 	
 	xlabelPositions, xlabels = [2*pi*i for i in range(0,16, 3)], [0] + [str(i) + r"$\times2\pi$" for i in range(3,16, 3)]
-	axs[0,0].set_ylabel("Self Consistent\n" + r"$\tau$", fontsize = 15)
-	axs[1,0].set_ylabel("Test Particle\n" +r"$\tau$", fontsize = 15)
+	axs[0,0].set_ylabel("Self Consistent\n" + r"$\tau/\epsilon^{2}$", fontsize = 15)
+	axs[1,0].set_ylabel("Test Particle\n" +r"$\tau/\epsilon^{2}$", fontsize = 15)
 	axs[1,0].set_xticks(xlabelPositions)
 	axs[1,0].set_xticklabels(xlabels)
 	axs[1,1].set_xticks(xlabelPositions)
@@ -254,8 +262,8 @@ def kalnajsNbodyTorque(stems = ["Monari_Bar/Evolution_Consistent_Cold", "Monari_
 	axs[0,0].ticklabel_format(axis='y', style = 'sci', scilimits=(0,0))
 	axs[1,0].ticklabel_format(axis='y', style = 'sci', scilimits=(0,0))
 
-	axs[1,0].set_title(r"Cold", fontsize = 15)
-	axs[1,1].set_title(r"Warm", fontsize = 15)
+	axs[0,0].set_title(r"Cold", fontsize = 15)
+	axs[0,1].set_title(r"Warm", fontsize = 15)
 	
 	#axs[1,0].legend(loc = 'upper right', fontsize = 12)
 	
@@ -671,6 +679,47 @@ def sormaniRatioDensity():
 
 
 
+def coefficentEvolution(): # Maybe Could include a shaded region for the amplitude? 
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
+	linear = readingInComplexCSV("Nbody_Sormani_Data/Varying_Ep/Linear_Test_Particle_Coeff.csv")
+
+	fig,axs = plt.subplots(ncols = 2)
+	lst_n = range(0,15,3)
+	cmap = ScalarMappable(cmap = 'plasma', norm = Normalize(vmin=-1, vmax=17))
+
+	for n in lst_n:
+		axs[0].plot(np.linspace(0, 100, np.shape(linear[1:100,n])[0]), np.absolute(linear[1:100,n]), color = cmap.to_rgba(n))
+		deriv = getGradient(np.linspace(0, 100, np.shape(linear[1:100,n])[0]), np.angle(linear[1:100,n]), multiple = 3, includeMinus = 1)
+
+		axs[1].plot(*deriv, label = f"{n}", color = cmap.to_rgba(n))
+
+	axs[0].set_ylabel(r"$|B_{p}(t)|$", fontsize = 15)
+	axs[1].set_ylabel(r"$\partial\arg \left(B_{p}\right)/\partial t$", fontsize = 15)
+
+	axs[1].axhline(-2*0.177, color = 'k', linestyle = '--')
+	axs[1].set_ylim([-.6,-.2])
+	axs[1].legend(title = r"Index, $p$", title_fontsize = 15, fontsize =12)
+
+	axs[0].set_title("Amplitude", fontsize = 15)
+	axs[1].set_title("Phase", fontsize = 15)
+
+	xlabelPositions, xlabels = [2*pi*i for i in range(0,16, 3)], [0] + [str(i) + r"$\times2\pi$" for i in range(3,16, 3)]
+	axs[0].set_xticks(xlabelPositions)
+	axs[0].set_xticklabels(xlabels)
+	axs[1].set_xticks(xlabelPositions)
+	axs[1].set_xticklabels(xlabels)
+	axs[0].set_xlabel("Time", fontsize = 15)
+	axs[1].set_xlabel("Time", fontsize = 15)
+	
+	axs[0].ticklabel_format(axis='y', style = 'sci', scilimits=(0,0))
+	plt.show()
+
+
+
+
+
+
 
 #densityWakeDiffTemp()
 kalnajsNbodyTorque()
@@ -681,3 +730,6 @@ kalnajsNbodyTorque()
 #sormaniRatioDensity()
 
 #sormaniSpeed()
+
+#coefficentEvolution()
+ 

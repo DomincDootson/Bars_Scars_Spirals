@@ -196,3 +196,17 @@ void varyingNumberBasisFunctions() {
 	}
 	out.close(); 
 } 
+
+/* Guassian Spiral */ 
+/* --------------- */
+
+void spiralGaussianTest() {
+	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat", 48);
+	Spiral2D spiral(pd);
+
+	spiral.gaussianSpiral(pd, 1, 8, 1);
+	spiral.density2dEvolution(0, pd, "Plotting/test_spiral.csv");
+}
+
+// some function that does the evolution of the waves
+

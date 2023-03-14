@@ -15,5 +15,6 @@ void varyingSigmaEvolution();
 void smallSpiral(); 
 
 void varyingNumberBasisFunctions();
+void spiralGaussianTest();
 
 #endif

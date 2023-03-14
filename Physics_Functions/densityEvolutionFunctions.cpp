@@ -176,20 +176,29 @@ void diskKickingPerturbations()
 // SPIRAL EQU //
 // ---------- //
 
+
+
 void greensFunctions() {
 
-	std::vector<double> params{48, .15, 15};
-	PotentialDensityPairContainer<GaussianLogBasis> pd{params, 48, 2};	
+	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat", 48);
+
+	VolterraSolver solver("KalnajsNKernel.out", 48, 2, 100, 0.5); 
+
+	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(48+1); 
+
+	for (int n =0; n <= pd.maxRadialIndex(); ++n) {coeff(n) = -pd.potential(2, n);}
+
+	solver.activeFraction(0.5); 
+	solver.setInitalPerturbation(coeff);
+	solver.deltaPerturbationTest(); 
+	solver.density2dEvolution("Plotting/Greens_Data/Kalnajs_Test_Green_2.csv", pd, 13, 5);
 
 
-
-	std::string kernel{"Kernels/gaussianComparison.out"};
-	VolterraSolver solver(kernel, pd.maxRadialIndex(), 2, 200, 0.25);
-	solver.activeFraction(.40);
-
-
-	solver.kernelTesting("testing.csv", 27, false);
-	solver.density2dEvolution("Disk_Kicking/littleSigma_35/Density2D20_2.csv", pd);
+	VolterraSolver solverC("KalnajsNKernel.out", 48, 2, 100, 0.5); 
+	solverC.activeFraction(0.5); 
+	solverC.setInitalPerturbation(coeff);
+	solverC.deltaPerturbationConsistent(); 
+	solverC.density2dEvolution("Plotting/Greens_Data/Kalnajs_Green_2.csv", pd,13, 5);
 
 }
 

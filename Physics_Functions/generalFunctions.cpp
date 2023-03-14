@@ -8,6 +8,7 @@
 #include "../Potential_Density_Pair_Classes/KalnajsBasis.h"
 #include "../Potential_Density_Pair_Classes/KalnajsNBasis.h"
 #include "../Potential_Density_Pair_Classes/GaussianLogBasis.h"
+#include "../Potential_Density_Pair_Classes/GaussianNBasis.h"
 //#include "../Potential_Density_Pair_Classes/SpiralBasis.h"
 
 
@@ -93,10 +94,10 @@ void savingKalnajsFunctions(const std::string & filename) {
 
 void generatingKalnajsKernels(const std::string & filename, int m2, int nMax, double rInner)
 {
-	ActionAngleBasisContainer test("KalnajsN", "KalnajsN", 40, 2, 4, 251, 15);
-	Mestel DF(1, 1, 0.377, 1, 1, 11.4, 4, 5);
+	ActionAngleBasisContainer test("KalnajsN", "KalnajsN", 48, 2, 7, 251, 15);
+	Mestel DF(1, 1, 0.35, 1, 1, 11.4, 4, 5);
 
-	VolterraSolver solver2(40, 2, 400, 0.1);
+	VolterraSolver solver2(48, 2, 100, 0.5);
 
 	//std::string kernel2 = "Kernels/kalnajsComparison_" +std::to_string((int) nMax) + "_" + std::to_string((int) rInner) + ".out";
 	
@@ -222,6 +223,16 @@ void energyTapping(int nMax, int rInner) {
 
 
 
+/* Softening */
+/* --------- */
+
+void softeningKernel(const std::string & filename, int nMax) {
+	PotentialDensityPairContainer<KalnajsNBasis> PD("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat", nMax);
+	PD.interactionPotential(filename, 15, 500); 
+}
+
+
+
 /* Misc */
 /* ---- */
 
@@ -242,6 +253,23 @@ void savingDensity(const std::string & filename) {
 void checkMass() {
 	Mestel DF(1, 1, 0.35);
 
-	std::cout << DF.diskMass(15) <<'\n';
+	std::cout << DF.diskMass() <<'\n';
 }
+
+void guassianNTest() {
+	//Mestel DF;
+	PotentialDensityPairContainer<GaussianNBasis> PD("Potential_Density_Pair_Classes/Gaussian_Numerical/Gaussian_Numerical.dat", 48);
+	//PotentialDensityPairContainer<GaussianNBasis> PD("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat", 48);
+	// ActionAngleBasisContainer test("GaussianN", PD.maxRadialIndex(), 2, 7, 251, 15); 
+	// test.scriptW(PD, DF, "GaussianN"); 
+
+	// ActionAngleBasisContainer test("GaussianN", "GaussianN", 48, 2, 7, 251, 15);
+	// Mestel DF(1, 1, 0.35, 1, 1, 11.4, 4, 5);
+
+	// VolterraSolver solver2(48, 2, 100, 0.5);
+	// solver2.generateKernel("GaussianNKernel.out", DF, test);
+
+	std::cout << PD.calculateScriptE() <<'\n';
+} 
+
 

@@ -202,7 +202,7 @@ void savingDensityFile(double scarRadius, const std::string & filename) {
 	std::cout << "Calculating Scarred Density R: " << scarRadius << '\n' <<'\n' << '\n';
 	ScarredMestel<AngularMomentumScar> DF(1, 1, sqrt(1/(1+11.4)), 1, 1, 11.5, 4, 5);
 	
-	AngularMomentumScar scar1(scarRadius, 0.25, -0.95);
+	AngularMomentumScar scar1(1.0, 0.25, -scarRadius);
 	DF.addScar(scar1);
 
 	

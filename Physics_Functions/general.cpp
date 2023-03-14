@@ -13,8 +13,8 @@ int main()
 	//multipleKalnajsBF();
 	
 	
-	generatingKalnajsBF(2); 
-	//generatingKalnajsKernels("Kernels/Kalnajs_4_.out", 2, 48, 1);
+	//generatingKalnajsBF(2); 
+	//generatingKalnajsKernels("Kernels/Kalnajs_4_.out", 2, 40, 1);
 	//generatingKalnajsKernelsAxisymmetric("Kalnajs_0.out");
 	
 	// generatingKalnajsKernels("Kernels/Kalnajs_4_Long.out", 2, 4, 1);
@@ -36,9 +36,14 @@ int main()
 
 	//savingDensity("WKB_Disc/Tapered_Density.csv");
 
+/*	softeningKernel("Plotting/Kalnajs_Interaction_Potential_48.csv");
+	softeningKernel("Plotting/Kalnajs_Interaction_Potential_24.csv", 24);
+	softeningKernel("Plotting/Kalnajs_Interaction_Potential_72.csv", 72);*/
 
 	//monariBarTesting();
 	//checkMass();
+
+	guassianNTest();
 	return 0;
 }
 

@@ -311,8 +311,8 @@ class TwoDdensity(object):
 	def fourierCoeffT(self, angHarmonic, time, rMax = 15): # We fit rho = A(R)Cos(l phi + psi(R)) 
 		
 		phase, magnitude = [], []
-		radii, angles  = np.linspace(0.01, rMax, 100), np.linspace(0, 2 * 3.14, 100)
-
+		radii, angles  = np.linspace(0.01, rMax, self.nRows//2), np.linspace(0, 2 * 3.14, 50)
+		
 		dtheta = angles[1] - angles[0]
 
 		for radius in radii:
@@ -322,7 +322,7 @@ class TwoDdensity(object):
 				sinI += sin(angHarmonic * theta) * (dtheta / pi) * self.densityPolar(time, radius, theta, radii[-1]) # Factor of pi 
 				cosI += cos(angHarmonic * theta) * (dtheta / pi) * self.densityPolar(time, radius, theta, radii[-1]) # to normalise the integrals 
 		
-			phase.append(atan2(sinI, cosI)) # Where does the minus sign come from  
+			phase.append(atan2(sinI, cosI)) 
 			if isnan(phase[-1]): # For the case when the amplitude is zero everywhere at the start
 				phase[-1] = 0
 			magnitude.append(sqrt(sinI**2  + cosI**2))

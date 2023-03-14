@@ -5,7 +5,7 @@ from Density_Classes.WaveFitter import *
 from CoefficientClass import *
 
 import matplotlib.animation as animation
-from statistics import median
+
 
 def modesComparison(oneDdensity, filename = None, index2Normalise = -1):
 	modePower = [each.modePower() for each in oneDdensity]
@@ -68,17 +68,7 @@ def decomposed1Danimations(readStem, writeStem, file2read):
 		write2 = writeStem + f2r +".mp4"
 		wavefitter.density_animation(filename = write2)
 
-def getGradient(radius, phase, multiple = 8):
-	rad, grad = [r1 for r1 in radius[1:]], [(ph1-ph0)/(r1-r0) for ph1, ph0, r1, r0 in zip(phase[1:], phase, radius[1:], radius)]
-	r_o, g_o =[], []
-	med = median(grad)
-	for r, g in zip(rad, grad):
-		if abs(g) < multiple * med:
-			r_o.append(r)
-			g_o.append(-g)
 
-
-	return r_o, g_o
 
 def wavesFittingTest():
 	plt.rc('text', usetex=True)
@@ -110,9 +100,9 @@ def wavesFittingTest():
 		XX, YY = wave.density.meshgrid(rMax = 15)
 		axs[i,2].contourf(XX, YY, wave.density[time], levels = 100)
 		m = np.amax(wave.density[time])
-		axs[i,2].contour(XX, YY, wave.density[time], levels = [0.5 *m], colors = 'firebrick')
+		axs[i,2].contour(XX, YY, wave.density[time], levels = [0.5 *m], colors = 'black')
 		axs[i,2].set(aspect = 1)
-		axs[i,2].plot([rad[i]*cos(th) for th in np.linspace(0,2*pi)], [rad[i]*sin(th) for th in np.linspace(0,2*pi)], color = 'black', linestyle = '--')
+		axs[i,2].plot([rad[i]*cos(th) for th in np.linspace(0,2*pi)], [rad[i]*sin(th) for th in np.linspace(0,2*pi)], color = 'firebrick', linestyle = '--')
 
 		axs[i,0].set_xlim([1, 10])
 		axs[i,1].set_xlim([1, 10])
@@ -140,39 +130,58 @@ def wavesFittingTest():
 def wavesDirectionTest():
 	plt.rc('text', usetex=True)
 	plt.rc('font', family='serif')
-	fig, axs = plt.subplots(nrows = 4, ncols = 3, sharex = True, sharey = 'col')
+	fig, axs = plt.subplots(nrows = 4, ncols = 2, sharex = True)
 
 	waves = WaveFitter("Waves_Data/test_spiral.csv", timeEnd = 130*0.3, l = 2, rmax = 15)
 
 
-	waves.split_waves()
+	#waves.split_waves()
+	waves.split_waves_k(1.297)
 	times = [45, 60, 75, 90]
 	for i in range(4):
 		time = times[i]
 		
-		ingoing, outgoing = waves.ingoing_T(time), waves.outgoing_T(time)
+		i_s, i_l, o_s, o_l = waves.ingoing_S(time), waves.ingoing_L(time), waves.outgoing_S(time), waves.outgoing_L(time)
 
-		axs[i,0].plot(waves.radii, np.real(ingoing), color = 'royalblue', label = r"$\rho(R,\phi=0,t)$")
-		axs[i,0].plot(waves.radii, np.absolute(ingoing), color = 'firebrick', linestyle = "--", label =  r"$\rho(R,t)$")
-		axs[i,0].set_xlim([waves.radii[5],8])
+		
+		## Outgoing ##
+		axs[i,0].plot(waves.radii, np.real(o_s), color = 'firebrick', label = r"Short")
+		axs[i,0].plot(waves.radii, np.absolute(o_s), color = 'firebrick', linestyle = "--")
 
-		axs[i,1].plot(waves.radii, np.real(outgoing), color = 'royalblue')
-		axs[i,1].plot(waves.radii, np.absolute(outgoing), color = 'firebrick', linestyle = "--")
-		axs[i,1].set_xlim([waves.radii[5],8])
+		axs[i,0].plot(waves.radii, np.real(o_l), color = 'royalblue', label = r"Long")
+		axs[i,0].plot(waves.radii, np.absolute(o_l), color = 'royalblue', linestyle = "--")
+		axs[i,0].set_xlim([waves.radii[8],8])
+		
+		axs[i,1].plot(*getGradient(waves.radii, np.angle(o_s), multiple = 5), color = 'firebrick', label = r"Short")
+		axs[i,1].plot(*getGradient(waves.radii, np.angle(o_l), multiple = 5), color = 'royalblue', label = r"Long")
+		axs[i,1].axhline(0, color = 'k', linestyle = '--')
+		axs[i,1].set_xlim([waves.radii[8],8])
 
-		axs[i,2].plot(waves.radii, np.real(ingoing+outgoing), color = 'royalblue')
-		axs[i,2].plot(waves.radii, np.absolute(ingoing+outgoing), color = 'firebrick', linestyle = "--")
-		axs[i,2].set_xlim([waves.radii[5],8])
+		## Ingoing ##
+		# axs[i,2].plot(waves.radii, np.real(i_s), color = 'firebrick', label = r"Short")
+		# axs[i,2].plot(waves.radii, np.absolute(i_s), color = 'firebrick', linestyle = "--")
+
+		# axs[i,2].plot(waves.radii, np.real(i_l), color = 'royalblue', label = r"Long")
+		# axs[i,2].plot(waves.radii, np.absolute(i_l), color = 'royalblue', linestyle = "--")
+		# axs[i,2].set_xlim([waves.radii[5],8])
+		
+		# axs[i,3].plot(*getGradient(waves.radii, np.angle(i_s), multiple = 5), color = 'firebrick', label = r"Short")
+		# axs[i,3].plot(*getGradient(waves.radii, np.angle(i_l), multiple = 5), color = 'royalblue', label = r"Long")
+		# axs[i,3].axhline(0, color = 'k', linestyle = '--')
+		# axs[i,3].set_xlim([waves.radii[5],8])
+		
 
 
 	
 	axs[-1,0].set_xlabel(r"$R$", fontsize  = 15)
 	axs[-1,1].set_xlabel(r"$R$", fontsize  = 15)
-	axs[-1,2].set_xlabel(r"$R$", fontsize  = 15)
+	# axs[-1,2].set_xlabel(r"$R$", fontsize  = 15)
+	# axs[-1,3].set_xlabel(r"$R$", fontsize  = 15)
 
-	axs[0,0].set_title(r"In-going", fontsize = 15)
-	axs[0,1].set_title(r"Out-going", fontsize = 15)
-	axs[0,2].set_title(r"Total", fontsize = 15)
+	axs[0,0].set_title("Out-going\nDensity", fontsize = 15)
+	axs[0,1].set_title("Out-going\nWavenumber", fontsize = 15)
+	# axs[0,2].set_title("In-going\nAmplitude", fontsize = 15)
+	# axs[0,3].set_title("In-going\nPhase", fontsize = 15)
 
 	axs[0,0].set_ylabel(r"$t = 2.1 \times 2\pi$", fontsize = 15)
 	axs[1,0].set_ylabel(r"$t = 2.9 \times 2\pi$", fontsize = 15)
@@ -180,7 +189,7 @@ def wavesDirectionTest():
 	axs[3,0].set_ylabel(r"$t = 4.3 \times 2\pi$", fontsize = 15)
 
 	axs[0,0].legend(fontsize = 10)
-
+ 
 
 	plt.show()
 #saveAnimations()
@@ -195,13 +204,21 @@ def wavesDirectionTest():
 # density = TwoDdensity("test_spiral.csv")
 # plt.plot(np.linspace(-15,15,201),density[15][100,:])
 
+
 #wavesFittingTest()
-
-wavesDirectionTest()
+#wavesDirectionTest()
 # wave = WaveFitter("Waves_Data/test_spiral.csv", timeEnd = 40, l = 2, rmax = 15)
-# wave.split_waves()
-# wave.density_animation("spiral_video.mp4")
+# wave.check_k_splitting(50, 1.297)
 
 
+wave = WaveFitter("Test_density.csv", timeEnd = 100, l = 2, rmax = 10)
+print(wave.density.nRows)
+#wave.splitting_Plot(1)
+#wave.check_k_fitting(48)
+# wave.check_k_splitting(48, 1.09)
+wave.k_splitting_Plot(48, 1.09)
+#wave.splitting_Plot(45)
+#plt.show()
+#wave.check_k_fitting(48)
 
 

@@ -88,5 +88,39 @@ def kalnajsPlots():
 	plt.show()
 
 
+def greenComparison():
+	fig, axs = plt.subplots(nrows = 4, ncols = 2, sharex = True, sharey = 'col')
+	t_lst = [2, 4,6,-1]
 
-greensFunctionEvolution()
+	data = [TwoDdensity("Greens_Data/Kalnajs_Green_2.csv"), TwoDdensity("Greens_Data/Kalnajs_Green_2.csv"), TwoDdensity("Greens_Data/Kalnajs_Test_Green_2.csv"), TwoDdensity("Greens_Data/Kalnajs_Test_Green_2.csv")]
+	r = np.linspace(0, 5, data[0][0].shape[0])
+	
+	for i in range(4):
+		t = t_lst[i]
+		r, amp, phase = data[0].fourierCoeffT(2, t, 10)
+		#axs[i,0].imshow(data[0][t])
+		axs[i, 0].plot(r, amp, color = 'firebrick', linestyle = '--')
+		axs[i, 0].plot(r, amp*np.cos(phase))
+
+		r, amp, phase = data[1].fourierCoeffT(2, t, 10)
+		# axs[i,1].imshow(data[1][t])
+		axs[i, 0].plot(r, amp, color = 'royalblue', linestyle = '--')
+		axs[i, 0].plot(r, amp*np.cos(phase), color = 'royalblue')
+
+		r, amp, phase = data[2].fourierCoeffT(2, t, 10)
+		#axs[i,2].imshow(data[2][t])
+		axs[i, 1].plot(r, amp, color = 'firebrick', linestyle = '--')
+		axs[i, 1].plot(r, amp*np.cos(phase), color = 'firebrick', )
+
+		r, amp, phase = data[3].fourierCoeffT(2, t, 10)
+		# axs[i,3].imshow(data[3][t])
+		axs[i, 1].plot(r, amp, color = 'royalblue', linestyle = '--')
+		axs[i, 1].plot(r, amp*np.cos(phase), color = 'royalblue')
+
+	axs[0,0].set_xlim([0,5])
+
+	plt.show()
+
+
+#greensFunctionEvolution()
+greenComparison()

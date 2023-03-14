@@ -28,16 +28,20 @@ void saveArray(const Eigen::ArrayXXd grid) {
 }
 
 
-Eigen::VectorXcd deltaFunctionDensity(PotentialDensityPairContainer<KalnajsNBasis> & bf,  double radius) {
-	int nGrid{200}; double rMax{10}, spacing{(2*rMax) / ((double) nGrid)};
+Eigen::VectorXcd deltaFunctionDensity(PotentialDensityPairContainer<KalnajsNBasis> & bf, double centre, double width = 0.5) {
 
-	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(bf.maxRadialIndex()+1);
-	Eigen::ArrayXXcd den = bf.densityArray(coeff, nGrid, rMax);
-	den((int) nGrid/2, (int) (nGrid/2 + radius/spacing)) = 1 * radius; 
 	
-	coeff = bf.densityFitting(den, rMax);
+	auto ic = [centre, width] (double radius) {return (0.5) * 1/sqrt(2 * M_PI*width*width)*exp(-0.5 *pow((radius-centre)/width , 2));}; 
 
-	return coeff;
+	Eigen::VectorXcd coef = Eigen::VectorXcd::Zero(bf.maxRadialIndex()+1);
+	double stepSize{0.01};
+	for (int n = 0; n < coef.size(); ++n) {
+		for (double r= stepSize; r < 15; r += stepSize) {coef(n) += - 2 * M_PI * bf.potential(r, n) * ic(r) * r;}
+	} 
+
+	return stepSize*coef; 
+	//coef(0) = 1;
+	// return coef;
 }
 
 Eigen::VectorXcd deltaFunctionPotential(PotentialDensityPairContainer<KalnajsNBasis> & bf,  double radius) {
@@ -150,18 +154,35 @@ void turnOffBarFile(const std::string & filename, double turnOffTime) {
 	out.close();
 }
 
+void turnOnBarFile(const std::string & filename, double turnOnTime) {
+	int nStep{100}; double stepSize{0.5};
+
+	std::ofstream out(filename);
+	out << nStep <<'\n';
+
+	for (double time =0; time < nStep*stepSize; time += stepSize) {
+		if ( time < turnOnTime) {out << time << " " << pow(sin(time *M_PI/(2 * turnOnTime)),2) <<'\n';}
+		else {out << time << " " << 1 <<'\n';}
+	}
+	out.close();
+}
+
 void waveEvolutionTest(const std::string & densityfile, double CRposition, double perturberRadius, const std::string & growthFile) {
-	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_10_2.dat", 48);
-	Bar2D bar(deltaFunctionDensity(pd, perturberRadius), -patternSpeedFromCR(CRposition));  
+	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat", 48);
+	
+	//turnOnBarFile(growthFile, 40);
+	turnOffBarFile(growthFile, 150);
+	Bar2D bar(deltaFunctionDensity(pd, 2), 0.2);  
+	//bar.sormaniBar(pd);
 
 	if (growthFile != "None") {bar.readInSize(growthFile);}
 
-	VolterraSolver solver("Kernels/Kalnajs_4_.out", 48, 2, 400, 0.10);
+	VolterraSolver solver("Kernels/Waves/Kalnajs_2_WM.out", 48, 2, 100, 1.0);
 	solver.activeFraction(0.5);
-	solver.barRotation(bar, false); 
-	
+	//solver.barRotation(bar, true); 
 
-	solver.density2dEvolution(densityfile, pd, 2);
+	solver.barRotation(bar, "Plotting/Coeff_test.csv", "Plotting/Evolution_test.csv", true, false);
+	solver.density2dEvolution(densityfile, pd, 2, 10);
 
 }
 

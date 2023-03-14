@@ -73,6 +73,11 @@ public:
 	Eigen::VectorXcd potentialFitting(const Eigen::ArrayXXcd &potentialArrayTrue, const double rMax) const;  // This will calculate individual parts and solve matrix equation
 	Eigen::VectorXcd   densityFitting(const Eigen::ArrayXXcd   &densityArrayTrue, const double rMax) const;  // This will calculate individual parts and solve matrix equation
 
+
+	void interactionPotential(const std::string & filename, const double rMax, const int nStep) const; 
+
+
+
 protected:
 	std::vector<T> m_potentialDensityContainer;
 	int m_maxRadialIndex,  m_fourierHarmonic;
@@ -90,6 +95,7 @@ private:
 	void saveParamters(std::ofstream & out) const;
 	double scriptEelement(int k, int j) const;
 
+	double interactionPotential(double R, double Rprime) const; 
 };
 
 template <class T>
@@ -397,6 +403,30 @@ void saveArray(const Eigen::ArrayXXcd grid) {
 		out << grid(i, grid.cols()-1).real() << '\n';
 	}
 	out.close();
+}
+
+template <class T>
+void PotentialDensityPairContainer<T>::interactionPotential(const std::string & filename, const double rMax, const int nStep) const {
+	std::ofstream out(filename);
+
+	double step{rMax/((double) nStep)};
+
+	for (double R = 0; R < rMax; R+=step) {
+		for (double Rp = 0; Rp < rMax; Rp += step) {
+			out << interactionPotential(R, Rp) << ',';
+		}
+		out << interactionPotential(R, rMax) <<'\n';
+	}
+	out.close();
+}
+
+
+
+template <class T>
+double PotentialDensityPairContainer<T>::interactionPotential(double R, double Rprime) const { // We will need to include E when doing this with guassian
+	double sum{0};
+	for (int i = 0; i <= m_maxRadialIndex; ++i) {sum += -potential(R, i)*potential(Rprime, i);}
+		return sum; 
 }
 
 #endif 

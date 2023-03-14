@@ -7,8 +7,8 @@ int main()
 	//differentTempKernels();	
 	
 	//saveFittedSormani("Plotting/Test.csv");
-	//differentTempKernels();
-	sormaniBarEvolution();
+	differentTempKernels();
+	//sormaniBarEvolution();
 	//sormaniPatternSpeed(); 
 	//sormaniBarShape();
 	//sormaniConstantRatio(); 

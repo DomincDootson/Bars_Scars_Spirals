@@ -77,15 +77,14 @@ void barEvolutionKalnajs(double ep, double omegaP, const std::string & evolution
 {
  	std::cout << evolutionFile <<'\n'; 
 
- 	PotentialDensityPairContainer<KalnajsNBasis> pd("../Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat", 70);
-	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(70+1); coeff(0) = 0.01; 
-	Bar2D bar(coeff, ep, "../Bar2D/barSize.out"); // I think we are running this of 0.1 
-	bar.sormaniBar(pd, omegaP, "../Bar2D/Bar_Potentials/Sormani_Large.out");
+ 	PotentialDensityPairContainer<KalnajsNBasis> pd("../Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat", 40);
+	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(40+1); coeff(0) = 0.01; 
+	Bar2D bar(coeff, omegaP, "../Bar2D/barSize.out"); // I think we are running this of 0.1 
+	bar.sormaniBar(pd, ep, "../Bar2D/Bar_Potentials/Sormani_Large.out");
 
-	NBodyBar nbodyBar(100000, 10000, 0.01, pd, bar, littleSigma, 0.5);  
+	NBodyBar nbodyBar(1000000, 10000, 0.01, pd, bar, littleSigma, 0.5);  // 1000000
 	if (isSelfConsistent) {nbodyBar.nBodyEvolution("Coeff.csv", evolutionFile, 0);}
 	else {nbodyBar.testParticleEvolution("Coeff.csv", evolutionFile, 0);} 
-	
 }
 
 void somaniTrappedOrbits(const double littleSigma, const std::string & outFilename)
@@ -119,9 +118,9 @@ void orbitSection(const std::string & sectionBodies, const std::string & outFile
 	
 	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(70+1);
 	Bar2D bar(coeff, 0.18, "../Bar2D/barSize.out"); 
-	bar.sormaniBar(pd, 0.01, "../Bar2D/Bar_Potentials/Sormani_Large.out");
+	bar.sormaniBar(pd, 0.005, "../Bar2D/Bar_Potentials/Sormani_Large.out");
 
-	NBodyBar nbodyBar(1, 200, 0.001, pd, bar);
+	NBodyBar nbodyBar(1, 200, 0.0005, pd, bar);
 		
 	nbodyBar.angularMomentumSections(outFile, sectionBodies);
 }
@@ -179,20 +178,40 @@ void testingPhaseSpace() {
 
 
 void varyingEpsilon() {
-	barEvolutionKalnajs(0.005, 0.18, "evolution_005_18_0.csv", false, 0.35);
-	barEvolutionKalnajs(0.005, 0.18, "evolution_005_18_1.csv", false, 0.35);
-	barEvolutionKalnajs(0.005, 0.18, "evolution_005_18_2.csv", false, 0.35);
+	barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolution_005_18_0.csv", false, 0.35);
+	barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolution_005_18_1.csv", false, 0.35);
+	barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolution_005_18_2.csv", false, 0.35);
 
-	barEvolutionKalnajs(0.05, 0.18, "evolution_05_18_0.csv", false, 0.35);
-	barEvolutionKalnajs(0.05, 0.18, "evolution_05_18_1.csv", false, 0.35);
-	barEvolutionKalnajs(0.05, 0.18, "evolution_05_18_2.csv", false, 0.35);
+	barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionW_005_18_0.csv", false, 0.45);
+	barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionW_005_18_1.csv", false, 0.45);
+	barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionW_005_18_2.csv", false, 0.45);
+	
+	// barEvolutionKalnajs(0.001, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_001_18_0.csv", true, 0.35);
+	// barEvolutionKalnajs(0.001, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_001_18_1.csv", true, 0.35);
+	// barEvolutionKalnajs(0.001, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_001_18_2.csv", true, 0.35);
 
-	barEvolutionKalnajs(0.01, 0.18, "evolution_01_18_0.csv", false, 0.35);
-	barEvolutionKalnajs(0.01, 0.18, "evolution_01_18_1.csv", false, 0.35);
-	barEvolutionKalnajs(0.01, 0.18, "evolution_01_18_2.csv", false, 0.35);
+	// barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_005_18_0.csv", true, 0.35);	
+	// barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_005_18_1.csv", true, 0.35);
+	// barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_005_18_2.csv", true, 0.35);
 
-	barEvolutionKalnajs(0.1, 0.18, "evolution_1_18_0.csv", false, 0.35);
-	barEvolutionKalnajs(0.1, 0.18, "evolution_1_18_1.csv", false, 0.35);
-	barEvolutionKalnajs(0.1, 0.18, "evolution_1_18_2.csv", false, 0.35);
+	// barEvolutionKalnajs(0.05, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_05_18_0.csv", true, 0.35);
+	// barEvolutionKalnajs(0.05, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_05_18_1.csv", true, 0.35);
+	// barEvolutionKalnajs(0.05, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_05_18_2.csv", true, 0.35);
+
+	// barEvolutionKalnajs(0.01, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_01_18_0.csv", true, 0.35);
+	// barEvolutionKalnajs(0.01, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_01_18_1.csv", true, 0.35);
+	// barEvolutionKalnajs(0.01, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_01_18_2.csv", true, 0.35);
+
+	// barEvolutionKalnajs(0.1, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_1_18_0.csv", true, 0.35);
+	// barEvolutionKalnajs(0.1, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_1_18_1.csv", true, 0.35);
+	// barEvolutionKalnajs(0.1, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_1_18_2.csv", true, 0.35);
+
+	
+	// barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionW_005_18_0.csv", false, 0.45);
+	// barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionW_005_18_1.csv", false, 0.45);
+	// barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionW_005_18_2.csv", false, 0.45);
+	// barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionW_005_18_3.csv", false, 0.45);
+	// barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionW_005_18_4.csv", false, 0.45);
+	
 }
 

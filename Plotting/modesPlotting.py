@@ -5,6 +5,7 @@ from CoefficientClass import *
 from ModeFinder import *
 from scipy.stats import linregress
 import csv
+from Density_Classes.WaveFitter import * 
 
 import matplotlib.animation as animation
 
@@ -215,35 +216,33 @@ def scarredModesDensity(files, radius, omega0s, rMax = 6):
 
 	plt.show()
 
-def scarredModesDensityRadii(files, radius, omega0s, rMax = 6):
+def scarredModesDensityRadii(radius, rMax = 6):
 	plt.rc('text', usetex=True)
 	plt.rc('font', family='serif')
 	colors = ['firebrick','royalblue','navy']
-	fig, axs = plt.subplots(nrows = 2, sharex = True, sharey=False)
+	fig, axs = plt.subplots(ncols = 2, sharex = True, sharey=False)
 
-	cmap = ScalarMappable(Normalize(0.5,3), cmap = "plasma")
+	cmap = ScalarMappable(Normalize(0.9,2.2), cmap = "plasma")
 
 
-	for file, r, om, color in zip(files, radius, omega0s, colors):
-		print(file)
+	for r in radius:
+		file = f"Modes_Data/Scarred_Density/SD_{10*r:.0f}_25_-95.csv"
 		mode = TwoDdensity(file)
 
 		rad, amp, phs = mode.fourierCoeffT(2, -1, rMax) 
-		#color = cmap.to_rgba(r)
-		#print(color)
+		axs[0].plot((1/r)*rad, amp*(rad/(2*pi)), color = cmap.to_rgba(r), label = f"{r:.1f}")
+		axs[1].plot((1/r)*rad, amp*(rad/(2*pi))*np.cos(phs), color = cmap.to_rgba(r), label = f"{r:.1f}")
+		
 
-		axs[0].plot((1/r)*rad, amp*(rad/(2*pi)), label = r, color = color)
-		axs[1].plot((1/r)*rad, phs, color = color)
+	axs[0].set_xlim([0.5,3])
+	
+	axs[1].set_xlabel(r"$R/R_{in}$", fontsize = 15)
+	axs[0].set_xlabel(r"$R/R_{in}$", fontsize = 15)
 
-	axs[0].set_xlim([0,3])
+	axs[0].set_ylabel(r"$\rho(R)/\rho_{0}(R)$", fontsize = 15)
+	axs[1].set_ylabel(r"$\rho(R,\phi = 0)/\rho_{0}(R)$", fontsize = 15)
 
-	axs[0].set_xlabel(r"$R/R_{in}$", fontsize = 12)
-	axs[1].set_xlabel(r"$R/R_{in}$", fontsize = 12)
-
-	axs[0].set_ylabel(r"Normalised Amplitude", fontsize = 12)
-	axs[1].set_ylabel(r"$\phi(R)$", fontsize = 12)
-
-	axs[0].legend(title = r"$R_{in}$")
+	axs[0].legend(title = r"$R_{in}$", fontsize = 12, title_fontsize = 15)
 
 	plt.show()
 
@@ -262,11 +261,6 @@ def modeAnimationVaryingChi(filestem, to_add, filename = None):
 	fig, axs = plt.subplots(1,1)
 
 	ims = []
-
-
-
-
-
 	for xi in to_add:
 		modes = ModeFinder(filestem + str(int(100*xi)) +".csv")
 		XX, YY, logDet = np.real(modes.omegas), np.imag(modes.omegas), np.log(np.absolute(modes.det))
@@ -288,6 +282,218 @@ def modeAnimationVaryingChi(filestem, to_add, filename = None):
 	else:
 		plt.show()
 	
+def coefficentEvolution(file = "Modes_Data/fitting_test.csv"): # Maybe Could include a shaded region for the amplitude? 
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
+	linear = readingInComplexCSV(file)
+
+	fig,axs = plt.subplots(ncols = 2)
+	lst_n = range(0,15,3)
+	cmap = ScalarMappable(cmap = 'plasma', norm = Normalize(vmin=-1, vmax=17))
+
+	for n in lst_n:
+		axs[0].plot(np.linspace(0, 150, np.shape(linear[:800,n])[0]), np.absolute(linear[:800,n]), color = cmap.to_rgba(n))
+		deriv = getGradient(np.linspace(0, 150, np.shape(linear[:800,n])[0]), np.angle(linear[:800,n]), multiple = 0.55, includeMinus = 1)
+
+		axs[1].plot(*deriv, label = f"{n}", color = cmap.to_rgba(n))
+
+	axs[0].set_ylabel(r"$|B_{p}(t)|$", fontsize = 15)
+	axs[1].set_ylabel(r"$\partial\arg \left(B_{p}\right)/\partial t$", fontsize = 15)
+
+	axs[0].set_yscale('log')
+	t = np.linspace(50,150)
+	axs[0].plot(t, 0.025*np.exp(t * 0.22), label = r"$\exp{(\eta t)}$", color = 'k', linestyle = '--')
+
+	
+	axs[1].axhline(-0.88, color = 'k', linestyle = '--', label  = r'$-\omega_{0}$')
+	axs[1].legend(title = r"Index, $p$", title_fontsize = 15, fontsize =12)
+	axs[0].legend(fontsize = 12)
+
+	axs[0].set_title("Amplitude", fontsize = 15)
+	axs[1].set_title("Phase", fontsize = 15)
+
+	xlabelPositions, xlabels = [2*pi*i for i in range(0,25, 6)], [0] + [str(i) + r"$\times2\pi$" for i in range(3,25, 6)]
+	axs[0].set_xticks(xlabelPositions)
+	axs[0].set_xticklabels(xlabels)
+	axs[1].set_xticks(xlabelPositions)
+	axs[1].set_xticklabels(xlabels)
+	axs[0].set_xlabel("Time", fontsize = 15)
+	axs[1].set_xlabel("Time", fontsize = 15)
+
+
+	
+	
+	#axs[0].ticklabel_format(axis='y', style = 'sci', scilimits=(0,0))
+	plt.show()
+
+
+
+def fitCoefficents2File(file = "Modes_Data/Chi_Coeff/UnstableModes.csv"):
+	filename = lambda nu, chi :  f"Modes_Data/Chi_Coeff/coeff_{nu}_{100*chi:.0f}.csv"
+	chi_lst, nu_4, nu_6, nu_8 = [], [], [], []
+	for chi in np.arange(0.2, 1., 0.01):
+		coeff_4, coeff_6, coeff_8 = CoefficientClass(filename(4, chi), 400), CoefficientClass(filename(6, chi), 400), CoefficientClass(filename(8, chi), 400)
+		chi_lst.append(chi)
+		nu_4.append(coeff_4.fitUnstableMode())
+		nu_6.append(coeff_6.fitUnstableMode())
+		nu_8.append(coeff_8.fitUnstableMode())
+
+	# Now write to file 
+	with open(file, 'w', encoding='UTF8', newline='') as f:
+		writer = csv.writer(f)
+		for c, n_4, n_6, n_8 in zip(chi_lst, nu_4, nu_6, nu_8):
+			writer.writerow([c, n_4.real, n_4.imag, n_6.real, n_6.imag, n_8.real, n_8.imag])
+
+
+
+def kernelMode2File(file = "Modes_Data/Chi_Coeff/UnstableModesKernel.csv"):
+	
+	chi_4, omega0_4, eta_4 = calculatingOmega0Eta(f"Modes_Data/Chi_Search/Chi_SearchKernel_Mode_Searching_4_" , 0.05)
+	chi_6, omega0_6, eta_6 = calculatingOmega0Eta(f"Modes_Data/Chi_Search/Chi_SearchKernel_Mode_Searching_6_" , 0.05)
+	chi_8, omega0_8, eta_8 = calculatingOmega0Eta(f"Modes_Data/Chi_Search/Chi_SearchKernel_Mode_Searching_8_" , 0.05)
+
+	nu_4 = [o + 1j * n for o, n in zip(omega0_4, eta_4)]
+	nu_6 = [o + 1j * n for o, n in zip(omega0_6, eta_6)]
+	nu_8 = [o + 1j * n for o, n in zip(omega0_8, eta_8)]
+	print(chi_4)
+
+	with open(file, 'w', encoding='UTF8', newline='') as f:
+		writer = csv.writer(f)
+		for c, n_4, n_6, n_8 in zip(chi_4, nu_4, nu_6, nu_8):
+			writer.writerow([c, n_4.real, n_4.imag, n_6.real, n_6.imag, n_8.real, n_8.imag])
+
+	print(f"Data saved to: {file}")
+		
+		
+	
+
+def varyingChiPlot():
+	data = readingInRealCSV("Modes_Data/Chi_Coeff/UnstableModes.csv")
+	data_scatter = readingInRealCSV("Modes_Data/Chi_Coeff/UnstableModesKernel.csv")
+
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
+	fig, axs = plt.subplots(ncols = 1, sharex = True)
+	cmap = ScalarMappable(cmap = 'plasma', norm = Normalize(vmin=0.4, vmax=1.2))
+	
+	n = 47
+	for x0, x1, y0, y1, c in zip(data[n:,1], data[n+1:,1], data[n:,2], data[n+1:,2], data[n:,0]):
+		axs.plot([x0, x1],[y0,y1], color = cmap.to_rgba(c), linestyle = '--')
+	axs.plot([x0, x1],[y0,y1], color = cmap.to_rgba(c), linestyle = '--', label = 'Kernel')
+
+	
+	for x0, y0, c in zip(data_scatter[:7,1], data_scatter[:7,2], data_scatter[:7,0]):
+		axs.scatter(x0, y0+0.01, color = cmap.to_rgba(c))
+	axs.scatter(x0, y0+0.01, color = cmap.to_rgba(c), label ='Coefficient')
+	
+	# for x0, x1, y0, y1, c in zip(data[35:,3], data[36:,3], data[35:,4], data[36:,4], data[35:,0]):
+	# 	axs.plot([x0, x1],[y0,y1], color = cmap.to_rgba(c))
+	n = 32
+	for x0, x1, y0, y1, c in zip(data[n:,5], data[n+1:,5], data[n:,6], data[n+1:,6], data[n+1:,0]):
+		axs.plot([x0, x1],[y0,y1], color = cmap.to_rgba(c))
+	axs.plot([x0, x1],[y0,y1], color = cmap.to_rgba(c), label = 'Kernel')
+	
+	for x0, y0, c in zip(data_scatter[:10,5], data_scatter[:10,6], data_scatter[:10,0]):
+		axs.scatter(x0, y0, color = cmap.to_rgba(c), marker = 'x')
+	axs.scatter(x0, y0, color = cmap.to_rgba(c), marker = 'x', label ='Coefficient')
+	
+	
+
+	# axs[0].plot(data[47:,0], data[47:,1])
+	# axs[0].plot(data[35:,0], data[35:,3])
+	# axs[0].plot(data[27:,0], data[27:,5])
+
+	# axs[1].plot(data[47:,0], data[47:,2])
+	# axs[1].plot(data[35:,0], data[35:,4])
+	# axs[1].plot(data[27:,0], data[27:,6])
+
+
+	axs.axhline(0, linestyle = '--', color = 'k')
+
+	
+	axs.set_ylabel(r"$\eta$", fontsize = 15)
+	axs.set_xlabel(r"$\omega_{0}$", fontsize = 15)
+	cbar = fig.colorbar(cmap, ax=axs).set_label(label = r"$\xi$", fontsize = 15)
+
+	h, l = axs.get_legend_handles_labels()
+	ph = [plt.plot([],marker="", ls="")[0]]*2
+	handles = ph + h
+	labels = [r"$\nu_{t}$ = 4:", r"$\nu_{t}$ = 8:"] + l
+	plt.legend(handles, labels, ncol=3, fontsize =12)
+	
+
+	plt.show()
+
+
+## In-going and Out-going ##
+
+def seperatingWaves():
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
+
+	fig, axs = plt.subplots(ncols = 2, nrows = 2, sharey = 'row', sharex = True)
+	wf = WaveFitter("Modes_Data/Mode_Evolution_R_20_W_25_D_-95_G.csv", timeEnd = 25)
+	wf.split_waves()
+
+
+	axs[0,0].plot(wf.radii, np.absolute(wf.outgoing_T(50)), linestyle = '--', label = r"$\rho(R)$", color = 'firebrick')
+	axs[0,0].plot(wf.radii, np.absolute(wf.outgoing_T(50))*np.cos(np.angle(wf.outgoing_T(50))), color = 'royalblue')
+	
+	axs[0,1].plot(wf.radii, np.absolute(wf.ingoing_T(50)), linestyle = '--', color = 'firebrick', label = r"$\rho(R)$")
+	axs[0,1].plot(wf.radii, np.absolute(wf.ingoing_T(50))*np.cos(np.angle(wf.ingoing_T(50))), color = 'royalblue', label = r"$\rho(R, \phi = 0)$")
+
+	axs[1,0].plot(*getGradient(wf.radii, np.angle(wf.outgoing_T(50)), includeMinus = 1), color = 'royalblue')
+	axs[1,1].plot(*getGradient(wf.radii, np.angle(wf.ingoing_T(50)), includeMinus = 1), color = 'royalblue')
+	
+	axs[1,0].axhline(0, linestyle = '--', color = 'k')
+	axs[1,1].axhline(0, linestyle = '--', color = 'k')
+
+	axs[0,0].axvline(2, linestyle = ':', color = 'gray')
+	axs[0,1].axvline(2, linestyle = ':', color = 'gray')
+	axs[1,0].axvline(2, linestyle = ':', color = 'gray')
+	axs[1,1].axvline(2, linestyle = ':', color = 'gray')
+
+	axs[0,0].axvline(2.71, linestyle = '--', color = 'gray')
+	axs[0,1].axvline(2.71, linestyle = '--', color = 'gray')
+	axs[1,0].axvline(2.71, linestyle = '--', color = 'gray')
+	axs[1,1].axvline(2.71, linestyle = '--', color = 'gray')
+
+	axs[0,0].axvline(5.5, linestyle = ':', color = 'gray')
+	axs[0,1].axvline(5.5, linestyle = ':', color = 'gray')
+	axs[1,0].axvline(5.5, linestyle = ':', color = 'gray')
+	axs[1,1].axvline(5.5, linestyle = ':', color = 'gray')
+
+	#axs[0,0].set_xlim([1., 5.6])
+	axs[0,0].set_ylim([-0.1, 0.2])
+
+	axs[0,0].set_title("Out-going", fontsize = 15)
+	axs[0,1].set_title("In-going", fontsize = 15)
+
+	axs[0,0].set_ylabel(r"Density", fontsize = 15)
+	axs[1,0].set_ylabel(r"$k(R)$", fontsize = 15)
+	axs[0,1].legend(fontsize = 12)
+
+	axs[1,0].set_xlabel(r"Radius", fontsize = 15)
+	axs[1,1].set_xlabel(r"Radius", fontsize = 15)
+
+	plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #eigenModeComparison(["Modes_Data/JB_mode.csv", "Modes_Data/JB_mode_Time.csv"], 0.88)
 
@@ -314,7 +520,7 @@ def modeAnimationVaryingChi(filestem, to_add, filename = None):
 #scarredModesDensity([f"Modes_Data/Scarred_Density/SD_{r}_25_-95.csv" for r in ['12', '14','16','18','20']], [1.2, 1.4, 1.6, 1.8, 2.0], [0.564407, 0.510169, 0.469492, 0.428814, 0.394915])
 #scarredModesDensity([f"Modes_Data/Scarred_Density/SD_{r}_25_-95.csv" for r in ['14','16', '18']], [1.4, 1.6, 1.8], [0.510169, 0.469492, 0.428814])
 
-#scarredModesDensityRadii([f"Modes_Data/Scarred_Density/SD_{r}_25_-95.csv" for r in ['12','18','20']], [1.2, 1.8, 2.0], [0.564407, 0.428814, 0.394915])
+#scarredModesDensityRadii([1.2, 1.4, 1.6, 1.8, 2.0])
 #scarredModesDensityRadii([f"Modes_Data/Scarred_Density/SD_{r}_25_-95.csv" for r in ['12','18','20']], [1.2, 1.8, 2.0], [0.564, 0.428814, 0.394915])
 
 
@@ -322,4 +528,11 @@ def modeAnimationVaryingChi(filestem, to_add, filename = None):
 
 #modes = ModeFinder("Modes_Data/Chi_Search/VideoKernel_Mode_Searching_4_100.csv")
 #modes.contourPlotShow()
-modeAnimationVaryingChi("Modes_Data/Chi_Search/VideoKernel_Mode_Searching_4_", [0.92, 0.94, 0.96, 0.98, 1])
+#modeAnimationVaryingChi("Modes_Data/Chi_Search/VideoKernel_Mode_Searching_4_", [0.92, 0.94, 0.96, 0.98, 1])
+#coefficentEvolution()
+#kernelMode2File()
+#fitCoefficents2File()
+#varyingChiPlot()
+#coefficentEvolution("Modes_Data/Chi_Coeff/coeff_4_69.csv")
+
+seperatingWaves()

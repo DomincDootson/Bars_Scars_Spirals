@@ -51,6 +51,8 @@ class WKB_Disc():
 	def OLR(self, omega, m =2):
 		return self.CR(omega, m) * (2+sqrt(2))*0.5
 
+	def Q(self):
+		return self.sigmaR / (self.activeFraction * (3.36/(sqrt(2)*2*pi)))
 
 	def set_sigma_with_Q(self, Q):
 		self.sigmaR = Q * self.activeFraction * (3.36/(sqrt(2)*2*pi))
@@ -178,6 +180,7 @@ class WKB_Disc():
 
 	    return max(r_plot)
 
+
 	def k_func_r(self, omega0, forbidden_radius = 0.99): # Use this for plotting r vs k
 	    cr = self.CR(omega0)
 	    fr = self.forbidden_radius(omega0, 500)
@@ -187,6 +190,13 @@ class WKB_Disc():
 	    
 	    return r_plot, k_plot
 
+	def k_turning(self, omega0):	 
+		fr, CR = self.forbidden_radius(omega0, 500), self.CR(omega0)
+		r, k = self.k_func_r(omega0, fr)
+
+		index = r.index(max(r))
+		return k[index]/self.k_crit(r[index])
+
 	def plotting_k_vs_r(self, omega0 = 1, scars = []):
 		fr, CR = self.forbidden_radius(omega0, 500), self.CR(omega0)
 		r, k = self.k_func_r(omega0, fr)
@@ -195,6 +205,8 @@ class WKB_Disc():
 		for scar in scars:
 			plt.axvline(scar/self.CR(omega0), linestyle = '--', color = 'firebrick')
 		plt.axvline(self.ILR(omega0)/CR, linestyle = '--', color = 'firebrick')
+		plt.axhline(self.k_turning(omega0), linestyle = ':', color = 'k')
+		
 
 		plt.title(f"{omega0}")
 		plt.xlabel(r"$R/R_{crit}$")
@@ -233,7 +245,7 @@ class WKB_Disc():
 	    return (sum(k_unpacked))*(radii[1] - radii[0]) # We need to integrate over both branches 
         
 
-	def find_mode_omega0(self, inital_guess, r_inf, nstep = 15, rUpperScar = 10000): 
+	def find_mode_omega0(self, inital_guess, r_inf, nstep = 10, rUpperScar = 10000): 
 	    
 	    omegaL, omegaM, omegaU = inital_guess[0], sum(inital_guess)/len(inital_guess), inital_guess[1]
 	    integralL = self.integrate_k(omegaL, r_inf/self.CR(omegaL), rUpperScar = rUpperScar) - pi
@@ -353,10 +365,14 @@ class WKB_Disc():
 		plt.show()
 
 
-# disc = WKB_Disc(0.366, epsilon = 0)
+disc = WKB_Disc(0.2835, epsilon = 0)
+print(disc.Q(), disc.forbidden_radius(2/5) * disc.CR(2/5), disc.k_turning(2/5))
 # disc.set_sigma_with_Q(1.2)
 # print(disc.sigmaR, disc.CR(1))
 # disc.plotting_k_vs_r(1)
+# disc = WKB_Disc(0.366, epsilon = 0, activeFraction = 0.5)
+# disc.set_sigma_with_Q(1.3)
 
+# print(disc.k_turning(1))
 
 

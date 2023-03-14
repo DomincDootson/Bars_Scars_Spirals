@@ -41,37 +41,77 @@ def isTrapped(rapo):
 def sectionPlot(filename = "Orbit_Sections/ResonantSections.csv", nPlot = 6):
 	plt.rc('text', usetex=True)
 	plt.rc('font', family='serif')
-	fig, axs = plt.subplots(1, 1, sharey = False, sharex = False)	
+	fig, axs = plt.subplots(ncols = 1, nrows = 2, sharex = True)	
 
-	data = readingInRealCSV(filename)
-
-
-	n, count = 10, 0
-	
-	for i in range(0,48,2):
+	## ILR ##
+	## --- ##
+	data = readingInRealCSV(filename[0])
+	n, count = 11, 0
+	for i in range(24, 56 ,12): #[40, 41, 42, 43]
 		
 		if isTrapped(data[n:,2*i]):
 			
-			axs.scatter(data[n:,2*i]/pi, data[n:,2*i+1], s = .1, color = 'navy')
-			axs.scatter(-data[n:,2*i]/pi, data[n:,2*i+1], s = .1, color = 'navy')
+			axs[0].scatter(data[n:,2*i]/pi, data[n:,2*i+1], s = 1, color = 'royalblue')
+			axs[0].scatter(-data[n:,2*i]/pi, data[n:,2*i+1], s = 1, color = 'royalblue')
 			count += 1
 		else:
-			axs.scatter(data[n:,2*i]/pi, data[n:,2*i+1], s = .1, color = 'firebrick')
+			axs[0].scatter(data[n:,2*i]/pi, data[n:,2*i+1], s = 1, color = 'royalblue')
 
+	for i in range(9, 40, 12): #[40, 41, 42, 43]
+	 	axs[0].scatter(data[n:,2*i]/pi, data[n:,2*i+1], s = 1, color = 'firebrick')
+	 	axs[0].scatter(-data[n:,2*i]/pi, data[n:,2*i+1], s = 1, color = 'firebrick')
+	
+	for i in range(51, 88, 12, ): #[40, 41, 42, 43]
+		axs[0].scatter(data[n:,2*i]/pi, data[n:,2*i+1], s = 1, color = 'firebrick')
+		axs[0].scatter(-data[n:,2*i]/pi, data[n:,2*i+1], s = 1, color = 'firebrick')
+
+
+	axs[0].set_title("Inner Lindblad", fontsize = 15)
+	#axs[0].set_xlabel(r"$\phi_{apo}/\pi$", fontsize = 15)
+
+
+	## CR ##
+	## -- ##
+	data = readingInRealCSV(filename[1])
+	n, count = 10, 0
+	for i in range(40,48,): #[40, 41, 42, 43]
+		
+		if isTrapped(data[n:,2*i]):
+			
+			axs[1].scatter(data[n:,2*i]/pi, data[n:,2*i+1], s = 1, color = 'royalblue')
+			axs[1].scatter(-data[n:,2*i]/pi, data[n:,2*i+1], s = 1, color = 'royalblue')
+			count += 1
+		else:
+			axs[1].scatter(data[n:,2*i]/pi, data[n:,2*i+1], s = 1)
+
+	for i in range(24, 40, 4): #[40, 41, 42, 43]
+		axs[1].scatter(data[n:,2*i]/pi, data[n:,2*i+1], s = 1, color = 'firebrick')
+		axs[1].scatter(-data[n:,2*i]/pi, data[n:,2*i+1], s = 1, color = 'firebrick')
+	
+	for i in range(72, 88, 4): #[40, 41, 42, 43]
+		axs[1].scatter(data[n:,2*i]/pi, data[n:,2*i+1], s = 1, color = 'firebrick')
+		axs[1].scatter(-data[n:,2*i]/pi, data[n:,2*i+1], s = 1, color = 'firebrick')
+			
+
+	
 
 
 
 	
 	
 
-	axs.set_xlim([-1, 1])	
+	axs[1].set_xlim([-1, 1])	
+	axs[1].set_ylim([4.4, 5.4])	
 
-	axs.axvline(0, color = 'k', linestyle = '--')
+	#axs[1].axvline(0, color = 'k', linestyle = '--')
 	
+	axs[1].set_xlabel(r"$\phi_{apo}/\pi$", fontsize = 15)
+	#axs[1].set_xlabel(r"$\phi_{apo}/\pi$", fontsize = 15)
+	axs[0].set_ylabel(r"$L_{z}$", fontsize = 15)
+	axs[1].set_ylabel(r"$L_{z}$", fontsize = 15)
+	axs[1].set_title("Corotation", fontsize = 15)
 
 
-	axs.set_xlabel(r"$\phi_{apo}/\pi$", fontsize = 15)
-	axs.set_ylabel(r"$L_{z}$", fontsize = 15)
 	#axs.legend()
 	
 	plt.show()
@@ -110,4 +150,4 @@ def ptleChangeInAngMom():
 #ptleChangeInAngMom()
 #sectionPlot("Orbit_Sections/ResonantSections.csv")
 
-sectionPlot("../nBody/sormaniILRSections.csv") # Bar_Data/Sections/
+sectionPlot(["../nBody/sormaniILRSections.csv","../nBody/sormaniCRSections.csv"]) # Bar_Data/Sections/

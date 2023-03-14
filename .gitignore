@@ -1,9 +1,11 @@
 /Kalnajs*
 /GaussianLog*
+/GaussianN*
 /MestelTesting*
 /SpiralAABF*
 /scriptE
 /Kernels 
+
 
 /Density_Kicking/*.out 
 /Density_Kicking/Density2D*.out 

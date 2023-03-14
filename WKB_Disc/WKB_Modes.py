@@ -185,6 +185,38 @@ def forbiddenRadii(rScar, omega0 = []):
 
 
 
+## Varying Depth of Scar ##
+## --------------------- ##
+
+def varyingScarDepth(file = "Cavity_Modes/VaryingScarDepth.csv", r = "15"):
+	depths = np.arange(0, 1+0.1, 0.1)
+	densityFile = lambda depth : f"Disc_Density/Tapered_R_{r}_W_25_D_-{depth*100:.0f}_G.csv"
+	discs = [WKB_Disc(1/sqrt(12.4), densityFile = densityFile(d), epsilon = 0) for d in depths]
+	
+	
+	with open(file, 'w', encoding='UTF8', newline='') as f:
+		writer = csv.writer(f)
+		for d, disc in zip(depths, discs):	
+			print(f'Depth of Scar: {d}')
+			writer.writerow([d, disc.modeFinder(range_omega0 = [0.7, 0.3], rScar = float(r)/10).real]) # Please be careful when setting the initial guess
+	
+def plottingVaryingScarDepth():
+
+
+	fig, axs = plt.subplots()
+
+	data = readingInRealCSV("Cavity_Modes/VaryingScarDepth_10.csv")
+	axs.plot(data[:,0], data[:,1])
+
+	data = readingInRealCSV("Cavity_Modes/VaryingScarDepth_15.csv")
+	axs.plot(data[:,0], data[:,1])
+
+	data = readingInRealCSV("Cavity_Modes/VaryingScarDepth_20.csv")
+	axs.plot(data[:,0], data[:,1])
+	axs.set_ylabel(r"$\omega_{0}$", fontsize = 15)
+	axs.set_xlabel(r"$A_{s}$", fontsize = 15)
+
+	plt.show()
 
 
 
@@ -192,7 +224,8 @@ def forbiddenRadii(rScar, omega0 = []):
 #varyingInnerPositon(np.linspace(1, 2, 11), "Cavity_Modes/VaryingInnerPosition_Tapered_Scarred.csv")
 #varyingInnerPositon(np.linspace(1, 2, 11))
 #varyingOuterPositon(np.linspace(1.5, 2, 1))
-
+disc = WKB_Disc(1/sqrt(12.4))
+print(disc.forbidden_radius(0.371186)*disc.CR(0.371186))
 #plottingInnerPosition(scatterFiles = ["Cavity_Modes/VaryingInnerPositionResponse_25_-95.csv"])
 #forbiddenRadii(rScar = [1.2, 1.4, 1.6, 1.8, 2.0], omega0 = [0.564407, 0.510169, 0.469492, 0.428814, 0.394915])
 #deRijkeMode()
@@ -214,6 +247,21 @@ disc.plotting_k_vs_r(0.40453948974609377, scars = [2])'''
 
 
 
-disc = WKB_Disc(0.377, activeFraction = 0.5, densityFile = "Tapered_Density.csv")
-omega0 = 0.8
-print(omega0, (disc.forbidden_radius(omega0)+1)*disc.CR(omega0))
+# disc = WKB_Disc(0.377, activeFraction = 0.5, densityFile = "Tapered_Density.csv")
+
+# r = np.linspace(0.5, 5)
+# rho = [disc.Sigma(r_e) for r_e in r]
+# plt.plot(r, rho)
+
+# disc = WKB_Disc(0.377, activeFraction = 0.5, densityFile = "Disc_Density/Tapered_R_20_W_25_D_-95_G.csv")
+
+# r = np.linspace(0.5, 5)
+# rho = [disc.Sigma(r_e) for r_e in r]
+# plt.plot(r, rho)
+# plt.show()
+
+
+#varyingScarDepth()
+# varyingScarDepth(file = "Cavity_Modes/VaryingScarDepth_20.csv", r = "20")
+# varyingScarDepth(file = "Cavity_Modes/VaryingScarDepth_10.csv", r = "10")
+# plottingVaryingScarDepth()

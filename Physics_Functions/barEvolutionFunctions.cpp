@@ -213,17 +213,18 @@ void kalnajsKernelsDiffTemp()
 
 void differentTempKernels() {
 	double timeStep{1};
-	int nMax{48}, numbTimeSteps{100};
+	int nMax{48}, numbTimeSteps{300};
 
-	std::vector sigmas = {.35};
-	ActionAngleBasisContainer test("KalnajsN", "KalnajsN", nMax, 2, 10, 251, 15);
+	std::vector sigmas = {0.2835}; // was 0.45
+	ActionAngleBasisContainer test("KalnajsN", "KalnajsN", nMax, 2, 4, 251, 15); // 4 back to 10 
 
 	for (auto it = sigmas.begin(); it != sigmas.end(); ++it) { 
 		Mestel DF(1, 1, *it, 1, 1);
 		
 		VolterraSolver solver(nMax, 2, numbTimeSteps, timeStep);
 
-		std::string kernel = "Kernels/Kalnajs_2_" + std::to_string((int) round(100*(*it))) + "_New.out";
+		//std::string kernel = "Kernels/Kalnajs_2_" + std::to_string((int) round(100*(*it))) + "_New.out";
+		std::string kernel = "Kernels/Kalnajs_2_WM_Long.out"; 
 		solver.generateKernel(kernel, DF, test); 
 	}
 } 
@@ -250,7 +251,7 @@ void saveFittedSormani(const std::string & filename, const std::string & barFile
 
 void sormaniBarRun(const double temp, const bool selfConsistent, const std::string & barFile = "Bar2D/Bar_Potentials/Sormani_Medium.out") {
 	double timeStep{1};
-	int nMax{48}, numbTimeSteps{100};
+	int nMax{72}, numbTimeSteps{300};
 
 	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat", nMax);
 	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(nMax+1); 
@@ -258,27 +259,25 @@ void sormaniBarRun(const double temp, const bool selfConsistent, const std::stri
 
 	Bar2D bar(coeff, 0.18, "Bar2D/barSize.out"); 
 
-	bar.sormaniBar(pd, 0.05, barFile); 
+	bar.sormaniBar(pd, 0.005, barFile); 
 
 
-	std::string kernel = "Kernels/Kalnajs_2_" + std::to_string((int) round(100*(temp))) + "_New.out";
+	std::string kernel = "Kernels/Kalnajs_2_" + std::to_string((int) round(100*(temp))) + ".out";
 	VolterraSolver solver(kernel, nMax, 2, numbTimeSteps, timeStep); 
 	solver.activeFraction(.50);
 	
  	
- 	solver.barRotation(bar, coeffFileName("Plotting/KalnajsTorque/Sormani_Bar", temp, selfConsistent), evolutionFileName("Plotting/KalnajsTorque/Sormani_Bar", temp, selfConsistent), selfConsistent, false, true);
- 	//solver.barRotation(bar, "Plotting/test.csv", evolutionFileName("Plotting/KalnajsTorque/Sormani_Bar", temp, selfConsistent), selfConsistent, false, true);
- 	//solver.barRotationUnsaving(bar, selfConsistent, false, true);
- 	//solver.density2dEvolution(evolutionFileName("Plotting/Bar_Data/Sormani_Diff_Temp", temp, selfConsistent), pd, 25, 5);
- 	//solver.potential2dEvolution(evolutionFileName("Plotting/Bar_Data/Sormani_Diff_Temp", temp, selfConsistent), pd, 25, 5);
+ 	//solver.barRotation(bar, coeffFileName1("Plotting/KalnajsTorque/Sormani_Bar", temp, selfConsistent), evolutionFileName("Plotting/KalnajsTorque/Sormani_Bar", temp, selfConsistent), selfConsistent, false, true);
+ 	solver.barRotation(bar, "Plotting/Nbody_Sormani_Data/Varying_Ep/Linear_Consistent_Particle_Coeff.csv", "Plotting/Nbody_Sormani_Data/Varying_Ep/Linear_Test_Particle_Warm.csv", selfConsistent, false, true);
 }
+
 
 void sormaniBarEvolution(const std::string & barFile) {
 	//sormaniBarRun(0.35, true, barFile);
-	sormaniBarRun(0.35, false, barFile);
+	//sormaniBarRun(0.35, false, barFile);
 
 	//sormaniBarRun(0.45, true, barFile);
-	//sormaniBarRun(0.45, false, barFile);
+	sormaniBarRun(0.45, false, barFile);
 }
 
 /* Testing different Soramni Effects */
@@ -368,4 +367,4 @@ void sormaniConstantRatio(const std::string & dir) {
 
 	sormaniGeneral(dir + "Kalnajs_consistent_Large.csv", "Bar2D/Bar_Potentials/Sormani_Large.out", 0.135, true);
 	sormaniDensity(dir + "Kalnajs_consistent_density_Large.csv", "Bar2D/Bar_Potentials/Sormani_Large.out", 25, 0.135, true, false);
-}
+}	

@@ -23,7 +23,7 @@ public:
 		m_coeff[0] = t0Coeff;
 	}
 	
-	ExpansionCoeff(const std::string & filename, const int numbTimeStep) : m_coeff(numbTimeStep) 
+	ExpansionCoeff(const std::string & filename, const int numbTimeStep) : m_coeff(numbTimeStep) // it copies the vector into each vector
 	{coefficentReadInConstructor(filename);}
 	
 
@@ -57,9 +57,11 @@ public:
 	template <class Tbf>
 	void write2dPotential2File(const std::string & outFilename, const Tbf & bf, const int skip, const double rMax = 10) const;
 
+	void rotateCoefficents(double omega, double timeStep); 
 
 	int nTimeStep() const {return m_coeff.size();}
 	void resizeVector(const int nTimeStep); // Please note that this leaves the vecotor at index = 0 unchaged. 
+	int maxRadialIndex() const {return m_coeff.size();}
 
 private:
 	
@@ -108,11 +110,17 @@ void ExpansionCoeff::coefficentReadInConstructor(const std::string &filename)
 
 	double real, imag;
 	std::complex<double> unitComplex(0,1);
-	for (auto it = m_coeff.begin(); it != m_coeff.end(); ++it){
+	m_coeff[0] = Eigen::VectorXcd(maxRadialIndex+1);
+	for (int n = 0; n < m_coeff[0].size(); ++ n) {
+	 	inFile >> real >> imag;
+	 	m_coeff[0](n) = real + unitComplex * imag;
+	 }
+
+	for (auto it = m_coeff.begin()+1; it != m_coeff.end(); ++it){
 		it -> setZero(maxRadialIndex+1);
 	 	for (int n = 0; n < it -> size(); ++ n) {
 	 		inFile >> real >> imag;
-	 		(*it)(n) = real + unitComplex * imag;
+	 		(*it) = m_coeff[0]; 
 	 	}
 	 }
 
@@ -213,9 +221,9 @@ template <class Tbf>
 void ExpansionCoeff::write2dDensity2File(const std::string & outFilename, const Tbf & bf, const int skip, const double rMax, const int nStep) const
 {
 	std::ofstream out(outFilename);
-	for (int time = 0; time < 130; time += skip){  // m_coeff.size() PUTBACK
+	for (int time = 0; time < m_coeff.size(); time += skip){  // m_coeff.size() PUTBACK
 		if (time % (skip*10) == 0) {std::cout << "Outputting density for: " << time << '\n';}
-		Eigen::ArrayXXd density = bf.densityArrayReal(m_coeff[time], nStep, rMax); // I suppose this could always be make quicker by saving the individual arrays for each bf
+		Eigen::ArrayXXd density = bf.densityArrayReal(m_coeff[time], 201, 10); // I suppose this could always be make quicker by saving the individual arrays for each bf
 		outputArray(out, density);
 	}
 	std::cout << "Density evolution saved to: " << outFilename << '\n';
@@ -272,6 +280,12 @@ void ExpansionCoeff::resizeVector(const int nTimeStep) {
 	auto maxRadialIndex{m_coeff[0].size()};
 	m_coeff.resize(nTimeStep); 
 	for (int i = 1; i < m_coeff.size(); ++i) {m_coeff[i] = Eigen::VectorXcd::Zero(maxRadialIndex);}
+}
+
+
+void ExpansionCoeff::rotateCoefficents(double omega, double timeStep) {
+	std::complex<double> unitComplex(0,-1);
+	for (int i = 1; i < m_coeff.size(); ++i) {m_coeff[i] = m_coeff[0] * exp(unitComplex * (timeStep * i));}
 }
 
 #endif

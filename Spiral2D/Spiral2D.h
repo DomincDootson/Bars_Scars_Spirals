@@ -14,8 +14,9 @@ public:
 	Spiral2D(const Tbf & bf, double k = 1, double scale = 5, double maxDensity = 1, int taper = 6) : 
 	m_k{k}, m_scale{scale}, m_maxDensity{maxDensity}, m_taper{taper},
 	m_responseCoef(1, bf.maxRadialIndex())
-	{m_responseCoef(0) = densityResolving(bf, 15);} // This number is the upper limit of the basis function
+	{}//m_responseCoef(0) = densityResolving(bf, 15);} // This number is the upper limit of the basis function
 
+	
 
 	~Spiral2D() {}
 
@@ -44,9 +45,13 @@ public:
 
 	template <class Tbf>
 	void density2dFinal(const Tbf & bf, const std::string & outFilename, const int fromEnd = 1, const double rMax = 10, const double nStep = 201) const {m_responseCoef.write2dDensity2File(m_responseCoef.nTimeStep() - fromEnd, outFilename, bf, rMax, nStep);}
+	
 
 	double maxDensity() const {return m_maxDensity;}
 	void removeIC() {for (int time = 0; time < m_responseCoef.nTimeStep(); ++time) {m_responseCoef(time) -= m_responseCoef(0);}}
+
+	template <class Tbf>
+	void gaussianSpiral(const Tbf & bf, const double k, const double centre, const double width, const double rMax = 15); 
 
 private: 
 	const double m_k, m_scale, m_maxDensity;
@@ -111,6 +116,17 @@ std::vector<double> Spiral2D::densityPower(const Tbf & bf) const {
 	return power; 
 }
 
+template <class Tbf>
+void Spiral2D::gaussianSpiral(const Tbf & bf, const double k, const double centre, const double width, const double rMax ) {
+	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(bf.maxRadialIndex()+1);
+	auto densityProfile = [centre, width] (double rad) {return 1/(width * sqrt(2*M_PI))*exp(-0.5 * pow((rad-centre)/width,2));};
+	std::complex<double> unitComplex(0,1);
+	double spacing =  0.01*width;
+	for (int n = 0; n < bf.maxRadialIndex(); ++n) {
+		for (double r = spacing; r < rMax; r+= spacing) {coeff(n) += r*r*bf.potential(r, n) * exp(unitComplex * r * k) * densityProfile(r);}
+	}
+	m_responseCoef(0) = -coeff*spacing; 
+}
 
 
 #endif

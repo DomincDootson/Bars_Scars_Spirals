@@ -12,7 +12,7 @@
 class OrbitSections
 {
 public:
-	OrbitSections(const int nPtle = 20, const std::string & filename = "Bodies/particleSamplesSections.out") : m_nParticles{nPtle}, m_nPoints{150}, m_oldBarAngle{0},
+	OrbitSections(const int nPtle = 20, const std::string & filename = "Bodies/particleSamplesSections.out") : m_nParticles{nPtle}, m_nPoints{140}, m_oldBarAngle{0},
 	v_xValues(m_nParticles * m_nPoints), v_pxValues(m_nParticles * m_nPoints), v_indicies(m_nParticles),
 	m_ptle(filename, nPtle, 1),
 	m_oldXY(2*m_nParticles), m_oldVXVY(2*m_nParticles)

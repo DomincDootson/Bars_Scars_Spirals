@@ -4,6 +4,8 @@ from Density_Classes.TwoDdensity import *
 
 from numpy import linalg as LA
 
+from scipy.special import legendre
+
 '''leading = TwoDdensity("Spiral_Data/spiralLeading.csv")
 trailing = TwoDdensity("Spiral_Data/spiralTrailing.csv")
 
@@ -67,33 +69,28 @@ plt.xlabel(r"$\lambda/\lambda_{crit}$")
 plt.yscale('log')
 z
 plt.show()'''
-linear = readingInComplexCSV("KalnajsTorque/Sormani_Bar/coeffTest35.csv")
-n = 0
-fig,axs = plt.subplots(ncols = 2)
-axs[0].plot(np.linspace(0, 100, np.shape(linear[1:100,n])[0]), np.absolute(linear[1:100,n]))
-axs[1].plot(np.linspace(0, 100, np.shape(linear[1:100,n])[0]), np.angle(linear[1:100,n]), label = "Linear")
-
-# linear_old = readingInComplexCSV("test.csv")
-
-
-
-# axs[0].plot(np.linspace(0, 100, np.shape(linear_old[:100,n])[0]), np.absolute(linear_old[:100,n]))
-# axs[1].plot(np.linspace(0, 100, np.shape(linear_old[:100,n])[0]), np.angle(linear_old[:100,n]), label = "Linear")
-
-
-nbody = readingInComplexCSV("KalnajsTorque/Sormani_Bar/Coefficent_0.csv")
-
-axs[0].plot(np.linspace(0, 100, np.shape(nbody[:100,n])[0]), np.absolute(nbody[:100,n]))
-axs[1].plot(np.linspace(0, 100, np.shape(nbody[:100,n])[0]), np.angle(nbody[:100,n]), label = "Test Particle")
-axs[0].set_ylabel("Absolute")
-axs[1].set_ylabel("Phase")
-axs[1].legend()
-fig.suptitle(f"n = {n}")
 
 # Coefficent_0.csv
 
 
+# fig,axs = plt.subplots(ncols = 3)
+
+# data = readingInComplexCSV("Coeff_test.csv")
+# for n in range(0, 16, 2):
+# 	axs[0].plot(np.linspace(0,100, np.shape(data)[0]), np.absolute(data[:, n]))
+# 	axs[1].plot(*getGradient(np.linspace(0,100, np.shape(data)[0]), np.angle(data[:, n]), multiple = 2))
+
+# data = readingInRealCSV("Evolution_test.csv")
+# axs[2].plot(np.linspace(0,100, np.shape(data)[0]), data[:,2])
 
 
+# plt.show()
 
+# den = TwoDdensity("Test_density.csv")
+# den.densityAnimation()
+
+data= TwoDdensity("test_spiral.csv")
+r, a,_ = data.fourierCoeffT(2, 0, 10)
+plt.plot(r, a)
+#plt.imshow(data[0])
 plt.show()

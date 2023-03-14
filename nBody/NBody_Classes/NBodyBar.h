@@ -59,16 +59,19 @@ void NBodyBar<Tbf>::testParticleEvolution(const std::string & diskFile, const st
 template <class Tbf>
 void NBodyBar<Tbf>::nBodyEvolution(const std::string & diskFile, const std::string & barFile, const double freelyRotating){ 
 	std::ofstream out(diskFile); int updateBarEvery{100}; m_barGrid.updateGrid(0);
+	savePhaseSpace("../Plotting/Nbody_Sormani_Data/Phase_Space_Data/Beginning.csv"); 
 	for (int time = 0; time < this->m_numbTimeSteps; ++time){
 		this->outputInfo(time, out);
 	    this->backgroundParticleEvolution(true);
 	    
 		if (m_barGrid.updateGridNow(time,updateBarEvery)) { barUpdate(time*this->m_timeStep, freelyRotating, updateBarEvery); }
 		foregroundParticleEvolution(true, time*this->m_timeStep); // Update this function
+		if (time == (this->m_numbTimeSteps/2)) {savePhaseSpace("../Plotting/Nbody_Sormani_Data/Phase_Space_Data/Middle.csv");}
 
 	}
 	out.close();
 	m_barGrid.saveBarEvolution(barFile);
+	savePhaseSpace("../Plotting/Nbody_Sormani_Data/Phase_Space_Data/End.csv");
 }
 
 template <class Tbf>
@@ -84,7 +87,7 @@ void NBodyBar<Tbf>::barUpdate(const double time, const double freelyRotating, co
 template <class Tbf>
 void NBodyBar<Tbf>::angularMomentumSections(const std::string & filename,  const std::string & bodiesFile) 
 {
-	OrbitSections sectionsClass(48, bodiesFile); int minIndex{0}, index{0}, skip{100}; m_barGrid.updateGrid(); 
+	OrbitSections sectionsClass(96, bodiesFile); int minIndex{0}, index{0}, skip{100}; m_barGrid.updateGrid(); 
 	
 	do 
 	{	

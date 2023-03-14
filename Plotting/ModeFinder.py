@@ -52,19 +52,25 @@ class ModeFinder():
 			plt.show()
 
 	def contourPlotShow(self):
-		
+		plt.rc('text', usetex=True)
+		plt.rc('font', family='serif')
 		fig, axs = plt.subplots()
 
 		XX, YY, logDet = np.real(self.omegas), np.imag(self.omegas), np.log(np.absolute(self.det))
+		contour = axs.contour(XX, YY, logDet, levels = 8, colors = 'k', alpha = 0.8)
 		contour = axs.contourf(XX, YY, logDet, levels = 100)
+
 		cbar = fig.colorbar(contour)
-		cbar.ax.set_title(r"$\log\left[\det\left[\hat{\mathcal{M}}(\omega) - I \right]\right] $")
+		cbar.ax.set_title(r"$\log\left[\det\left[\hat{\mathcal{M}}(\omega) - \mathcal{I} \right]\right] $", fontsize = 15)
 
 		minVal = self.modes()
 		
 		for each in minVal:
 			print(each)
 			axs.scatter(each.real, each.imag, color = 'firebrick')
+
+		axs.set_xlabel(r"$\omega_{0}$", fontsize =15)
+		axs.set_ylabel(r"$\eta$", fontsize = 15)
 
 		
 		plt.show()
@@ -117,7 +123,9 @@ class ModeFinder():
 
 
 
-
+# mf = ModeFinder("test.csv")
+# mf.contourPlotShow()
+#print(mf.mostUnstableMode())
 
 
 #det = ModeFinder("Modes_Data/Unstable_Mode_Search.csv")
@@ -139,5 +147,4 @@ plt.show()
 ''' 
 #det.contourPlotShow()
 # det.cutThrough(20)
-
 
