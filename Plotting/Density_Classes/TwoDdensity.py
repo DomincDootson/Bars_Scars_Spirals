@@ -311,7 +311,7 @@ class TwoDdensity(object):
 	def fourierCoeffT(self, angHarmonic, time, rMax = 15): # We fit rho = A(R)Cos(l phi + psi(R)) 
 		
 		phase, magnitude = [], []
-		radii, angles  = np.linspace(0.01, rMax, self.nRows//2), np.linspace(0, 2 * 3.14, 50)
+		radii, angles  = np.linspace(0.01, rMax, int(sqrt(2)*self.nRows)//2), np.linspace(0, 2 * 3.14, 50)
 		
 		dtheta = angles[1] - angles[0]
 

@@ -119,6 +119,7 @@ PotentialDensityPairContainer<T>::PotentialDensityPairContainer(const std::strin
 
 
 	double step, rMax; inFile >> step; inFile >> rMax; 
+	std::cout << step << " " << rMax <<'\n';
 	for (int i = 0; i <= m_maxRadialIndex; ++i) {
 		m_potentialDensityContainer.emplace_back(inFile, step, rMax, i, m_fourierHarmonic); 
 	}

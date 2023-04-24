@@ -168,21 +168,21 @@ void turnOnBarFile(const std::string & filename, double turnOnTime) {
 }
 
 void waveEvolutionTest(const std::string & densityfile, double CRposition, double perturberRadius, const std::string & growthFile) {
-	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical.dat", 48);
+	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat", 72);
 	
 	//turnOnBarFile(growthFile, 40);
-	turnOffBarFile(growthFile, 150);
-	Bar2D bar(deltaFunctionDensity(pd, 2), 0.2);  
+	turnOffBarFile(growthFile, 10);
+	Bar2D bar(deltaFunctionDensity(pd, 5 *(1-sqrt(2)), 0.5), -0.2, growthFile);  
 	//bar.sormaniBar(pd);
 
 	if (growthFile != "None") {bar.readInSize(growthFile);}
 
-	VolterraSolver solver("Kernels/Waves/Kalnajs_2_WM.out", 48, 2, 100, 1.0);
+	VolterraSolver solver("Kalnajs_kernel_Wave.out", 72, 2, 100, 1.0);
 	solver.activeFraction(0.5);
 	//solver.barRotation(bar, true); 
 
 	solver.barRotation(bar, "Plotting/Coeff_test.csv", "Plotting/Evolution_test.csv", true, false);
-	solver.density2dEvolution(densityfile, pd, 2, 10);
+	solver.density2dEvolution(densityfile, pd, 1, 10);
 
 }
 

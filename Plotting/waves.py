@@ -73,7 +73,7 @@ def decomposed1Danimations(readStem, writeStem, file2read):
 def wavesFittingTest():
 	plt.rc('text', usetex=True)
 	plt.rc('font', family='serif')
-	fig, axs = plt.subplots(nrows = 4, ncols = 3, sharex = 'col')
+	fig, axs = plt.subplots(nrows = 4, ncols = 3, sharex = 'col', sharey = 'col')
 
 	wave = WaveFitter("Waves_Data/test_spiral.csv", timeEnd = 130*0.3, l = 2, rmax = 15)
 
@@ -92,17 +92,18 @@ def wavesFittingTest():
 		axs[i,0].plot(wave.radii, amp, color = 'royalblue', linestyle = '--')
 		axs[i,0].plot(wave.radii, amp * np.cos(phase), color = 'royalblue')
 		axs[i,1].plot(*getGradient(wave.radii, phase), color = 'royalblue', label = "Reconstructed")
-		axs[i,1].axhline(0, linestyle = '--')
+		axs[i,1].axhline(0, linestyle = '--', color = 'k')
 
-		axs[i,1].axvline(rad[i], linestyle = '--', color = 'black')
+		#axs[i,1].axvline(rad[i], linestyle = '--', color = 'black')
 
 
 		XX, YY = wave.density.meshgrid(rMax = 15)
-		axs[i,2].contourf(XX, YY, wave.density[time], levels = 100)
-		m = np.amax(wave.density[time])
-		axs[i,2].contour(XX, YY, wave.density[time], levels = [0.5 *m], colors = 'black')
+		s = slice(40,160)
+		axs[i,2].contourf(XX[s, s], YY[s, s], wave.density[time][s, s], levels = 100)
+		m = np.amax(wave.density[time][s, s])
+		axs[i,2].contour(XX[s, s], YY[s, s], wave.density[time][s, s], levels = [0.5 *m], colors = 'black')
 		axs[i,2].set(aspect = 1)
-		axs[i,2].plot([rad[i]*cos(th) for th in np.linspace(0,2*pi)], [rad[i]*sin(th) for th in np.linspace(0,2*pi)], color = 'firebrick', linestyle = '--')
+		#axs[i,2].plot([rad[i]*cos(th) for th in np.linspace(0,2*pi)], [rad[i]*sin(th) for th in np.linspace(0,2*pi)], color = 'firebrick', linestyle = '--')
 
 		axs[i,0].set_xlim([1, 10])
 		axs[i,1].set_xlim([1, 10])
@@ -115,7 +116,7 @@ def wavesFittingTest():
 
 	axs[0,0].set_title(r"$\rho(R,t)/M$", fontsize = 15)
 	axs[0,1].set_title(r"$k(R,t)$", fontsize = 15)
-	axs[0,2].set_title(r"Density", fontsize = 15)
+	axs[0,2].set_title(r"$\rho(R,\phi)$", fontsize = 15)
 
 	axs[0,0].set_ylabel(r"$t = 0$", fontsize = 15)
 	axs[1,0].set_ylabel(r"$t = 2 \times 2\pi$", fontsize = 15)
@@ -205,20 +206,22 @@ def wavesDirectionTest():
 # plt.plot(np.linspace(-15,15,201),density[15][100,:])
 
 
-#wavesFittingTest()
+wavesFittingTest()
 #wavesDirectionTest()
 # wave = WaveFitter("Waves_Data/test_spiral.csv", timeEnd = 40, l = 2, rmax = 15)
 # wave.check_k_splitting(50, 1.297)
 
 
-wave = WaveFitter("Test_density.csv", timeEnd = 100, l = 2, rmax = 10)
-print(wave.density.nRows)
-#wave.splitting_Plot(1)
 #wave.check_k_fitting(48)
 # wave.check_k_splitting(48, 1.09)
-wave.k_splitting_Plot(48, 1.09)
+#wave.k_splitting_Plot(48, 1.09)
 #wave.splitting_Plot(45)
 #plt.show()
 #wave.check_k_fitting(48)
 
+#wavesFittingTest()
 
+''' Run this '''
+
+# wave = WaveFitter("Test_density.csv", timeEnd = 100, l = 2, rmax = 10)
+# wave.splitting_Plot()

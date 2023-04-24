@@ -1,7 +1,7 @@
 from generalPlottingFunctions import *
 from Density_Classes.OneDdensity import *
 from Density_Classes.TwoDdensity import *
-
+from Density_Classes.WaveFitter import *
 from numpy import linalg as LA
 
 from scipy.special import legendre
@@ -89,8 +89,10 @@ plt.show()'''
 # den = TwoDdensity("Test_density.csv")
 # den.densityAnimation()
 
-data= TwoDdensity("test_spiral.csv")
-r, a,_ = data.fourierCoeffT(2, 0, 10)
-plt.plot(r, a)
-#plt.imshow(data[0])
-plt.show()
+#data= TwoDdensity("Test_Spiral_Evolution_Neg.csv")
+
+# plt.plot(r, a)
+# plt.plot(r, a*np.cos(ph))
+
+# wf = WaveFitter("Test_Spiral_Evolution_Neg.csv", 100)
+# wf.splitting_Plot()

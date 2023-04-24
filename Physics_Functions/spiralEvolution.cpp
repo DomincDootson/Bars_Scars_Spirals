@@ -14,7 +14,9 @@ int main() {
 	//smallSpiral(); 
 	//varyingNumberBasisFunctions();
 
-	spiralGaussianTest(); 
+	//spiralGaussianTest(); 
+	gaussianSpiralEvolution();
+
 
 	return 0;  
 }

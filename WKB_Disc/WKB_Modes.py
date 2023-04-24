@@ -56,30 +56,33 @@ def varyingInnerPositon(innerPosition, filename = "Cavity_Modes/VaryingInnerPosi
 	f.close()
 
 	
-def plottingInnerPosition(files = ["Cavity_Modes/VaryingInnerPosition.csv", "Cavity_Modes/VaryingInnerPosition_Tapered.csv", "Cavity_Modes/VaryingInnerPosition_Tapered_Scarred.csv"], scatterFiles = []):
+def plottingInnerPosition(files = ["Cavity_Modes/VaryingInnerPosition.csv", "Cavity_Modes/VaryingInnerPosition_Tapered.csv", "Softening_Data/Tapered_Unscared_Soft_1.csv", "Cavity_Modes/VaryingInnerPosition_Tapered_Scarred.csv"], scatterFiles = None):
 	plt.rc('text', usetex=True)
 	plt.rc('font', family='serif')
 	
-	fig, axs = plt.subplots(ncols = 1)
-	labels, colors, ls = ["Untapered","Tapered", "Tapered Scarred"], ["royalblue", "firebrick", "firebrick"], ['-', '--', '-']
+	fig, axs = plt.subplots(ncols = 2)
+	labels, colors, ls = ["Untapered","Tapered", "Tapered Softened"], ["royalblue", "firebrick", "firebrick"], ['-', '-', '--']
 	for file, l,c,s in zip(files, labels, colors, ls):
 		data = readingInRealCSV(file)
-		axs.plot(data[:,0]+0.125, data[:,1], label = l, color = c, linestyle = s) 
-		#axs[1].plot(data[:,0], data[:,2]) 
+		axs[0].plot(data[:,0], data[:,1], label = l, color = c, linestyle = s) 
+		axs[1].plot(data[:,0], data[:,2]*(2/0.693), color = c, linestyle = s) # 2/ln(2) to account for the wrong factor we were using perviously 
+
+	if scatterFiles is not None:
+		for file in scatterFiles:
+			data = readingInRealCSV(file)
+			axs[0].scatter(data[:,0], data[:, 1], color = 'firebrick')
+			axs[1].scatter(data[:,0], (data[:, 2]), color = 'firebrick', label = "Volterra Method") 		
+
+	axs[0].legend(fontsize = 12, title = "Density Model For WKB", title_fontsize=12)
+	axs[0].set_xlabel(r"Inner Scar Radius, $R_{in}$", fontsize = 12)
+	axs[0].set_ylabel(r"$\omega_{0}$", fontsize = 12)
+	axs[0].set_title(r"Spatial Frequency", fontsize = 15)
 
 	
-	for file in scatterFiles:
-		data = readingInRealCSV(file)
-		axs.scatter(data[1:,0], data[1:, 1], color = 'firebrick')
-		#axs[1].scatter(data[:,0], data[:, 2]) 		
-
-	axs.legend(fontsize = 12, title = "Density Model", title_fontsize=12)
-	axs.set_xlabel(r"Inner Scar Radius, $R_{i}$", fontsize = 12)
-	axs.set_ylabel(r"$\omega_{0}$", fontsize = 12)
-
-	
-	#axs[1].set_xlabel(r"Inner Scar Radius")
-	#axs[1].set_ylabel(r"$\eta$")
+	axs[1].legend(fontsize = 12)
+	axs[1].set_xlabel(r"Inner Scar Radius, $R_{in}$", fontsize = 12)
+	axs[1].set_ylabel(r"$\eta$")
+	axs[1].set_title(r"Growth Rate", fontsize = 15)
 
 	plt.show() 
 
@@ -222,11 +225,12 @@ def plottingVaryingScarDepth():
 
 #varyingSoftening(np.linspace(0.08, 0.10, 3))
 #varyingInnerPositon(np.linspace(1, 2, 11), "Cavity_Modes/VaryingInnerPosition_Tapered_Scarred.csv")
-#varyingInnerPositon(np.linspace(1, 2, 11))
+#plottingInnerPosition()
 #varyingOuterPositon(np.linspace(1.5, 2, 1))
-disc = WKB_Disc(1/sqrt(12.4))
-print(disc.forbidden_radius(0.371186)*disc.CR(0.371186))
-#plottingInnerPosition(scatterFiles = ["Cavity_Modes/VaryingInnerPositionResponse_25_-95.csv"])
+# disc = WKB_Disc(1/sqrt(12.4))
+# print(disc.forbidden_radius(0.371186)*disc.CR(0.371186))
+#varyingSoftening(np.linspace(1, 2, 11), "Softening_Data/Tapered_Unscared_Soft_1.csv", 0.125)
+plottingInnerPosition(scatterFiles = ["Cavity_Modes/VaryingInnerPositionResponse_25_-95.csv"])
 #forbiddenRadii(rScar = [1.2, 1.4, 1.6, 1.8, 2.0], omega0 = [0.564407, 0.510169, 0.469492, 0.428814, 0.394915])
 #deRijkeMode()
 
@@ -242,7 +246,7 @@ disc.plotting_k_vs_r(0.40453948974609377, scars = [2])'''
 
 
 #varyingSoftening(np.linspace(1, 2, 11), "Softening_Data/Tapered_Uncared_Hard.csv", 0)
-#varyingSoftening(np.linspace(1, 2, 11), "Softening_Data/Tapered_Unscared_Soft.csv", 0.125)
+#varyingSoftening(np.linspace(1, 2, 11), "Softening_Data/Tapered_Unscared_Soft_1.csv", 0.125)
 
 
 

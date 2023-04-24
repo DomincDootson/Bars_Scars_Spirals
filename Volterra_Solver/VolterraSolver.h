@@ -116,6 +116,8 @@ public:
 
 	template <class T> 
 	void spiralEvolution(T & spiral);  // This can also be used for Wave class
+	template <class T> 
+	void spiralEvolutionPerturbation(T & spiral);  // This can also be used for Wave class
 	
 
 private:
@@ -304,6 +306,14 @@ void VolterraSolver::spiralEvolution(T & spiral) {
 	transferCoeff(spiral);
 }
 
+template <class T> 
+void VolterraSolver::spiralEvolutionPerturbation(T & spiral) {
+	setInitalPerturbation(spiral(0));
+	solveVolterraEquation(true); 
+
+	spiral.resizeVector(m_numbTimeSteps);
+	transferCoeff(spiral);
+}
 
 /* Saving Functions */ 
 /* ---------------- */ 

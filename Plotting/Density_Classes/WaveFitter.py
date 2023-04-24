@@ -5,15 +5,19 @@ from scipy.special import jn_zeros, jv, hankel1, hankel2 # Bessel Functions
 from scipy.fft import fft2, ifft2, fftfreq
 from operator import gt, le
 
-def grad(radius, phase, multiple = 3):
+def grad(radius, phase, multiple = 5):
 	rad, grad = [r1 for r1 in radius[1:]], [(ph1-ph0)/(r1-r0) for ph1, ph0, r1, r0 in zip(phase[1:], phase, radius[1:], radius)]
 	r_o, g_o =[], []
 	med = abs(median(grad))
 	
 	for r, g in zip(rad, grad):
-		if abs(abs(g) - med)/med < multiple:
+		if abs(g) < multiple:
 			r_o.append(r)
 			g_o.append( g)
+
+
+
+		
 
 	return r_o, g_o
 
@@ -126,8 +130,8 @@ class WaveFitter():
 	def splitting_Plot(self, time):
 		self.split_waves()
 
-		fig,axs = plt.subplots(ncols = 2, nrows = 2, sharex = True, sharey = 'row')
-		axs[0,0].set_xlim([1.5, self.radii[-1]])
+		fig,axs = plt.subplots(ncols = 3, nrows = 2, sharex = True, sharey = 'row')
+		axs[0,0].set_xlim([3, self.radii[-1]])
 		inInd = 10
 
 		axs[0,0].plot(self.radii[inInd:], np.absolute(self.ingoing_T(time))[inInd:], linestyle = '--')
@@ -142,12 +146,72 @@ class WaveFitter():
 		axs[1,0].plot(*grad(self.radii[inInd:], np.angle(self.ingoing_T(time))[inInd:]))
 		axs[1,0].axhline(color = 'k', linestyle = 'dotted')
 
-
 		axs[1,1].plot(*grad(self.radii[inInd:], np.angle(self.outgoing_T(time))[inInd:]))
 		axs[1,1].axhline(color = 'k', linestyle = 'dotted')
+
+		total_d, total_p = self.total_T(time)
+		axs[0,2].plot(self.radii[inInd:], total_d[inInd:], linestyle = '--')
+		axs[0,2].plot(self.radii[inInd:], total_d[inInd:]*np.cos(total_p[inInd:]))
+		axs[0,2].axhline(color = 'k', linestyle = 'dotted')
+
+		axs[1,2].plot(*grad(self.radii[inInd:], total_p[inInd:]))
+		print(len(self.radii))
+		axs[1,2].axhline(color = 'k', linestyle = 'dotted')
 		
 		axs[0,0].set_title("In-going")
-		axs[1,0].set_title("Out-going")
+		axs[0,1].set_title("Out-going")
+	
+		plt.show()
+
+	def splitting_Plot(self):
+		self.split_waves()
+		plt.rc('text', usetex=True)
+		plt.rc('font', family='serif')
+		times = [25, 45, 55]
+		fig,axs = plt.subplots(ncols = 4, nrows = len(times), sharex = True)
+		axs[0,0].set_xlim([1.5/5, 8.5/5])
+		inInd = 10
+		minus, add = [1,1,-1], [0,0,1.5]
+
+		for i, t in enumerate(times):
+			amp, ang = np.absolute(self.ingoing_T(t))[inInd:], np.angle(self.ingoing_T(t)[inInd:])
+			axs[i,0].plot(self.radii[inInd:]/5, amp, linestyle = '--', color = 'firebrick')
+			axs[i,0].plot(self.radii[inInd:]/5, amp * np.cos(ang + 2*t * 0.2), color = 'royalblue')
+			axs[i,0].axhline(color = 'k', linestyle = 'dotted')
+			
+			axs[i,0].axvline(1.45, color = 'k', linestyle = '--')
+			axs[i,2].axvline(0.55, color = 'k', linestyle = '--')
+
+			
+
+			amp, ang = np.absolute(self.outgoing_T(t))[inInd:], np.angle(self.outgoing_T(t)[inInd:])
+			axs[i,2].plot(self.radii[inInd:]/5, amp, linestyle = '--', color = 'firebrick')
+			axs[i,2].plot(self.radii[inInd:]/5, amp * np.cos(ang - 2*t * 0.2), color = 'royalblue')
+			axs[i,2].axhline(color = 'k', linestyle = 'dotted')
+
+			r, k = grad(self.radii[inInd:], -np.angle(self.ingoing_T(t))[inInd:])
+			axs[i,1].plot(np.asarray(r)/5, 0.75*(np.asarray(k)-1.3), color = 'royalblue')
+			axs[i,1].axhline(color = 'k', linestyle = 'dotted')
+			
+			r, k = grad(self.radii[inInd:], np.angle(self.outgoing_T(t))[inInd:])
+			axs[i,3].plot(np.asarray(r)/5, np.asarray(k)+2., color = 'royalblue')
+			axs[i,3].axhline(color = 'k', linestyle = 'dotted')
+		
+		axs[0,0].set_title("In-going\n"+r"$\rho$", fontsize = 15)
+		axs[0,2].set_title("Out-going\n"+r"$\rho$", fontsize = 15)
+		axs[0,1].set_title("In-going\n"+r"$k$", fontsize = 15)
+		axs[0,3].set_title("Out-going\n"+r"$k$", fontsize = 15)
+
+		axs[-1,0].set_xlabel(r"$R/R_{CR}$", fontsize =15)
+		axs[-1,1].set_xlabel(r"$R/R_{CR}$", fontsize =15)
+		axs[-1,2].set_xlabel(r"$R/R_{CR}$", fontsize =15)
+		axs[-1,3].set_xlabel(r"$R/R_{CR}$", fontsize =15)
+
+		axs[0,0].set_ylabel(r"$t = 4.0\times 2\pi$", fontsize = 15)
+		axs[1,0].set_ylabel(r"$t = 7.2\times 2\pi$", fontsize = 15)
+		axs[2,0].set_ylabel(r"$t = 8.8\times 2\pi$", fontsize = 15)
+
+
 	
 		plt.show()
 
@@ -218,6 +282,7 @@ class WaveFitter():
 
 	def k_splitting_Plot(self, time, k_tp):
 		self.split_waves_k(k_tp)
+		
 
 		fig,axs = plt.subplots(ncols = 2, nrows = 4, sharex = True, sharey = 'row')
 		axs[0,0].set_xlim([1.5, self.radii[-1]])

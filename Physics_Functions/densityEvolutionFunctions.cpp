@@ -182,7 +182,7 @@ void greensFunctions() {
 
 	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat", 48);
 
-	VolterraSolver solver("KalnajsNKernel.out", 48, 2, 100, 0.5); 
+	VolterraSolver solver("Kernels/Greens_Kernels/KalnajsNKernel.out", 48, 2, 100, 0.5); 
 
 	Eigen::VectorXcd coeff = Eigen::VectorXcd::Zero(48+1); 
 
@@ -194,7 +194,7 @@ void greensFunctions() {
 	solver.density2dEvolution("Plotting/Greens_Data/Kalnajs_Test_Green_2.csv", pd, 13, 5);
 
 
-	VolterraSolver solverC("KalnajsNKernel.out", 48, 2, 100, 0.5); 
+	VolterraSolver solverC("Kernels/Greens_Kernels/KalnajsNKernel.out", 48, 2, 100, 0.5); 
 	solverC.activeFraction(0.5); 
 	solverC.setInitalPerturbation(coeff);
 	solverC.deltaPerturbationConsistent(); 

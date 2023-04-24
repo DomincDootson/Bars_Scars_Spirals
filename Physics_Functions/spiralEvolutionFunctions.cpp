@@ -201,12 +201,24 @@ void varyingNumberBasisFunctions() {
 /* --------------- */
 
 void spiralGaussianTest() {
-	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat", 48);
+	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat");
 	Spiral2D spiral(pd);
 
-	spiral.gaussianSpiral(pd, 1, 8, 1);
-	spiral.density2dEvolution(0, pd, "Plotting/test_spiral.csv");
+	spiral.gaussianSpiral(pd, 1.3555331395141814, 8, 0.15);
+	spiral.density2dEvolution(0, pd, "Plotting/test_spiral.csv", 10, 401);
 }
 
-// some function that does the evolution of the waves
+void gaussianSpiralEvolution() {
+	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat");
+	Spiral2D spiral(pd);
+	spiral.gaussianSpiral(pd, -1.3555331395141814, 8, 0.5);
+
+	VolterraSolver solver("Kalnajs_kernel_Wave.out", 72, 2, 100, 1);
+	solver.activeFraction(.5);
+
+	solver.spiralEvolution(spiral); 
+	//solver.spiralEvolutionPerturbation(spiral);
+	//spiral.removeIC();
+	spiral.density2dEvolution(pd, "Plotting/Test_Spiral_Evolution_Neg.csv", 1, 10, 401);
+}
 

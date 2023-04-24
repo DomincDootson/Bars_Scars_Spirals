@@ -123,12 +123,21 @@ void generateIndividualSwingKernel(int l, const double timeStep = 0.3, const int
 
 }
 
+void generateIndividualSwingKernel_name(const std::string filename, int l, const double timeStep = 0.3, const int nStep = 500, const int nMax = 40, const double temp = 0.24) {
+	Mestel DF(1, 1, temp, 1, 1, 11.5, 4, 5);
+	VolterraSolver solver(nMax, l, nStep, timeStep);	
+	ActionAngleBasisContainer pd("KalnajsN/Swing_Amplification", "KalnajsN", nMax, l, 4, 251, 15);
+	solver.generateKernel(filename, DF, pd); 
+}
+
+
 void generateSwingKernels(int lMax) {
-	
 	for (int i = 0; i < 15; ++i) {
 	std::cout << "Calculating kernels for l: " << i <<'\n';
 	generateIndividualSwingKernel(i);}
 }
+
+
 
 /* Fixed Radius Amplification */
 /* -------------------------- */
@@ -137,6 +146,12 @@ void generateSwingKernels(int lMax) {
 void writeVector2file(const std::vector<double> & values, const std::string & filename, int startHarmonic = 0, int endHarmonic = 15) {
 	std::ofstream out(filename);
 	for (int l = 0; l < endHarmonic; ++l) {out << l <<',' << values[l] << '\n';}
+	out.close();
+} 
+
+void writeVector2file(const std::vector<double> & x_vec, const std::vector<double> & y_vec, const std::string & filename) {
+	std::ofstream out(filename);
+	for (int i =0; i < x_vec.size(); ++i) {out << x_vec[i] <<',' << y_vec[i] << '\n';}
 	out.close();
 } 
 
@@ -215,4 +230,67 @@ void densityEvolutionFixedRadius(double rad, int startHarmonic, int endHarmonic)
 		evolutionFixedRadiusGivenl("TA_Evolution_", rad, l, false, -1);
 	}
 }
+
+/* Cold Disc limit */ 
+/* --------------- */ 
+
+void generateSwingKernelsTemp(int l, double Q) {
+	std::vector<double> chi_d {0.05, 0.10, 0.15,0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50};
+	std::vector<std::string> chi_s {"05", "10", "15", "20", "25", "30", "35", "40", "45", "50"};
+
+	std::string Q_s{std::to_string(int(Q*10))};
+
+	auto sigma = [Q] (double xi) {return Q * xi * (3.36/(2*M_PI*sqrt(2)));};
+
+	for (int i =0; i < chi_d.size(); ++i) {
+		std::string filename = "Kernels/Swing_Kernels/Diff_Temp/SW_Ker_" + std::to_string(l) +"_" + Q_s +"_"+chi_s[i]+ ".out";
+		std::cout << filename <<'\n';
+		generateIndividualSwingKernel_name(filename, l, 1, 150, 40, sigma(chi_d[i]));
+	}
+}
+
+double amplificationGivenChi(const double rad, const int l, const bool isSelfConsistent, const double activeFraction, const std::string & chi_s) {
+	PotentialDensityPairContainer<KalnajsNBasis> pd("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_" +std::to_string(l) +".dat", 40);
+	Eigen::VectorXcd coef(40+1);
+
+	for (int n = 0; n <= pd.maxRadialIndex(); ++n) {coef(n) = - 2 * M_PI * pd.potential(rad, n);}
+	Bar2D bar(coef, 1/rad, "Bar2D/Swing_Files/Radius_"+std::to_string((int) rad)+".out", l); 
+
+	  
+
+	std::string kernelFile = "Kernels/Swing_Kernels/Diff_Temp/SW_Ker_" + std::to_string(l) +"_13_"+chi_s+ ".out";
+	VolterraSolver solver(kernelFile, 40, l, 150, 1);
+	
+	solver.activeFraction(activeFraction); 
+	solver.barRotationUnsaving(bar, isSelfConsistent, false, true);
+
+	return solver.maxDensity(pd); 
+}
+
+void densityEvolutionChi(double rad, int harmonic) {
+	saveRotationFile("Bar2D/Swing_Files/Radius_"+std::to_string((int) rad)+".out", 0.5*M_PI * rad);  // Keep alive for half a turn
+	
+	std::vector<double> chi_d {0.05, 0.10, 0.15,0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50};
+	std::vector<std::string> chi_s {"05", "10", "15", "20", "25", "30", "35", "40", "45", "50"};
+	
+	std::vector<double> c, t;
+	for (int i = 0; i < chi_s.size(); ++i) {
+		std::cout << "Active Fraction: " << chi_d[i] << '\n';
+		c.emplace_back(amplificationGivenChi(5, harmonic, true, chi_d[i], chi_s[i]));
+		t.emplace_back(amplificationGivenChi(5, harmonic, false, chi_d[i], chi_s[i]));
+		
+		
+	}
+
+	
+	
+	
+	
+	writeVector2file(chi_d, c, "Disc_Consistent_13_" +std::to_string(harmonic)+".csv");
+	writeVector2file(chi_d, t, "Disc_Test_13_" +std::to_string(harmonic)+".csv");
+
+
+}
+
+
 

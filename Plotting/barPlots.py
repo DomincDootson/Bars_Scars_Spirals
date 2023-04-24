@@ -722,7 +722,7 @@ def coefficentEvolution(): # Maybe Could include a shaded region for the amplitu
 
 
 #densityWakeDiffTemp()
-kalnajsNbodyTorque()
+#kalnajsNbodyTorque()
 #torquePlots()
 #sormaniFits()
 #sormaniTorque()
@@ -732,4 +732,4 @@ kalnajsNbodyTorque()
 #sormaniSpeed()
 
 #coefficentEvolution()
- 
+sormaniRatioDensity() 

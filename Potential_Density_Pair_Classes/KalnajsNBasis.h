@@ -15,6 +15,7 @@ public:
 	{
 		for (int i = 0; i < v_potential.size(); i++) {inFile >> v_potential[i];}
 		for (int i = 0; i < v_density.size(); i++) {inFile >> v_density[i];}
+		std::cout << "Size: " << v_potential.size() <<'\n';
 	}
 	
 	~KalnajsNBasis() {}

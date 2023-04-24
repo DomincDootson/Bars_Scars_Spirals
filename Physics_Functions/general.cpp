@@ -36,14 +36,18 @@ int main()
 
 	//savingDensity("WKB_Disc/Tapered_Density.csv");
 
-/*	softeningKernel("Plotting/Kalnajs_Interaction_Potential_48.csv");
+	/*softeningKernel("Plotting/Kalnajs_Interaction_Potential_48.csv");
 	softeningKernel("Plotting/Kalnajs_Interaction_Potential_24.csv", 24);
 	softeningKernel("Plotting/Kalnajs_Interaction_Potential_72.csv", 72);*/
 
 	//monariBarTesting();
 	//checkMass();
 
-	guassianNTest();
+	//guassianNTest();
+	//generatingKalnajsKernels("test.out", 2, 72, 1);
+	//guassianNTest(); 
+
+	saveKalnajsBF();
 	return 0;
 }
 

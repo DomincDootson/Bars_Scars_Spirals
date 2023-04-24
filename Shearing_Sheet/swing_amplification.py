@@ -60,8 +60,6 @@ def save_amplification_data(filename_B = "Binney_Amplification_Comp.csv", filena
 
 
 
-
-
 def axiysmmetric_response():
 	sheet  = AxisymmetricSheet()
 	sheet.print_time_coeff()
@@ -94,11 +92,11 @@ def max_density_response():
 	data = []
 	for l in np.linspace(1,8):
 		print(l)
-		patch = ShearingPatch([l/4, -l/4], 1.3, 0.2, xi = 0.5)
+		patch = ShearingPatch([l/4, -l/4], 1.5, 0.2, xi = 0.5)
 		data.append([l, *patch.toomre_amplification_Abs()])
 		
-	save_2_file("../Plotting/swing_test_12.csv", data)
-#max_density_response()
+	save_2_file("../Plotting/swing_test_15.csv", data)
+
 #save_amplification_data()
 
 
@@ -125,7 +123,45 @@ def shearing_sheet_response_ti():
 	plt.ylabel(r"$\tilde{\Sigma}_{1}/\hat{\Sigma}_{e}$", fontsize = 15)
 	plt.show()
 
-shearing_sheet_response_ti()
+
+## Cold disc Amplification ## 
+## ----------------------- ##
+
+
+def cold_disc_amplification(Q, ell):
+	v_xi = np.linspace(0.01, 0.50, 40)
+	k_over_kcrit = v_xi * ell * 0.5 
+	
+	amp = []
+	for xi, k_norm in zip(v_xi, k_over_kcrit):
+		print(f"{Q}, {ell}, {xi}")
+		sheet = ShearingSheet(k_norm, Q, xi = xi)
+		amp.append(sheet.delta_amplification())
+		
+	return v_xi, amp
+
+	
+def cold_disc_limit(Q = 1.3, filename = "../Plotting/Swing_Data/Cold_Limit/Cold_Limit_Sheet_13.csv"):
+	ell = [8, 4, 8]
+
+	with open(filename, 'w', encoding='UTF8', newline='') as f:
+		writer = csv.writer(f)
+		
+		v_xi, amp = cold_disc_amplification(Q, ell[0])
+		print(amp)
+
+		writer.writerow(v_xi)
+		writer.writerow(amp)
+
+		# for l in ell[1:]:
+		# 	v_xi, amp = cold_disc_amplification(Q, l)
+		# 	writer.writerow(amp)
+
+
+max_density_response()
+# cold_disc_limit()
+
+#shearing_sheet_response_ti()
 
 # axiysmmetric_response()
 

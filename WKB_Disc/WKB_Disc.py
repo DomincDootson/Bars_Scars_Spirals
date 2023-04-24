@@ -180,6 +180,9 @@ class WKB_Disc():
 
 	    return max(r_plot)
 
+	def outer_forbidden_radius(self, omega0):
+		return self.CR(omega0)*(2  - self.forbidden_radius(omega0))
+
 
 	def k_func_r(self, omega0, forbidden_radius = 0.99): # Use this for plotting r vs k
 	    cr = self.CR(omega0)
@@ -292,9 +295,9 @@ class WKB_Disc():
 
 	def modeFinder(self, range_omega0 = [0.5, 0.6], rScar = 1.2, rUpperScar = 100000):
 		omega = self.find_mode_omega0(range_omega0, rScar, rUpperScar = rUpperScar)
-		#eta = self.find_mode_eta(omega, rScar, rUpperScar = rUpperScar) ## This can sometimes produce an indexing error. 
+		eta = self.find_mode_eta(omega, rScar, rUpperScar = rUpperScar) ## This can sometimes produce an indexing error. 
 
-		return omega + 1j* 1
+		return omega + 1j* eta
 
 
     ## Wave Motion in WKB Disc ##
@@ -321,10 +324,10 @@ class WKB_Disc():
 
 
 
-	def motion_of_wave(self, omega0): 
-		time, region, fr = np.linspace(0, 50, 400), [False, False], self.forbidden_radius(omega0)
+	def motion_of_wave(self, omega0 = 0.4, rad = 8): 
+		time, region, fr = np.linspace(0, 57, 800), [False, False], self.forbidden_radius(omega0)
 		radius, k, vg, deltaT = np.zeros_like(time), np.zeros_like(time), np.zeros_like(time), time[1]
-		radius[0] = 1.15*self.ILR(omega0) 
+		radius[0] = 1.3*self.ILR(omega0) 
 		k[0]  = self.correct_k(omega0, radius[0], region)
 		vg[0] = self.stellar_vg(k[0], radius[0])
 		
@@ -355,18 +358,31 @@ class WKB_Disc():
 		axs.set_ylabel(r"$R/R_{CR}$", fontsize = 15)
 		axs.set_xlabel(r"$k/k_{crit}$", fontsize = 15)
 
-		axs.text(-7.5, 0.35, "A", fontsize = 12)
-		axs.text(-1.80, 0.84, "B", fontsize = 12)
-		axs.text(-0.19, 0.40, "C", fontsize = 12)
-		axs.text(1.66, 0.84, "D", fontsize = 12)
-		axs.text(7.5, 0.35, "E", fontsize = 12)
+		axs.text(-3, 0.40, "A", fontsize = 12)
+		axs.text(-1.2, 0.58, "B", fontsize = 12)
+		axs.text(-0.15, 0.35, "C", fontsize = 12)
+		axs.text(1.0, 0.58, "D", fontsize = 12)
+		axs.text(3, 0.40, "E", fontsize = 12)
+
+		
+		k = disc.k_from_omega(0.4, rad)
+		axs.scatter([-k[1]/self.k_crit(rad)],  [rad/self.CR(omega0)], color = 'firebrick')
 
 		fig.colorbar(cmap, ax=axs, label = r"$t/(2\pi/\omega_{0})$").set_label(label = r"$t/(2\pi/\omega_{0})$", fontsize = 15)
 		plt.show()
 
 
-disc = WKB_Disc(0.2835, epsilon = 0)
-print(disc.Q(), disc.forbidden_radius(2/5) * disc.CR(2/5), disc.k_turning(2/5))
+# disc = WKB_Disc(0.2835, epsilon = 0)
+# disc.motion_of_wave(0.4)
+# print(disc.Q(), 
+
+# 	disc.outer_forbidden_radius(0.4),
+# 	0.98*disc.OLR(0.4), 
+# 	disc.k_from_omega(0.4, 1.5))
+
+
+
+
 # disc.set_sigma_with_Q(1.2)
 # print(disc.sigmaR, disc.CR(1))
 # disc.plotting_k_vs_r(1)
@@ -375,4 +391,5 @@ print(disc.Q(), disc.forbidden_radius(2/5) * disc.CR(2/5), disc.k_turning(2/5))
 
 # print(disc.k_turning(1))
 
-
+# disc = WKB_Disc(sigmaR = 1/sqrt(12.4), activeFraction = 0.5, densityFile = "Disc_Density/Tapered_R_10_W_25_D_-0_G.csv")
+# print(disc.modeFinder())

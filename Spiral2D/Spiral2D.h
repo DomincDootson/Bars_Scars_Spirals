@@ -22,10 +22,10 @@ public:
 
 
 	template <class Tbf>
-	void density2dEvolution(const Tbf & bf, const std::string & filename, const int skip, const double rMax =10) const {m_responseCoef.write2dDensity2File(filename, bf, skip, rMax);}
+	void density2dEvolution(const Tbf & bf, const std::string & filename, const int skip, const double rMax =10, const int nStep =201) const {m_responseCoef.write2dDensity2File(filename, bf, skip, rMax, nStep);}
 
 	template <class Tbf>
-	void density2dEvolution(int timeIndex, const Tbf & bf, const std::string & filename, const double rMax =10) const {m_responseCoef.write2dDensity2File(timeIndex, filename, bf, rMax);}
+	void density2dEvolution(int timeIndex, const Tbf & bf, const std::string & filename, const double rMax =10, const int nStep = 201) const {m_responseCoef.write2dDensity2File(timeIndex, filename, bf, rMax, nStep);}
 	void saveEvolutionCoeff(const std::string & filename) const {m_responseCoef.write2File(filename);}
 
 	void susceptibilityEvolution(const std::string & filename) const;
@@ -48,7 +48,9 @@ public:
 	
 
 	double maxDensity() const {return m_maxDensity;}
-	void removeIC() {for (int time = 0; time < m_responseCoef.nTimeStep(); ++time) {m_responseCoef(time) -= m_responseCoef(0);}}
+	void removeIC() {
+		auto ic = m_responseCoef(0);
+		for (int time = 0; time < m_responseCoef.nTimeStep(); ++time) {m_responseCoef(time) -= ic;}}
 
 	template <class Tbf>
 	void gaussianSpiral(const Tbf & bf, const double k, const double centre, const double width, const double rMax = 15); 

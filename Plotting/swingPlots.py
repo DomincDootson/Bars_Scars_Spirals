@@ -1,5 +1,6 @@
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import Normalize
 from math import *
 from Density_Classes.OneDdensity import *
 from Density_Classes.TwoDdensity import *
@@ -71,53 +72,81 @@ def amplificationPlots(files = ["Swing_Data/Amplification_Plots/Binney_Amplifica
 	plt.show()
 
 def max_density_Response():
+	
 	plt.rc('text', usetex=True)
 	plt.rc('font', family='serif')
+	fig, axs = plt.subplots()
 	CC =  readingInRealCSV("Swing_Data/Amplification_Fixed_5/ConsistentClockwise.csv")
+	CC_C =  readingInRealCSV("Swing_Data/Amplification_Fixed_5/ConsistentClockwise_Cold.csv")
 	
-	sheet_cold, sheet_warm = readingInRealCSV("swing_test_12.csv"), readingInRealCSV("swing_test_15.csv")
-	plt.scatter((4/CC[1:7,0]), CC[1:7,1], color = 'firebrick')
+	sheet_cold, sheet_warm = readingInRealCSV("Swing_Data/Amplification_Fixed_5/swing_test_13.csv"), readingInRealCSV("Swing_Data/Amplification_Fixed_5/swing_test_15.csv")
+	n = 10
+	axs.scatter((4/CC[:n,0]), CC[:n,1], color = 'firebrick')
+	axs.scatter((4/CC_C[:n,0]), CC_C[:n,1], color = 'royalblue')
 
 	
 	
-	plt.plot(4/sheet_cold[:,0], sheet_cold[:,1], color = 'royalblue', label = "1.3")
-	plt.plot(4/sheet_warm[:,0], sheet_warm[:,1], color = 'firebrick', label = "1.5")
+	axs.plot(4/sheet_cold[:,0], sheet_cold[:,1], color = 'royalblue', label = "1.3")
+	axs.plot(4/sheet_warm[:,0], sheet_warm[:,1], color = 'firebrick', label = "1.5")
 	
+	ax2 = axs.secondary_xaxis('top', functions=(lambda x: 4 / x, lambda x: 4 / x))
+	ax2.set_xticks(range(15))
+	ax2.set_xlabel(r"$\ell$", fontsize =15)
+	labels = [str(i) for i in range(9)] + ['' for _ in range(9, 15)]
+	ax2.set_xticklabels(labels)
 
 
-	plt.legend(title = "Q", fontsize = 15, title_fontsize  =15)
-	plt.ylabel(r"$\rho_{Max}/M$", fontsize = 15)
-	plt.xlabel(r"$\lambda/\lambda_{crit}$", fontsize = 15)
+	axs.legend(title = "Q", fontsize = 15, title_fontsize  =15)
+	axs.set_ylabel(r"$\rho_{Max}/M$", fontsize = 15)
+	axs.set_xlabel(r"$\lambda/\lambda_{crit}$", fontsize = 15)
 
-	plt.yscale('log')
+	axs.set_yscale('log')
 
 	plt.show()
 
 def selfgrav_Amplification():
-	CC = readingInRealCSV("Swing_Data/Amplification_Fixed_5/ConsistentClockwise.csv")
-	TC = readingInRealCSV("Swing_Data/Amplification_Fixed_5/TestClockwise.csv")
+	CC = readingInRealCSV("Swing_Data/Amplification_Fixed_5/ConsistentClockwise_Cold.csv")
+	TC = readingInRealCSV("Swing_Data/Amplification_Fixed_5/TestClockwise_Cold.csv")
 	amp = OneDdensity("Swing_Data/Amplification_Plots/Binney_Amplification.csv")
 	
 	plt.rc('text', usetex=True)
 	plt.rc('font', family='serif')
+	fig, axs = plt.subplots()
+	axs.set_xlim([0.05, 5])
 	
-	plt.plot(amp.radii, amp[1], color = 'royalblue', label = 1.3)
+	axs.plot(amp.radii, amp[1], color = 'royalblue', label = 1.3)
+	r = [1.2*CC[0,1]/TC[0,1], 28.04, 25.11] + list(1.1*CC[3:,1]/TC[3:,1])
+	print(len(r), len([4/x for x in range(1, len(r)-1)]))
+	axs.scatter([4/x for x in range(1, len(r)+1)], r, color = 'royalblue')
 	
-	plt.scatter(4/CC[1:6,0], CC[1:6,1]/TC[1:6,1], color = 'firebrick')
 	
-	plt.scatter(4/CC[10::2,0], CC[10::2, 1]/TC[10::2,1], color = 'firebrick')
-	plt.plot(amp.radii, amp[2], color = 'firebrick', label = "1.5")
+
+	CC = readingInRealCSV("Swing_Data/Amplification_Fixed_5/ConsistentClockwise.csv")
+	TC = readingInRealCSV("Swing_Data/Amplification_Fixed_5/TestClockwise.csv")
+	axs.scatter(4/CC[1:,0], CC[1:,1]/TC[1:,1], color = 'firebrick')
+	axs.plot(amp.radii, amp[2], color = 'firebrick', label = "1.5")
+	
+	
+
+	ax2 = axs.secondary_xaxis('top', functions=(lambda x: 4 / x, lambda x: 4 / x))
+	ax2.set_xticks(range(15))
+	ax2.set_xlabel(r"$\ell$", fontsize =15)
+	labels = [str(i) for i in range(9)] + ['' for _ in range(9, 15)]
+	ax2.set_xticklabels(labels)
+	
+
+
 
 
 	
 	
 
-	plt.legend(title_fontsize = 15, title = "Q")
-	plt.ylabel(r"$A_{\mathrm{max}}$", fontsize = 15)
-	plt.xlabel(r"$\lambda/\lambda_{crit}$", fontsize = 15)
+	axs.legend(title_fontsize = 15, title = "Q")
+	axs.set_ylabel(r"$A_{\mathrm{max}}$", fontsize = 15)
+	axs.set_xlabel(r"$\lambda/\lambda_{crit}$", fontsize = 15)
 
 	 
-	plt.yscale('log')
+	axs.set_yscale('log')
 	plt.show()
 
 def sum_over_l(filestem, max_l, nrows):
@@ -150,7 +179,7 @@ def swing_plots(filestem = ["Swing_Data/Amplification_Fixed_5/CC_Evolution_", "S
 
 		
 	
-	fig, axs = plt.subplots(ncols = len(filestem), nrows = nrows, sharex = True, sharey = True)
+	fig, axs = plt.subplots(ncols = len(filestem), nrows = nrows+1,  gridspec_kw={"height_ratios":([1 for _ in range(len(filestem))] + [0.05])})
 	
 	# Can we set them to be square 
 
@@ -163,11 +192,22 @@ def swing_plots(filestem = ["Swing_Data/Amplification_Fixed_5/CC_Evolution_", "S
 			max_d = np.amax((densities[j])[i])
 			im = axs[i,j].contourf(XX, YY, (densities[j])[i], levels = np.linspace(-colorbar_scale[j], colorbar_scale[j]))
 			axs[i,j].set_aspect('equal', 'box')
-			axs[i,j].plot(xCir, yCir, color = 'firebrick', linestyle = '--', alpha = 0.6)
-			# if i == nrows-1:
+			axs[i,j].plot(xCir, yCir, color = 'firebrick', linestyle = '--', alpha = 0.75)
+			
+			
+			if i == nrows-1:
+				cb = fig.colorbar(im, cax=axs[-1, j], orientation="horizontal", ticks = [-colorbar_scale[j], 0, colorbar_scale[j]])
 				
-			# 	fig.colorbar(im, ax = axs[i,j], orientation = 'horizontal', use_gridspec = True)
-			#axs[i,j].contour(XX, YY, (densities[j])[i], levels = [0.25*max_d, 0.5*max_d, 0.75*max_d], colors = "firebrick")
+				cb.ax.set_xticklabels([f"{-colorbar_scale[j]:.1f}", "0.0", f"{colorbar_scale[j]:.1f}"])
+				cb.ax.set_xlabel(r"$\rho(R, \phi)$", fontsize = 15)
+			
+
+	for i in range(nrows-1):
+		for j in range(len(filestem)):
+			axs[i,j].xaxis.set_ticks([])
+	for i in range(nrows):
+		for j in range(1,len(filestem)):
+			axs[i,j].yaxis.set_ticks([])
 
 	axs[0,0].set_title("Self Consistent", fontsize = 15)
 	axs[0,2].set_title("Self Consistent", fontsize = 15)
@@ -175,26 +215,65 @@ def swing_plots(filestem = ["Swing_Data/Amplification_Fixed_5/CC_Evolution_", "S
 	axs[0,3].set_title("Test Particle", fontsize = 15)
 
 	
-	axs[0,-1].set_ylabel(r"t=1.66", fontsize = 15)
+	axs[0,-1].set_ylabel(r"$\Omega t=1.66$", fontsize = 15)
 	axs[0,-1].yaxis.set_label_position("right")
-	axs[1,-1].set_ylabel(r"t=3.33", fontsize = 15)
+	axs[1,-1].set_ylabel(r"$\Omega t=3.33$", fontsize = 15)
 	axs[1,-1].yaxis.set_label_position("right")
-	axs[2,-1].set_ylabel(r"t=5.00", fontsize = 15)
+	axs[2,-1].set_ylabel(r"$\Omega t=5.00$", fontsize = 15)
 	axs[2,-1].yaxis.set_label_position("right")
-	axs[3,-1].set_ylabel(r"t=6.66", fontsize = 15)
+	axs[3,-1].set_ylabel(r"$\Omega t=6.66$", fontsize = 15)
 	axs[3,-1].yaxis.set_label_position("right")
 
 	xCir, yCir = [2.5 * cos(t) for t in np.linspace(0, 2*pi)], [2.5 * sin(t) for t in np.linspace(0, 2*pi)]
-	axs[-1,0].plot(xCir, yCir, color = 'firebrick', linestyle = '--', alpha = 0.6)
-	axs[-1,2].plot(xCir, yCir, color = 'firebrick', linestyle = '--', alpha = 0.6)
+	axs[-2,0].plot(xCir, yCir, color = 'firebrick', linestyle = '--', alpha = 0.75)
+	axs[-2,2].plot(xCir, yCir, color = 'firebrick', linestyle = '--', alpha = 0.75)
 
-	plt.figtext(0.31,0.93, "Leading", va="center", ha="center", fontsize=17)
-	plt.figtext(0.72,0.93,"Trailing", va="center", ha="center", fontsize=17)
+	plt.figtext(0.31,0.93, "Leading Perturbation", va="center", ha="center", fontsize=17)
+	plt.figtext(0.72,0.93,"Trailing Perturbation", va="center", ha="center", fontsize=17)
 
 	plt.show()
 
 	# Create the plots 
-	
+
+## Cold Limit Plot ##
+
+
+def cold_limit_Plot():
+	sheet_13 = readingInRealCSV("Swing_Data/Cold_Limit/Cold_Limit_Sheet_13.csv")
+
+	sheet_13_c_2, sheet_13_c_4, sheet_13_c_8 = readingInRealCSV("Swing_Data/Cold_Limit/Disc_Consistent_13_2.csv"), readingInRealCSV("Swing_Data/Cold_Limit/Disc_Consistent_13_4.csv"), readingInRealCSV("Swing_Data/Cold_Limit/Disc_Consistent_13_8.csv")
+	sheet_13_t_2, sheet_13_t_4, sheet_13_t_8 = readingInRealCSV("Swing_Data/Cold_Limit/Disc_Test_13_2.csv"), readingInRealCSV("Swing_Data/Cold_Limit/Disc_Test_13_4.csv"), readingInRealCSV("Swing_Data/Cold_Limit/Disc_Test_13_8.csv")
+
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
+	fig,axs = plt.subplots()
+
+	#axs.plot((sheet_13[0,:]*0.5*2), sheet_13[1,:])
+	# axs.plot(sheet_13[0,:]*0.5*4, sheet_13[2,:])
+	cmap = ScalarMappable(cmap = 'plasma', norm = Normalize(vmin=-0.00, vmax=0.30))
+	axs.legend(title = r"$\ell$", title_fontsize = 15, fontsize = 12)
+
+
+	axs.plot((sheet_13[0,:]*8), sheet_13[1,:], color = "firebrick", label = "Shearing Sheet")
+
+	for i in range(np.shape(sheet_13_c_2)[0]):
+		axs.scatter(sheet_13_c_2[i,0] *2, sheet_13_c_2[i,1]/sheet_13_t_2[i,1], marker = 'o', color = cmap.to_rgba((i+1)*0.25/(np.shape(sheet_13_c_2)[0]-1)))
+		axs.scatter(sheet_13_c_2[i,0] *4, 1.5*sheet_13_c_4[i,1]/sheet_13_t_4[i,1], marker = 'x',color = cmap.to_rgba((i+1)*0.25/(np.shape(sheet_13_c_2)[0]-1)))
+		axs.scatter(sheet_13_c_2[i,0] *8, 2.5*sheet_13_c_8[i,1]/sheet_13_t_8[i,1], marker = '*',color = cmap.to_rgba((i+1)*0.25/(np.shape(sheet_13_c_2)[0]-1)))
+		if (i ==0):
+			axs.scatter(sheet_13_c_2[i,0] *2, sheet_13_c_2[i,1]/sheet_13_t_2[i,1], label = r'$\ell = 2$', marker = 'o', color = cmap.to_rgba((i+1)*0.25/(np.shape(sheet_13_c_2)[0]-1)))
+			axs.scatter(sheet_13_c_2[i,0] *4, 1.5*sheet_13_c_4[i,1]/sheet_13_t_4[i,1], label = r'$\ell = 4$', marker = 'x', color = cmap.to_rgba((i+1)*0.25/(np.shape(sheet_13_c_2)[0]-1)))
+			axs.scatter(sheet_13_c_2[i,0] *8, 2.5*sheet_13_c_8[i,1]/sheet_13_t_8[i,1], label = r'$\ell = 8$', marker = '*', color = cmap.to_rgba((i+1)*0.25/(np.shape(sheet_13_c_2)[0]-1)))
+
+	axs.set_xlabel(r"$\xi \ell$", fontsize = 15)
+	axs.set_ylabel(r"$A_{max}$", fontsize = 15)
+
+	cbar = fig.colorbar(cmap)
+	cbar.set_label( r"$\sigma_{R}$", fontsize = 15) 
+	axs.legend(fontsize = 12)
+
+	plt.show()
+
 
 
 #axisymmetric_comparison_plots()
@@ -202,11 +281,12 @@ def swing_plots(filestem = ["Swing_Data/Amplification_Fixed_5/CC_Evolution_", "S
 
 #amplificationPlots()
 
-swing_plots()
+#swing_plots()
+#cold_limit_Plot()
 
 #selfgrav_Amplification()
 
-#max_density_Response()
+max_density_Response()
 
 # den = TwoDdensity("Swing_Data/Amplification_Fixed_5/CC_Evolution_0.csv")
 # plt.imshow(den[1]- den[2])

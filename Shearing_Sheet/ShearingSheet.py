@@ -8,7 +8,7 @@ from Animator import *
 
 class ShearingSheet():
 	
-	def __init__(self, ky, Q, omega = 1, kappa = sqrt(2), xi = 1, time_begin = 0, time_end = 1):	# ky is in units of k_crit
+	def __init__(self, ky, Q, omega = 1, kappa = sqrt(2), xi = 1, time_begin = 0, time_end = 5):	# ky is in units of k_crit
 		
 		self.omega, self.kappa, self.sigma_0 = omega, omega * kappa, xi *(omega/(2*pi))
 		self.k_crit = (self.kappa**2)/(2 * pi * self.sigma_0) 

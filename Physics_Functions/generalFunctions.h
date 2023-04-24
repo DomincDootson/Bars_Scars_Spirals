@@ -2,6 +2,7 @@
 #define GENERALFUNCTIONS
 
 #include <string>
+void saveKalnajsBF();
 void freqCheck();
 void savingKalnajsFunctions(const std::string & filename); 
 void generatingKalnajsBF(int m2);

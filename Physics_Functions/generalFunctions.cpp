@@ -36,6 +36,20 @@
 
 // Put in a function to generate the names for the files that the BF are kept it
 
+void saveKalnajsBF() {
+	PotentialDensityPairContainer<KalnajsBasis> pd0({4, 1}, 10, 0), pd1({4, 1}, 10, 1), pd2({4, 1}, 10, 2);
+
+	std::ofstream out("Plotting/BF_Comparison/KalnajsFunctions.csv");
+
+	for (double r = 0; r <1; r +=0.005) {
+		out << r <<','<< pd0.potential(r, 0) << ',' << pd0.density(r, 0) << ',' << pd0.potential(r, 1) << ',' << pd0.density(r, 1) <<',' << pd0.potential(r, 2) << ',' << pd0.density(r, 2) <<','
+				      << pd1.potential(r, 0) << ',' << pd1.density(r, 0) << ',' << pd1.potential(r, 1) << ',' << pd1.density(r, 1) <<',' << pd1.potential(r, 2) << ',' << pd1.density(r, 2) << ','
+				 	  << pd2.potential(r, 0) << ',' << pd2.density(r, 0) << ',' << pd2.potential(r, 1) << ',' << pd2.density(r, 1) <<',' << pd2.potential(r, 2) << ',' << pd2.density(r, 2) <<'\n';
+	}
+	out.close();
+
+}
+
 void generatingKalnajsBF(int m2)
 {
 	Mestel DF;
@@ -94,14 +108,14 @@ void savingKalnajsFunctions(const std::string & filename) {
 
 void generatingKalnajsKernels(const std::string & filename, int m2, int nMax, double rInner)
 {
-	ActionAngleBasisContainer test("KalnajsN", "KalnajsN", 48, 2, 7, 251, 15);
-	Mestel DF(1, 1, 0.35, 1, 1, 11.4, 4, 5);
+	ActionAngleBasisContainer test("KalnajsN", "KalnajsN", 72, 2, 4, 251, 15);
+	Mestel DF(1, 1, 0.2835, 1, 1, 11.4, 4, 5);
 
-	VolterraSolver solver2(48, 2, 100, 0.5);
+	VolterraSolver solver2(72, 2, 100, 1);
 
 	//std::string kernel2 = "Kernels/kalnajsComparison_" +std::to_string((int) nMax) + "_" + std::to_string((int) rInner) + ".out";
 	
-	solver2.generateKernel(filename, DF, test);
+	solver2.generateKernel("Kalnajs_Kernel_Wave.out", DF, test);
 }
 
 void generatingKalnajsKernelsAxisymmetric(const std::string & filename) {
@@ -257,19 +271,29 @@ void checkMass() {
 }
 
 void guassianNTest() {
-	//Mestel DF;
 	PotentialDensityPairContainer<GaussianNBasis> PD("Potential_Density_Pair_Classes/Gaussian_Numerical/Gaussian_Numerical.dat", 48);
+	Mestel DF;
+	
 	//PotentialDensityPairContainer<GaussianNBasis> PD("Potential_Density_Pair_Classes/Kalnajs_Numerical/KalnajsNumerical_15_2.dat", 48);
+	
 	// ActionAngleBasisContainer test("GaussianN", PD.maxRadialIndex(), 2, 7, 251, 15); 
 	// test.scriptW(PD, DF, "GaussianN"); 
 
-	// ActionAngleBasisContainer test("GaussianN", "GaussianN", 48, 2, 7, 251, 15);
+	ActionAngleBasisContainer test("GaussianN", "GaussianN", 48, 2, 7, 251, 15);
 	// Mestel DF(1, 1, 0.35, 1, 1, 11.4, 4, 5);
 
-	// VolterraSolver solver2(48, 2, 100, 0.5);
-	// solver2.generateKernel("GaussianNKernel.out", DF, test);
+	VolterraSolver solver2(48, 2, 100, 0.5);
+	solver2.generateKernel("GaussianNKernel.out", DF, test);
 
-	std::cout << PD.calculateScriptE() <<'\n';
+	// std::cout << PD.calculateScriptE() <<'\n';
+	// std::ofstream out("Plotting/Guassianpd.csv");
+	// for (double r = 0; r < 15; r+=0.01)
+	// 	{out << r <<','; 
+	// 	for (int n = 0; n < 48; n++) {out << PD.density(r, n) << ',' << PD.potential(r,n) <<',';  }
+	// 	out << PD.density(r, 48) << ',' << PD.potential(r,48) <<'\n';
+
+	// }
+	// out.close(); 
 } 
 
 
