@@ -49,30 +49,7 @@ double PotentialDensityPair::scriptWElement(int const m1, std::vector<double> co
 
 double angle(double x, double y) // I hate this function, but don't know where it should live....
 {
-	if ((x>0) && (y>0)){
-		return atan(y/x);
-	}
-	else if ((x<0) && (y>0)){
-		return M_PI - atan(abs(y/x));
-	}
-	else if ((x<0) && (y<0)){
-		return M_PI + atan(abs(y/x));
-	}
-	else if (x == 0 && y<0){
-		return 1.5*M_PI;
-	}
-	else if (x==0 && y>0){
-		return 0.5 * M_PI; 
-	}
-	else if (y==0 && x<0){
-		return M_PI;
-	}
-	else if (x==0 && y==0){
-		return 0;
-	}
-	else {
-		return 2 * M_PI - atan(abs(y/x));
-	}
+	return atan2(y, x);
 }
 
 Eigen::ArrayXXcd PotentialDensityPair::densityGrid(const int nGrid, const double rMax) const
@@ -86,9 +63,7 @@ Eigen::ArrayXXcd PotentialDensityPair::densityGrid(const int nGrid, const double
 		{
 			x = spacing * (i - centre); y = spacing * (j - centre);
 			r = sqrt(x*x+y*y); theta = angle(x,y);
-			/*if (r<rMax && r!= 0){
-				grid(i,j) = exp(-unitComplex * (theta * m_fourierHarmonic)) * density(r);}
-			else {grid(i,j) = 0;}*/
+			
 			grid(i,j) = exp(-unitComplex * (theta * m_fourierHarmonic)) * density(r); // I am 99.8 % sure that the minus sign shouldn't be hear, but as it will only affect plots, I'll leave it
 		}
 	}
