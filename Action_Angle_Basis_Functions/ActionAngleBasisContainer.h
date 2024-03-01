@@ -7,7 +7,6 @@
 #include <Eigen/Dense>
 #include <string>
 
-// Could we make this more efficent to have the grids that keep getting passed around, saved as memeber variables? 
 class ActionAngleBasisContainer
 {
 public:
@@ -15,7 +14,7 @@ public:
 	: m_prefix{prefix}, 
 	m_intStep{500},
 	m_maxRadialIndex{maxRadialIndex}, m_fourierHarmonic{fourierHarmonic}, m_maxFourierHarmonic{maxFourierHarmonic},
-	m_sizeArray{sizeArray}, // m_om1Grid(sizeArray, sizeArray), m_om2Grid(sizeArray, sizeArray),
+	m_sizeArray{sizeArray},
 	m_spacingSize{maxRadius/((double) m_sizeArray - 1)}, // The size has minus 1 as we want the end point to be inclusive
 	m_basisContainer{},
 	v_radii(m_intStep), v_theta1(m_intStep), v_theta2(m_intStep), v_theta1Deriv(m_intStep), 
@@ -34,7 +33,7 @@ public:
 	ActionAngleBasisContainer(std::string dir, std::string prefix, int maxRadialIndex, int fourierHarmonic, int maxFourierHarmonic, int sizeArray, double maxRadius)
 	: m_prefix{prefix},
 	m_maxRadialIndex{maxRadialIndex}, m_fourierHarmonic{fourierHarmonic}, m_maxFourierHarmonic{maxFourierHarmonic},
-	m_sizeArray{sizeArray}, // m_om1Grid(sizeArray, sizeArray), m_om2Grid(sizeArray, sizeArray), 
+	m_sizeArray{sizeArray}, 
 	m_spacingSize{maxRadius/((double) m_sizeArray - 1)}, // The size has minus 1 as we want the end point to be inclusive
 	m_basisContainer{},
 	m_scriptE{ readInScriptE(dir)},

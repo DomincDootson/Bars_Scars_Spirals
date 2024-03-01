@@ -186,32 +186,7 @@ void varyingEpsilon() {
 	barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionW_005_18_1.csv", false, 0.45);
 	barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionW_005_18_2.csv", false, 0.45);
 	
-	// barEvolutionKalnajs(0.001, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_001_18_0.csv", true, 0.35);
-	// barEvolutionKalnajs(0.001, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_001_18_1.csv", true, 0.35);
-	// barEvolutionKalnajs(0.001, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_001_18_2.csv", true, 0.35);
 
-	// barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_005_18_0.csv", true, 0.35);	
-	// barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_005_18_1.csv", true, 0.35);
-	// barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_005_18_2.csv", true, 0.35);
-
-	// barEvolutionKalnajs(0.05, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_05_18_0.csv", true, 0.35);
-	// barEvolutionKalnajs(0.05, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_05_18_1.csv", true, 0.35);
-	// barEvolutionKalnajs(0.05, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_05_18_2.csv", true, 0.35);
-
-	// barEvolutionKalnajs(0.01, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_01_18_0.csv", true, 0.35);
-	// barEvolutionKalnajs(0.01, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_01_18_1.csv", true, 0.35);
-	// barEvolutionKalnajs(0.01, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_01_18_2.csv", true, 0.35);
-
-	// barEvolutionKalnajs(0.1, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_1_18_0.csv", true, 0.35);
-	// barEvolutionKalnajs(0.1, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_1_18_1.csv", true, 0.35);
-	// barEvolutionKalnajs(0.1, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionC_1_18_2.csv", true, 0.35);
-
-	
-	// barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionW_005_18_0.csv", false, 0.45);
-	// barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionW_005_18_1.csv", false, 0.45);
-	// barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionW_005_18_2.csv", false, 0.45);
-	// barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionW_005_18_3.csv", false, 0.45);
-	// barEvolutionKalnajs(0.005, 0.18, "../Plotting/Nbody_Sormani_Data/Varying_Ep/evolutionW_005_18_4.csv", false, 0.45);
 	
 }
 

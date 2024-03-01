@@ -1,9 +1,0 @@
-We use the following naming convention with the videos
-
-_n_ - Moving in the negative direction
-_p_ - Moving in the postive direction
-_w_ - Keep the stirring perturbation
-_R_ - Remove the stirring perturbation 
-
-What we need to figure out
-1. Why when we have the perturbation going in the opposite way do the waves not unwind? 

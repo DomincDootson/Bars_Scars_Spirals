@@ -22,10 +22,6 @@ public:
 	m_omega1{df.omega1Grid(df).array(bf.size(0), bf.spacing())}, m_omega2{df.omega2Grid(df).array(bf.size(0), bf.spacing())}, 
 
 
-
-
-
-
 	m_j2apoPeriJacobian(df.energyAngMomJacobain(bf.size(0), bf.spacing())),
 	m_rPeri{Eigen::ArrayXXd::Zero(m_dfSize, m_dfSize)}, m_rApo{Eigen::ArrayXXd::Zero(m_dfSize, m_dfSize)}, 
 	m_eCoords{Eigen::ArrayXXd::Zero(m_dfSize, m_dfSize)}, m_lCoords{Eigen::ArrayXXd::Zero(m_dfSize, m_dfSize)},

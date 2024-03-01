@@ -41,10 +41,7 @@ def write_Phi_2_2_file(filename, r_q = 1.5):
 		writer.writerows(out)
 
 
-	
-# write_Phi_2_2_file("Bar_Potentials/Sormani_Large.out", r_q = 2)
-# write_Phi_2_2_file("Bar_Potentials/Sormani_Medium.out", r_q = 1.5)
-# write_Phi_2_2_file("Bar_Potentials/Sormani_Small.out", r_q = 1.0)
+
 
 write_Phi_2_2_file("../Plotting/Bar_Data/Sormani_Fitting/Sormani_Large.csv", r_q = 2)
 write_Phi_2_2_file("../Plotting/Bar_Data/Sormani_Fitting/Sormani_Medium.csv", r_q = 1.5)
