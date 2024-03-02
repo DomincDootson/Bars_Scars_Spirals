@@ -38,6 +38,4 @@ This file allowed us to generate the response matrix:
 -`ResponseMatrix.h`: A class that had all the methods to calculate the response matrix either via direct integrate or from the time domain
 -`ResponseMatrixThread.h`: A class that allowed for the RM to be evaluated at different omega via multithreading
 -`ResponseMatrix.py`: Code that took a response matrix and solve for its eigenvalues (and hence the modes of the discs)
-
-### nBody
-Contains code that run N body simulations for comparison 
+ 
