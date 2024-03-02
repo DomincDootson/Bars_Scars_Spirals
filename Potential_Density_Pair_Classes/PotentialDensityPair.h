@@ -47,10 +47,7 @@ double PotentialDensityPair::scriptWElement(int const m1, std::vector<double> co
 
 
 
-double angle(double x, double y) // I hate this function, but don't know where it should live....
-{
-	return atan2(y, x);
-}
+double angle(double x, double y) { return atan2(y, x); }
 
 Eigen::ArrayXXcd PotentialDensityPair::densityGrid(const int nGrid, const double rMax) const
 {	
